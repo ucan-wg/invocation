@@ -150,7 +150,7 @@ type Scope enum {
   "v": "0.1.0",
   "nnc": "abcdef",
   "ext": null,
-  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
+  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
 }
 ```
 
@@ -186,7 +186,7 @@ type Scope enum {
       ]
     }
   },
-  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
+  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
 }
 ```
 
@@ -208,7 +208,7 @@ type Scope enum {
       ]
     }
   },
-  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
+  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
 }
  
 {
@@ -244,19 +244,21 @@ Note that this does not guarantee correctness of the result! The statement's ver
 
 ## 4.1 Fields
 
-| Field          | Type                      | Value     | Descrption                                       | Required | Default |
-|----------------|---------------------------|-----------|--------------------------------------------------|----------|---------|
-| `ucan/receipt` | `{CID => {"URI" => Any}}` |           | The CID of the UCAN to invoke                    | Yes      |         |
-| `v`            | `SemVer`                  | `"0.1.0"` | SemVer of the UCAN invocation object schema      | Yes      |         |
-| `nnc`          | `String`                  |           | A unique nonce, to distinguish each receipt      | Yes      |         |
-| `ext`          | `Any`                     |           | Nonnormative extended fields                     | No       | `null`  |
-| `sig`          | `Bytes`                   |           | Signature of the rest of the field canonicalized | Yes      |         |
+| Field          | Type                     | Descrption                                        | Required | Default |
+|----------------|--------------------------|---------------------------------------------------|----------|---------|
+| `ucan/receipt` | `CID`                    | CID of the Invocation that generated this respose | Yes      |         |
+| `rlt`          | `{URI : {Ability: Any}}` | The results of each call                          | Yes      |         |
+| `v`            | `SemVer`                 | SemVer of the UCAN invocation object schema       | Yes      |         |
+| `nnc`          | `String`                 | A unique nonce, to distinguish each receipt       | Yes      |         |
+| `ext`          | `Any`                    | Non-normative extended fields                     | No       | `null`  |
+| `sig`          | `Bytes`                  | Signature of the rest of the field canonicalized  | Yes      |         |
 
 ## 4.1 IPLD
 
 ``` ipldsch
 type Receipt struct {
-  rec {CID : {URI : {Ability : {String : Any}}}
+  rec &Invocation
+  rlt {URI : {Ability : Any}}
   v   SemVer
   nnc String
   ext optional Any
@@ -268,35 +270,32 @@ type Receipt struct {
 
 ``` json
 {
-  "ucan/receipt": {
-    "bafyLeft": {
-      "example.com": {
-        "msg/read": [
-          "from": "alice@example.com",
-          "text": "hello world"
-        ]
-      }
+  "ucan/receipt": "QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f",
+  "v": "0.1.0",
+  "rlt": {
+    "example.com": {
+      "msg/read": [
+        "from": "alice@example.com",
+        "text": "hello world"
+      ]
     },
-    "bafyRight": {
-      "sub.example.com?TYPE=TXT": {
-        "crud/update": {
-          "12345": {
-            "http": { 
-              "status": 200
-            },
-            "value": "lorem ipsum"
-          }
+    "sub.example.com?TYPE=TXT": {
+      "crud/update": {
+        "12345": {
+          "http": { 
+            "status": 200
+          },
+          "value": "lorem ipsum"
         }
       }
     }
   },
-  "v": "0.1.0",
   "nnc": "xyz",
   "ext": {
     "notes": "very receipt. such wow.",
     "tags": ["dag-house", "fission"]
   },
-  "sig": 0xB00
+  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt_VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
 }
 ```
 
