@@ -47,13 +47,56 @@ UCAN uses a capabilities model. The
 {
   "ucan/invoke": [ "bafyLeft", "bafyRight", "bafyEnd" ]
   "version": "0.1.0",
-  /* "nonce": "abcdef" -- I think the nonce inside each UCAN is sufficent? */
+  /* "nonce": "abcdef" -- I think the nonce inside each UCAN is sufficent? But also can never hurt */
   "siganture": 0xCOFFEE
 }
 ```
 
-# 3 UCAN Pipelining
+# 3 Receipt & Attestation
+
+An invocation receipt is a claim about what the output of an invocation is. A receipt MUST be attested via signature of the principal (the audience of the associated invocation).
+
+Note that this does not guarantee correctness of the result! The level of this statement's veracity MUST be ony taken that the signer claims this to be a fact.
+
+``` json
+{
+  "ucan/invocation/receipt": {
+    "bafyLeft": {
+      "a": 42,
+      "example.com": {
+        "msg/read": [
+          "from": "alice@example.com",
+          "text": "hello world"
+        ]
+      }
+    },
+    "bafyRight": {
+      "sub.example.com?TYPE=TXT": {
+        "crud/update": {
+          "12345": {
+            "http": { 
+              "status": 200
+            },
+            "value": "lorem ipsum"
+          }
+        }
+      }
+    }
+  },
+  "version": "0.1.0",
+  "nonce": "xyz",
+  "signature": 0xB00
+}
+```
+
+# 4 Pipelining
+
+> Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
+>
+> Robust Composition, Mark Miller
 
 At time of creation, a UCAN MAY not know the concrete value required to scope the resource down sufficiently. This MAY be caused either by invoking them both in the same payload, or following one after another by CID reference.
 
-Relative 
+Variables relative to the result of some other action MAY be used. In this case, the attested (signed) receipt of the previous action MUST be included in the following form:
+
+Refeernced by invocation CID
