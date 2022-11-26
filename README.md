@@ -11,7 +11,7 @@
 
 ## Depends On
 
-* [UCAN](https://github.com/ucan-wg/spec/) >=v0.10
+* [UCAN](https://github.com/ucan-wg/spec/)
 * [`ucan-ipld`](https://github.com/ucan-wg/ucan-ipld/)
 
 # 0 Abstract
@@ -173,7 +173,7 @@ type Scope enum {
     },
     "http://example.com/report": {
       "http/post": [
-        {"updateTo": {"ucan/promise": ["/", "dns://exmaple.com?TYPE=TXT", "crud/update", "http/statusCode"]}}
+        {"updateTo": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/statusCode"]}}
       ]
     },
     "mailto://alice@example.com": {
@@ -181,7 +181,7 @@ type Scope enum {
         {
           "to": "bob@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "dns://exmaple.com?TYPE=TXT", "crud/update", "http/body"]}
+          "body": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
         }
       ]
     }
@@ -219,7 +219,7 @@ type Scope enum {
   "run": {
     "http://example.com/report": {
       "http/post": [
-        {"updateTo": {"ucan/promise": ["QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f", "dns://exmaple.com?TYPE=TXT", "crud/update", "http/statusCode"]}}
+        {"updateTo": {"ucan/promise": ["QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f", "dns://example.com?TYPE=TXT", "crud/update", "http/0/statusCode"]}}
       ]
     },
     "mailto://alice@example.com": {
@@ -227,7 +227,7 @@ type Scope enum {
         {
           "to": "bob@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f", "dns://exmaple.com?TYPE=TXT", "crud/update", "http/body"]}
+          "body": {"ucan/promise": ["QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f", "dns://example.com?TYPE=TXT", "crud/update", "http/0/body"]}
         }
       ]
     }
@@ -352,7 +352,7 @@ type Promise struct {
 
 ``` json
 // IPLD
-["bafyInvocation", "exmaple.com/foo/bar", "http/put", "http/statusCode"]
+["bafyInvocation", "example.com/foo/bar", "http/put", "http/statusCode"]
 
 // Full struct representation
 { 
