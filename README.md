@@ -59,10 +59,10 @@ Specify Roles
 
 ``` ipldsch
 type Invocation struct {
-  i [&UCAN]
-  v SemVer
-  n String
-  s Bytes
+  inv [&UCAN] -- To invoke
+  v   SemVer  -- Version
+  nnc String  -- Nonce
+  sig Bytes   -- Signature
 }
 
 type SemVer struct {
@@ -78,9 +78,9 @@ type SemVer struct {
  ``` json
 {
   "ucan/invoke": [ "bafyLeft", "bafyRight", "bafyEnd" ]
-  "version": "0.1.0",
-  "nonce": "abcdef",
-  "siganture": 0xCOFFEE
+  "v": "0.1.0",
+  "nnc": "abcdef",
+  "sig": 0xCOFFEE
 }
 ```
 
@@ -96,10 +96,11 @@ The receipt MUST be signed with by the `aud` from the UCAN.
 
 ``` ipldsch
 type Receipt struct {
-  i {&UCAN : {URI : Any}} <!-- not sure if this actually works? My guess is that the link doesn't work because it should not  -->
-  v SemVer
-  n String
-  s Bytes
+  inv {&UCAN : {URI : Any}} <!-- not sure if this actually works? My guess is that the link doesn't work because it should not  -->
+  v   SemVer
+  nnc String
+  ext optional {String : Any}
+  sig Bytes
 }
 
 type URI = String
@@ -132,9 +133,12 @@ type URI = String
       }
     }
   },
-  "version": "0.1.0",
-  "nonce": "xyz",
-  "signature": 0xB00
+  "v": "0.1.0",
+  "nnc": "xyz",
+  "ext": {
+    "notes": "wow, what a "
+  },
+  "sig": 0xB00
 }
 ```
 
@@ -164,11 +168,17 @@ type Path String
 
 ### 4.2 JSON Example
 
+Some alternates:
+
 ``` json
 { 
   "ucan/invoked": "bafy12345",
   "output": "example/a/b"
 }
+
+"ucan:out:bafy12345/example/a/b"
+
+
 ```
 
 Inside a next UCAN, substitution of a previous unresolved step MUST be represented as:
@@ -177,8 +187,8 @@ Inside a next UCAN, substitution of a previous unresolved step MUST be represent
 {
   // ...,
   "att": {
-    "example.com": {
-      "path": { 
+    "example.com/$PATH": {
+      "$PATH": { 
         "ucan/invoked": "bafy12345",
         "output": "example.com/a/b"
       }
@@ -186,3 +196,9 @@ Inside a next UCAN, substitution of a previous unresolved step MUST be represent
   }
 }
 ```
+
+NOTE security, becase the aud controls the receipt of the first part of the pipeline, they control anything under the example.com namespace
+
+
+
+FIXME add diagram of required invocation -> receipt signers 
