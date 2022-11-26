@@ -47,11 +47,31 @@ UCAN uses a capabilities model. The
 * zcap
 * IPVM
 
+## 2.1 IPLD
+
+``` ipldsch
+type Invocation struct {
+  i [&UCAN]
+  v SemVer
+  n String
+  s Bytes
+}
+
+type SemVer struct {
+  ma Integer
+  mi Integer
+  pa Integer
+  ta optional nullable String
+}
+```
+
+## 2.2 Exmaple
+
  ``` json
 {
   "ucan/invoke": [ "bafyLeft", "bafyRight", "bafyEnd" ]
   "version": "0.1.0",
-  /* "nonce": "abcdef" -- I think the nonce inside each UCAN is sufficent? But also can never hurt */
+  "nonce": "abcdef",
   "siganture": 0xCOFFEE
 }
 ```
@@ -66,19 +86,12 @@ The receipt MUST be signed with by the `aud` from the UCAN.
 
 ## 3.1 IPLD
 
-```ipldsch
+``` ipldsch
 type Receipt struct {
   i {&UCAN : {URI : Any}} <!-- not sure if this actually works? My guess is that the link doesn't work because it should not  -->
   v SemVer
   n String
   s Bytes
-}
-
-type SemVer struct {
-  ma Integer
-  mi Integer
-  pa Integer
-  ta optional nullable String
 }
 
 type URI = String
