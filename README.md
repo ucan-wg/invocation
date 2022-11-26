@@ -171,9 +171,14 @@ type Scope enum {
         }
       ]
     },
-    "http://example.com/report": {
-      "http/post": [
-        {"updateTo": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/statusCode"]}}
+    "https://example.com/report": {
+      "crud/update": [
+        {
+          "performedBy": "did:key:zAlice",
+          "tags": ["hello", "world"],
+          "status": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/statusCode"]}},
+          "payload": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+        }
       ]
     },
     "mailto://alice@example.com": {
@@ -182,6 +187,20 @@ type Scope enum {
           "to": "bob@example.com",
           "subject": "DNSLink for example.com",
           "body": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+        }
+      ]
+    },
+    "https://example.com/events": {
+      "crud/create": [
+        { 
+          "event": "update-dns",
+          "status": "done"
+        },
+        {
+          "_": [
+            {"ucan/promise": ["/", "mailto://alice@example.com", "msg/send", null]}
+            {"ucan/promise": ["/", "https://example.com", "crud/update", null]}
+          ]
         }
       ]
     }
@@ -273,7 +292,7 @@ type Receipt struct {
   "ucan/receipt": "QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f",
   "v": "0.1.0",
   "rlt": {
-    "example.com": {
+    "https://example.com": {
       "msg/read": [{
         "from": "alice@example.com",
         "text": "Hello world!"
@@ -282,7 +301,7 @@ type Receipt struct {
         "text": "What's up?"
       }]
     },
-    "sub.example.com?TYPE=TXT": {
+    "dns://sub.example.com?TYPE=TXT": {
       "crud/update": {
         "12345": {
           "http": { 
