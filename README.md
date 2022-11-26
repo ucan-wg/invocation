@@ -140,7 +140,9 @@ type Scope enum {
 }
 ```
 
-## 3.3 JSON Exmaple
+## 3.3 JSON Examples
+
+### 3.3.1 Simple
 
  ``` json
 {
@@ -148,6 +150,88 @@ type Scope enum {
   "v": "0.1.0",
   "nnc": "abcdef",
   "ext": null,
+  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
+}
+```
+
+### 3.3.2 Internally Pipelined
+
+ ``` json
+{
+  "ucan/invoke": "bafyUCAN",
+  "v": "0.1.0",
+  "nnc": "abcdef",
+  "ext": null,
+  "run": {
+    "dns://example.com?TYPE=TXT": {
+      "crud/update": [
+        { 
+          "value": "hello world",
+          "retries": 5
+        }
+      ]
+    },
+    "http://example.com/report": {
+      "http/post": [
+        {"updateTo": {"ucan/promise": ["/", "dns://exmaple.com?TYPE=TXT", "crud/update", "http/statusCode"]}
+      ]
+    },
+    "mailto://alice@example.com": {
+      "msg/send": [
+        {
+          "to": "bob@example.com",
+          "subject": "DNSLink for example.com",
+          "body": {"ucan/promise": ["/", "dns://exmaple.com?TYPE=TXT", "crud/update", "http/body"]}
+        }
+      ]
+    }
+  },
+  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
+}
+```
+
+### 3.3.3 Externally Pipelined
+
+ ``` json
+{
+  "ucan/invoke": "bafyUCAN",
+  "v": "0.1.0",
+  "nnc": "abcdef",
+  "ext": null,
+  "run": {
+    "dns://example.com?TYPE=TXT": {
+      "crud/update": [
+        { 
+          "value": "hello world",
+          "retries": 5
+        }
+      ]
+    }
+  },
+  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
+}
+ 
+{
+  "ucan/invoke": "bafyUCAN",
+  "v": "0.1.0",
+  "nnc": "abcdef",
+  "ext": null,
+  "run": {
+    "http://example.com/report": {
+      "http/post": [
+        {"updateTo": {"ucan/promise": ["QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f", "dns://exmaple.com?TYPE=TXT", "crud/update", "http/statusCode"]}
+      ]
+    },
+    "mailto://alice@example.com": {
+      "msg/send": [
+        {
+          "to": "bob@example.com",
+          "subject": "DNSLink for example.com",
+          "body": {"ucan/promise": ["QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f", "dns://exmaple.com?TYPE=TXT", "crud/update", "http/body"]}
+        }
+      ]
+    }
+  },
   "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
 }
 ```
@@ -226,14 +310,23 @@ At UCAN creation time, the UCAN MAY not yet have all of the information required
 
 The authority to execute later actions often cannot be fully attenuated in advance, since the executor controls the reported output of the prior step in a pipeline. When chosing to use pipelining, the invoker MUST delegate capabilities for any of the possible outputs. If tight control is required to limit authority, pipelining SHOULD NOT be used.
 
+A promise MUST contain the CID of the target invocation, and the path of the 
 
+becaus eth eresource may have a path in it, the resource needs to be broken out!
 
+Inverts the version from the outer invocation
 
+## 5.1 Fields
 
-<!-- 
-FIXME NOTE TO SELF: for pipeline, possibly separate out delegation of resource from what to invoke. Add a field to invocation that defaults to "*". This lets you be VERY clear that there's a difference between what the UCAN delegates (wide) and what should be invoked (may be attenuated based on a returned value)
--->
+| Field           | Type      | Description                     | Required |
+|-----------------|-----------|---------------------------------|----------|
+| `ucan/promised` | `CID`     | The invocation being referenced | Yes      |
+| `using`         | `URI`     | The resource called             | Yes      |
+| `called`        | `Ability` | The ability used                | Yes      |
+| `path`          | `Path`    | Path to the specific output     | Yes      |
 
+``` json
+```
 
 the  know the concrete value required to scope the resource down sufficiently. This MAY be caused either by invoking them both in the same payload, or following one after another by CID reference.
 
@@ -242,52 +335,31 @@ Variables relative to the result of some other action MAY be used. In this case,
 Refeernced by invocation CID
 
 
-## 5.1 IPLD Schema
-
-<!-- FIXME reference a SPECIFIC invocation, or the underlying UCAN? Do we care about THAT return or ANY return? -->
+## 5.2 IPLD Schema
 
 ``` ipldsch
-type RelativeOutput struct {
-  i &Invocation
-  o Path -- output path
-} 
-
-type Path String
+type Promise struct {
+  pse &Invocation
+  usg URI
+  cll Ability -- output path
+  pth Path
+} representation tuple
 ```
 
-## 5.2 JSON Example
-
-Some alternates:
+## 5.3 JSON Example
 
 ``` json
+// IPLD
+["bafyInvocation", "exmaple.com/foo/bar", "http/put", "http/statusCode"]
+
+// Full struct representation
 { 
-  "ucan/invoked": "bafy12345",
-  "output": "example/a/b"
-}
-
-"ucan:out:bafy12345/example/a/b"
-
-
-```
-
-Inside a next UCAN, substitution of a previous unresolved step MUST be represented as:
-
-``` js
-{
-  // ...,
-  "att": {
-    "example.com/$PATH": {
-      "$PATH": { 
-        "ucan/invoked": "bafy12345",
-        "output": "example.com/a/b"
-      }
-    }
-  }
+  "ucan/promise": "bafyInvocation",
+  "using": "example.com/foo/bar",
+  "called": "http/put",
+  "path": "http/status"
 }
 ```
-
-NOTE security, becase the aud controls the receipt of the first part of the pipeline, they control anything under the example.com namespace
-
 
 # 6 Appendix
 
@@ -297,6 +369,7 @@ NOTE security, becase the aud controls the receipt of the first part of the pipe
 type CID = String
 type URI = String
 type Ability = String
+type Path = String
 
 type SemVer struct {
   num NumVer
@@ -313,6 +386,3 @@ type NumVer struct {
   join "."
 }
 ```
-
-
-
