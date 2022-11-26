@@ -173,7 +173,7 @@ type Scope enum {
     },
     "http://example.com/report": {
       "http/post": [
-        {"updateTo": {"ucan/promise": ["/", "dns://exmaple.com?TYPE=TXT", "crud/update", "http/statusCode"]}
+        {"updateTo": {"ucan/promise": ["/", "dns://exmaple.com?TYPE=TXT", "crud/update", "http/statusCode"]}}
       ]
     },
     "mailto://alice@example.com": {
@@ -219,7 +219,7 @@ type Scope enum {
   "run": {
     "http://example.com/report": {
       "http/post": [
-        {"updateTo": {"ucan/promise": ["QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f", "dns://exmaple.com?TYPE=TXT", "crud/update", "http/statusCode"]}
+        {"updateTo": {"ucan/promise": ["QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f", "dns://exmaple.com?TYPE=TXT", "crud/update", "http/statusCode"]}}
       ]
     },
     "mailto://alice@example.com": {
@@ -274,10 +274,13 @@ type Receipt struct {
   "v": "0.1.0",
   "rlt": {
     "example.com": {
-      "msg/read": [
+      "msg/read": [{
         "from": "alice@example.com",
-        "text": "hello world"
-      ]
+        "text": "Hello world!"
+      }, {
+        "from": "bob@example.com",
+        "text": "What's up?"
+      }]
     },
     "sub.example.com?TYPE=TXT": {
       "crud/update": {
