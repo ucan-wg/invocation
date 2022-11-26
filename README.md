@@ -55,3 +55,5 @@ UCAN uses a capabilities model. The
 # 3 UCAN Pipelining
 
 At time of creation, a UCAN MAY not know the concrete value required to scope the resource down sufficiently. This MAY be caused either by invoking them both in the same payload, or following one after another by CID reference.
+
+Relative 
