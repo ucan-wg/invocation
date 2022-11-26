@@ -47,6 +47,14 @@ UCAN uses a capabilities model. The
 * zcap
 * IPVM
 
+
+
+
+Specify Roles
+
+
+
+
 ## 2.1 IPLD
 
 ``` ipldsch
@@ -101,7 +109,7 @@ type URI = String
 
 ``` json
 {
-  "ucan/invocation/receipt": {
+  "ucan/receipt": {
     "bafyLeft": {
       "a": 42,
       "example.com": {
@@ -141,3 +149,40 @@ At time of creation, a UCAN MAY not know the concrete value required to scope th
 Variables relative to the result of some other action MAY be used. In this case, the attested (signed) receipt of the previous action MUST be included in the following form:
 
 Refeernced by invocation CID
+
+
+### 4.1 IPLD Schema
+
+``` ipldsch
+type RelativeOutput struct {
+  i &Invocation
+  o Path -- output path
+} 
+
+type Path String
+```
+
+### 4.2 JSON Example
+
+``` json
+{ 
+  "ucan/invoked": "bafy12345",
+  "output": "example/a/b"
+}
+```
+
+Inside a next UCAN, substitution of a previous unresolved step MUST be represented as:
+
+``` js
+{
+  // ...,
+  "att": {
+    "example.com": {
+      "path": { 
+        "ucan/invoked": "bafy12345",
+        "output": "example.com/a/b"
+      }
+    }
+  }
+}
+```
