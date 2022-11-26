@@ -68,6 +68,16 @@ The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field
 
 # 3 Envelope
 
+<!-- 
+
+!!! Irakli thinks this envelope is not required -- FIXME either clearly justify it or cut it !!!
+Part of this may be lazy vs eager semantics.
+
+In a referentially transparent lazy langauge (Haskell), you can always substitute the value of the output for the expression, so there's no distinction between "running a function" and a value.
+
+In an eager langauge (Javascript) there's a difference between passing around the reference to a function, and actually running it (by adding parentheses to it)
+-->
+
 The invocation envelope is a thin wrapper around a UCAN that conveys that all of the contained UCAN actions SHOULD be performed.
 
 All of the roles from the referenced UCANs MUST persist to the invocation per the [above table](FIXME).
@@ -76,12 +86,13 @@ The invocation wrapper MUST be signed by the same principal that issued the UCAN
 
 ## 3.1 Fields
 
-| Field         | Type     | Value     | Descrption                                       | Required |
-|---------------|----------|-----------|--------------------------------------------------|----------|
-| `ucan/invoke` | `CID`    |           | The CID of the UCAN to invoke                    | Yes      |
-| `v`           | `SemVer` | `"0.1.0"` | SemVer of the UCAN invocation object schema      | Yes      |
-| `nnc`         | `String` |           | A unique nonce, to distinguish each invocation   | Yes      |
-| `sig`         | `Bytes`  |           | Signature of the rest of the field canonicalized | Yes      |
+| Field         | Type     | Value     | Descrption                                       | Required | Default |
+|---------------|----------|-----------|--------------------------------------------------|----------|---------|
+| `ucan/invoke` | `CID`    |           | The CID of the UCAN to invoke                    | Yes      |         |
+| `v`           | `SemVer` | `"0.1.0"` | SemVer of the UCAN invocation object schema      | Yes      |         |
+| `nnc`         | `String` |           | A unique nonce, to distinguish each invocation   | Yes      |         |
+| `ext`         | `Any`    |           | Nonnormative extended fields                     | No       | `null`  |
+| `sig`         | `Bytes`  |           | Signature of the rest of the field canonicalized | Yes      |         |
   
 ### 3.1.1 Invocation
 
@@ -90,12 +101,16 @@ The `ucan/invoke` field MUST contain CIDs pointing to the UCANs to invoke. The o
 ### 3.1.2 Version
 
 The `v` field MUST contain the version of the invocation object  schema.
-
+ 
 ### 3.1.3 Nonce
 
 The `nnc` field MUS contain a unique nonce. This field makes each invocation unique.
 
-### 3.1.4 Signature
+### 3.1.4 Extended Fields
+
+The OPTIONAL `ext` field MAY contain arbitrary data. If not present, the `ext` field MUST me interpreted as `null`, including for [signature](#315-signature).
+
+### 3.1.5 Signature
 
 The `sig` field MUST contain the signature of the other fields. To construct the payload, the other fields MUST first be canonicalized as `dag-cbor`.
 
@@ -108,6 +123,7 @@ type Invocation struct {
   inv &UCAN  -- To invoke
   v   SemVer -- Version
   nnc String -- Nonce
+  ext Any    -- Extended fields
   sig Bytes  -- Signature
 }
 ```
@@ -119,17 +135,18 @@ type Invocation struct {
   "ucan/invoke": "bafyUCAN",
   "v": "0.1.0",
   "nnc": "abcdef",
+  "ext": null,
   "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
 }
 ```
 
 # 3 Receipt & Attestation
 
-An invocation receipt is a claim about what the output of an invocation is. A receipt MUST be attested via signature of the principal (the audience of the associated invocation).
+An invocation receipt is a claim about what the output of an invocation. A receipt MUST be attested via signature of the principal (the audience of the associated invocation).
 
 Note that this does not guarantee correctness of the result! The level of this statement's veracity MUST be ony taken that the signer claims this to be a fact.
 
-The receipt MUST be signed with by the `aud` from the UCAN.
+The receipt MUST be signed by the `aud` from the UCAN.
 
 ## 3.1 IPLD
 
