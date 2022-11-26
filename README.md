@@ -9,6 +9,10 @@
 * [Brooklyn Zelenka](https://github.com/expede/), [Fission](https://fission.codes/)
 * [Irakli Gozalishvili](https://github.com/Gozala), [DAG House](https://dag.house/)
 
+## Depends On
+
+* [`ucan-ipld`](https://github.com/ucan-wg/ucan-ipld/)
+
 # 0 Abstract
 
 ## Language
@@ -57,6 +61,30 @@ UCAN uses a capabilities model. The
 An invocation receipt is a claim about what the output of an invocation is. A receipt MUST be attested via signature of the principal (the audience of the associated invocation).
 
 Note that this does not guarantee correctness of the result! The level of this statement's veracity MUST be ony taken that the signer claims this to be a fact.
+
+The receipt MUST be signed with by the `aud` from the UCAN.
+
+## 3.1 IPLD
+
+```ipldsch
+type Receipt struct {
+  i {&UCAN : {URI : Any}} <!-- not sure if this actually works? My guess is that the link doesn't work because it should not  -->
+  v SemVer
+  n String
+  s Bytes
+}
+
+type SemVer struct {
+  ma Integer
+  mi Integer
+  pa Integer
+  ta optional nullable String
+}
+
+type URI = String
+```
+
+## 3.2 JSON Example
 
 ``` json
 {
