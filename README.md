@@ -24,19 +24,19 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 > Just because you can doesn't mean that you should
 >
-> — Anon
+> — Anonymous
 
-UCAN is a chained-capability certificate. It contains all of the information that one would need to perform some action, and the provable authority to do so. This begs the question: can UCAN be used directly as an RPC language?
+UCAN is a chained-capability format. A UCAN contains all of the information that one would need to perform some action, and the provable authority to do so. This begs the question: can UCAN be used directly as an RPC language?
 
-It is possible to use a UCAN directly for RPC when the intention is clear from context. This generally requires by putting more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). Invocation includes strictly more information than delegation: all of the authorty, plus the command to perform the action.
+Some teams have had success using UCAN directly for RPC when the intention is clear from context. This occurs when there is more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). Capability invocation contains strictly more information than delegation: all of the authorty of UCAN, plus the command to perform the action.
 
 ## 1.1 Intuition
 
 ## 1.1.1 Car Keys
 
-Akiko is going away for the weekend. Her good friend Boris is going to borrow her car while she's away. They meet at a nearby cafe, and Akiko hands Boris her car keys.
+Consider the following fictitious scenario:
 
-Boris now has the capability to drive Alice's car whenever he wants to. Depending on their plans for the rest of the day, Akiko may find Boris quite rude if he immedietly leaves the cafe to drive her car. On the other hand, if Akiko asks Boris to run some last minute pre-vacation errands for that require a car, she may expect Boris to immedietly drive off.
+Akiko is going away for the weekend. Her good friend Boris is going to borrow her car while she's away. They meet at a nearby cafe, and Akiko hands Boris her car keys. Boris now has the capability to drive Alice's car whenever he wants to. Depending on their plans for the rest of the day, Akiko may find Boris quite rude if he immedietly leaves the cafe to drive her car. On the other hand, if Akiko asks Boris to run some last minute pre-vacation errands for that require a car, she may expect Boris to immedietly drive off.
 
 ## 1.1.2 Lazy vs Eager Evaluation
 
@@ -50,21 +50,19 @@ message // Nothing happens
 message() // A message interups the user
 ```
 
-Delegating a capability is like the statement `message`. Invocation is like `message()`. It's true that sometimes we know to run things from their surrounding context without the parentheses:
+Delegating a capability is like the statement `message`. Invocation is akin to `message()`. It's true that sometimes we know to run things from their surrounding context without the parentheses:
 
 ```js
 [1,2,3].map(message) // Message runs 3 times 
 ```
 
-However, there is clearly a distinction between passing a function and invoking it.
+However, there is clearly a distinction between passing a function and invoking it. The same is true for capabilties: delegating the authority to do something is not the same as asking for it to be done immeditely, even if sometimes it's clear from context.
 
-The same is true for capabilties: delegating the authority to do something is not the same as asking for it to be done immeditely, even if sometimes it's clear from context.
+## 1.3 Separation of Concerns
 
-## 1.3 Order of Evaluation
+Information about the scheduling, order, and pipelining of actions is orthogonal to the flow of authority. An agent collaborating with the original executor does not need to know that their call is 3 invocations deep; they only need to know that they been asked to perform some action by the latest invoker.
 
-Information about the scheduling, order, and [pipelining](FIXME) of actions is orthogonal to the flow of authority.
-
-As we shall see in the [promise pipelining section](FIXME), asking an agent to perform a sequence of actions before you know the exact parameters requires delegating capabilties for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authorty that the executor has (since they can claim any value as having returned for any step).
+As we shall see in the [promise pipelining section](#6-promise-pipelining), asking an agent to perform a sequence of actions before you know the exact parameters requires delegating capabilties for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authorty that the executor has (since they can claim any value as having returned for any step).
 
 # 2 Roles
 
@@ -91,7 +89,7 @@ The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field
 
 The invocation envelope is a thin wrapper around a UCAN that conveys that all of the contained UCAN actions SHOULD be performed.
 
-All of the roles from the referenced UCANs MUST persist to the invocation per the [above table](FIXME).
+All of the roles from the referenced UCANs MUST persist to the invocation per the [roles table](#2-roles).
 
 The invocation wrapper MUST be signed by the same principal that issued the UCAN.
 
@@ -116,9 +114,9 @@ The `v` field MUST contain the version of the invocation object  schema.
 
 ### 3.1.3 Run Capabilities
 
-The OPTIONAL `run` field MUST reference the actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](FIXME)) are intended to be run, then they MUST be treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or lesser scope.
+The OPTIONAL `run` field MUST reference the actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](#6-promise-pipelining)) are intended to be run, then they MUST be treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or lesser scope.
 
-The only difference for the attenuated case is that [promises](FIXME) MAY also be used as inputs to fields.
+The only difference for the attenuated case is that [promises](#6-promise-pipelining) MAY also be used as inputs to fields.
 
 ### 3.1.4 Nonce
 
@@ -158,7 +156,7 @@ type Scope enum {
 
  ``` json
 {
-  "ucan/invoke": "bafyUCAN",
+  "ucan/invoke": "QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR",
   "v": "0.1.0",
   "nnc": "abcdef",
   "ext": null,
@@ -166,11 +164,11 @@ type Scope enum {
 }
 ```
 
-### 3.3.2 Internally Pipelined
+### 3.3.2 Batched Pipeline
 
  ``` json
 {
-  "ucan/invoke": "bafyUCAN",
+  "ucan/invoke": "QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR",
   "v": "0.1.0",
   "nnc": "abcdef",
   "ext": null,
@@ -221,11 +219,11 @@ type Scope enum {
 }
 ```
 
-### 3.3.3 Externally Pipelined
+### 3.3.3 Serial Pipeline
 
  ``` json
 {
-  "ucan/invoke": "bafyUCAN",
+  "ucan/invoke": "Qmd4trNUhgWwsBbSsYBEWJqgiHyLrnhZ8u1DJsWsEKeuuF",
   "v": "0.1.0",
   "nnc": "abcdef",
   "ext": null,
@@ -243,7 +241,7 @@ type Scope enum {
 }
  
 {
-  "ucan/invoke": "bafyUCAN",
+  "ucan/invoke": "Qmd4trNUhgWwsBbSsYBEWJqgiHyLrnhZ8u1DJsWsEKeuuF",
   "v": "0.1.0",
   "nnc": "abcdef",
   "ext": null,
@@ -304,7 +302,7 @@ Note that this does not guarantee correctness of the result! The statement's ver
 | Field          | Type         | Description                                                                      | Required | Default |
 |----------------|--------------|----------------------------------------------------------------------------------|----------|---------|
 | `ucan/receipt` | `CID`        | CID of the Invocation that generated this respose                                | Yes      |         |
-| `rlt`          | `{CID: Any}` | The results of each call, indexed by the CID of the [isolated capability](FIXME) | Yes      |         |
+| `rlt`          | `{CID: Any}` | The results of each call, indexed by the CID of the [isolated capability](#4-isolated-capabilities) | Yes      |         |
 | `v`            | `SemVer`     | SemVer of the UCAN invocation object schema                                      | Yes      |         |
 | `nnc`          | `String`     | A unique nonce, to distinguish each receipt                                      | Yes      |         |
 | `ext`          | `Any`        | Non-normative extended fields                                                    | No       | `null`  |
@@ -354,7 +352,7 @@ type Receipt struct {
     "tags": ["dag-house", "fission"]
   },
   "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt_VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
-}
+ }
 ```
 
 
@@ -405,11 +403,11 @@ type Promise struct {
 
 ``` json
 // IPLD
-["bafyInvocation", "example.com/foo/bar", "http/put", "http/statusCode"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/put", "http/statusCode"]
 
 // Full struct representation
 { 
-  "ucan/promise": "bafyInvocation",
+  "ucan/promise": "QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR",
   "using": "example.com/foo/bar",
   "called": "http/put",
   "path": "http/status"
@@ -441,3 +439,25 @@ type NumVer struct {
   join "."
 }
 ```
+
+# 8 Prior Art
+
+[UCANTO](https://github.com/web3-storage/ucanto) from DAG House
+
+[CapTP](erights.org/elib/distrib/captp/index.html) 
+
+[OCapN](https://github.com/ocapn/ocapn)
+
+[Cap'N Proto](https://capnproto.org/) 
+
+[Spritely Goblins](https://spritely.institute/static/papers/spritely-core.html)
+
+# 9 Acknowledgements
+
+Thanks to the [DAG House](https://dag.house) team for initially suggesting UCAN as a generalized RPC framework.
+
+Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering work](http://erights.org/talks/thesis/markm-thesis.pdf) on [capability systems](http://erights.org/).
+
+Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many conversations about capabaility systems and the programming models that they enable.
+
+Thanks to [Quinn Wilton](https://github.com/QuinnWilton) and [Marc-Antoine Parent](https://github.com/maparent) for their discussion of the distinction between declarations and directives.
