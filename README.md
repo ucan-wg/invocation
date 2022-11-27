@@ -97,14 +97,14 @@ The invocation wrapper MUST be signed by the same principal that issued the UCAN
 
 ## 3.1 Fields
 
-| Field         | Type                               | Value     | Description                                      | Required | Default |
-|---------------|------------------------------------|-----------|--------------------------------------------------|----------|---------|
-| `ucan/invoke` | `CID`                              |           | The CID of the UCAN to invoke                    | Yes      |         |
-| `v`           | `SemVer`                           | `"0.1.0"` | SemVer of the UCAN invocation object schema      | Yes      |         |
-| `run`         | `"*" or {URI : {Ability : [Any]}}` |           | Which UCAN capabilities to run                   | No       | `"*"`   |
-| `nnc`         | `String`                           |           | A unique nonce, to distinguish each invocation   | Yes      |         |
-| `ext`         | `Any`                              |           | Non-normative extended fields                    | No       | `null`  |
-| `sig`         | `Bytes`                            |           | Signature of the rest of the field canonicalized | Yes      |         |
+| Field         | Type                                         | Value     | Description                                      | Required | Default |
+|---------------|----------------------------------------------|-----------|--------------------------------------------------|----------|---------|
+| `ucan/invoke` | `CID`                                        |           | The CID of the UCAN to invoke                    | Yes      |         |
+| `v`           | `SemVer`                                     | `"0.1.0"` | SemVer of the UCAN invocation this schema        | Yes      |         |
+| `run`         | `"*" or {String: {URI : {Ability : [Any]}}}` |           | Which UCAN capabilities to run                   | No       | `"*"`   |
+| `nnc`         | `String`                                     |           | A unique nonce, to distinguish each invocation   | Yes      |         |
+| `ext`         | `Any`                                        |           | Non-normative extended fields                    | No       | `null`  |
+| `sig`         | `Bytes`                                      |           | Signature of the rest of the field canonicalized | Yes      |         |
   
 ### 3.1.1 Invocation
 
@@ -116,7 +116,7 @@ The `v` field MUST contain the version of the invocation object  schema.
 
 ### 3.1.3 Run Capabilities
 
-The OPTIONAL `run` field MUST reference the actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](#5-promise-pipelining)) are intended to be run, then they MUST be treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or lesser scope.
+The OPTIONAL `run` field MUST reference the actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](#5-promise-pipelining)) are intended to be run, then they MUST be prefixed with an arbitrary label and treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or lesser scope.
 
 #### 3.1.3.1 Promises
 
@@ -158,11 +158,24 @@ type Scope enum {
 
 ## 3.3 JSON Examples
 
- ``` json
+### 3.3.1 Run All
+
+ ``` js
 {
   "ucan/invoke": "QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR",
   "v": "0.1.0",
   "nnc": "abcdef",
+  "ext": null,
+  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
+}
+```
+
+ ``` js
+{
+  "ucan/invoke": "QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR",
+  "v": "0.1.0",
+  "nnc": "abcdef",
+  "run": "*", // Exmplicitely "run all"
   "ext": null,
   "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
 }
@@ -173,28 +186,29 @@ type Scope enum {
 The following examples both express the following dataflow graph:
 
 ```
-                 ┌────────────────────────────┐
-                 │                            │
-                 │ dns://example.com?TYPE=TXT │
-                 │        crud/update         │
-                 │                            │
-                 └───────┬──────────┬─────────┘
-                         │          │
-                         │          │
-┌────────────────────────▼───┐  ┌───▼────────────────────────┐
-│                            │  │                            │
-│ https://example.com/report │  │ mailto://alice@example.com │
-│         crud/update        │  │          msg/send          │
-│                            │  │                            │
-└────────────────────────┬───┘  └───┬────────────────────────┘
-                         │          │
-                         │          │
-                ┌────────▼──────────▼────────┐
-                │                            │
-                │ https://example.com/events │
-                │         crud/create        │
-                │                            │
-                └────────────────────────────┘
+              ┌────────────────────────────┐
+              │                            │
+              │ dns://example.com?TYPE=TXT │
+              │        crud/update         │
+              │                            │
+              └───────┬──────────┬─────────┘
+                      │          │
+                      │          │
+┌─────────────────────▼───┐  ┌───▼────────────────────────┐
+│                         │  │                            │
+│ mailto:alice@exaple.com │  │ mailto://alice@example.com │
+│         msg/send        │  │          msg/send          │
+│     bob@example.com     │  │      carol@exmaple.com     │
+│                         │  │                            │
+└─────────────────────┬───┘  └───┬────────────────────────┘
+                      │          │
+                      │          │
+             ┌────────▼──────────▼────────┐
+             │                            │
+             │ https://example.com/events │
+             │         crud/create        │
+             │                            │
+             └────────────────────────────┘
 ```
 
 #### 3.3.2.1 Batched 
@@ -206,26 +220,18 @@ The following examples both express the following dataflow graph:
   "nnc": "abcdef",
   "ext": null,
   "run": {
-    "dns://example.com?TYPE=TXT": {
-      "crud/update": [
-        { 
-          "value": "hello world",
-          "retries": 5
-        }
-      ]
+    "update-dns" : {
+      "using": "dns://example.com?TYPE=TXT":
+      "do": "crud/update",
+      "inputs": { 
+         "value": "hello world",
+         "retries": 5
+      }
     },
-    "https://example.com/report": {
-      "crud/update": [
-        {
-          "performedBy": "did:key:zAlice",
-          "tags": ["hello", "world"],
-          "status": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/statusCode"]},
-          "payload": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
-        }
-      ]
-    },
-    "mailto://alice@example.com": {
-      "msg/send": [
+    "notify-bob": {
+      "using": "mailto://alice@example.com",
+      "do": "msg/send",
+      "inputs": [
         {
           "to": "bob@example.com",
           "subject": "DNSLink for example.com",
@@ -233,17 +239,31 @@ The following examples both express the following dataflow graph:
         }
       ]
     },
-    "https://example.com/events": {
-      "crud/create": [
-        { 
-          "event": "update-dns",
-          "status": "done"
+    "notify-carol": {
+      "using": "mailto://alice@example.com",
+      "do": "msg/send",
+      "inputs": [
+        {
+          "to": "carol@example.com",
+          "subject": "DNSLink for example.com",
+          "body": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+        }
+      ]
+    },
+    "log-as-done": {
+      "using": "https://example.com/report"
+      "do": "crud/update"
+      "inputs": [
+        {
+          "from": "mailto://alice@exmaple.com",
+          "to": ["bob@exmaple.com", "carol@example.com"],
+          "event": "email-notification",
         },
         {
-          "_": [
-            {"ucan/promise": ["/", "mailto://alice@example.com", "msg/send", ""]}
-            {"ucan/promise": ["/", "https://example.com", "crud/update", ""]}
-          ]
+          "_": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+        },
+        {
+          "_": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
         }
       ]
     }
@@ -254,6 +274,43 @@ The following examples both express the following dataflow graph:
 
 ### 3.3.3 Serial Pipeline
 
+```
+              ┌────────────────────────────┐
+              │                            │
+              │ dns://example.com?TYPE=TXT │
+              │        crud/update         │
+              │                            │
+              └───────┬──────────┬─────────┘
+                      │          │
+┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+                      │          │
+                      │      ┌───▼────────────────────────┐
+                      │      │                            │
+                      │      │ mailto://alice@example.com │
+                      │      │          msg/send          │
+                      │      │      carol@exmaple.com     │
+                      │      │                            │
+                      │      └───┬────────────────────────┘
+                      │          │
+┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+                      │          │
+┌─────────────────────▼───┐      │
+│                         │      │
+│ mailto:alice@exaple.com │      │
+│         msg/send        │      │
+│     bob@example.com     │      │
+│                         │      │
+└─────────────────────┬───┘      │
+                      │          │
+                      │          │
+             ┌────────▼──────────▼────────┐
+             │                            │
+             │ https://example.com/events │
+             │         crud/create        │
+             │                            │
+             └────────────────────────────┘
+```
+
  ``` json
 {
   "ucan/invoke": "Qmd4trNUhgWwsBbSsYBEWJqgiHyLrnhZ8u1DJsWsEKeuuF",
@@ -261,8 +318,10 @@ The following examples both express the following dataflow graph:
   "nnc": "abcdef",
   "ext": null,
   "run": {
-    "dns://example.com?TYPE=TXT": {
-      "crud/update": [
+    "update-dns": {
+      "using": "dns://example.com?TYPE=TXT",
+      "do": "crud/update"
+      "inputs": [
         { 
           "value": "hello world",
           "retries": 5
@@ -279,17 +338,14 @@ The following examples both express the following dataflow graph:
   "nnc": "12345",
   "ext": null,
   "run": {
-    "http://example.com/report": {
-      "http/post": [
-        {"updateTo": {"ucan/promise": ["QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f", "dns://example.com?TYPE=TXT", "crud/update", "http/0/statusCode"]}}
-      ]
-    },
-    "mailto://alice@example.com": {
-      "msg/send": [
+    "notify-carol": {
+      "using": "mailto://alice@example.com",
+      "do": "msg/send",
+      "inputs": [
         {
-          "to": "bob@example.com",
+          "to": "carol@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f", "dns://example.com?TYPE=TXT", "crud/update", "http/0/body"]}
+          "body": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
         }
       ]
     }
@@ -303,17 +359,31 @@ The following examples both express the following dataflow graph:
   "nnc": "02468",
   "ext": null,
   "run": {
-    "https://example.com/events": {
-      "crud/create": [
-        { 
-          "event": "update-dns",
-          "status": "done"
+    "notify-bob": {
+      "using": "mailto://alice@example.com",
+      "do": "msg/send",
+      "inputs": [
+        {
+          "to": "bob@example.com",
+          "subject": "DNSLink for example.com",
+          "body": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+        }
+      ]
+    },
+    "log-as-done": {
+      "using": "https://example.com/report"
+      "do": "crud/update"
+      "inputs": [
+        {
+          "from": "mailto://alice@exmaple.com",
+          "to": ["bob@exmaple.com", "carol@example.com"],
+          "event": "email-notification",
         },
         {
-          "_": [
-            {"ucan/promise": ["/", "mailto://alice@example.com", "msg/send", ""]}
-            {"ucan/promise": ["/", "https://example.com", "crud/update", ""]}
-          ]
+          "_": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+        },
+        {
+          "_": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
         }
       ]
     }
