@@ -28,7 +28,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 UCAN is a chained-capability format. A UCAN contains all of the information that one would need to perform some action, and the provable authority to do so. This begs the question: can UCAN be used directly as an RPC language?
 
-Some teams have had success using UCAN directly for RPC when the intention is clear from context. This can be successful when there is more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). However, capability invocation contains strictly more information than delegation: all of the authorty of UCAN, plus the command to perform the action.
+Some teams have had success using UCAN directly for RPC when the intention is clear from context. This can be successful when there is more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). However, capability invocation contains strictly more information than delegation: all of the authority of UCAN, plus the command to perform the action.
 
 ## 1.1 Intuition
 
@@ -36,13 +36,13 @@ Some teams have had success using UCAN directly for RPC when the intention is cl
 
 Consider the following fictitious scenario:
 
-Akiko is going away for the weekend. Her good friend Boris is going to borrow her car while she's away. They meet at a nearby cafe, and Akiko hands Boris her car keys. Boris now has the capability to drive Alice's car whenever he wants to. Depending on their plans for the rest of the day, Akiko may find Boris quite rude if he immedietly leaves the cafe to go for a drive. On the other hand, if Akiko asks Boris to run some last minute pre-vacation errands for that require a car, she may expect Boris to immedietly drive off.
+Akiko is going away for the weekend. Her good friend Boris is going to borrow her car while she's away. They meet at a nearby cafe, and Akiko hands Boris her car keys. Boris now has the capability to drive Alice's car whenever he wants to. Depending on their plans for the rest of the day, Akiko may find Boris quite rude if he immediately leaves the cafe to go for a drive. On the other hand, if Akiko asks Boris to run some last minute pre-vacation errands for that require a car, she may expect Boris to immediately drive off.
 
 ## 1.1.2 Lazy vs Eager Evaluation
 
-In a referentially transparent setting, the description of an action is equalivalent to having done so: a function and its results are interchangable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be an elegant programming model, especially for pure functions. Effects under this model requires special handling, and when something will run can sometimes be unclear. 
+In a referentially transparent setting, the description of an action is equivalent to having done so: a function and its results are interchangable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be an elegant programming model, especially for pure functions. Effects under this model requires special handling, and when somtheing will run can sometimes be unclear. 
 
-Most languages use eager evaluation. Eager languages must contend directly with the distinction between a referance to a function and a command to run it. For instance, in JavaScript, adding parantheses to a function will run it. Omitting them lets the program pass around a reference to the function without immedietly invoking it.
+Most languages use eager evaluation. Eager languages must contend directly with the distinction between a reference to a function and a command to run it. For instance, in JavaScript, adding parentheses to a function will run it. Omitting them lets the program pass around a reference to the function without immediately invoking it.
 
 ``` js
 const message = () => alert("hello world")
@@ -56,17 +56,17 @@ Delegating a capability is like the statement `message`. Invocation is akin to `
 [1,2,3].map(message) // Message runs 3 times 
 ```
 
-However, there is clearly a distinction between passing a function and invoking it. The same is true for capabilties: delegating the authority to do something is not the same as asking for it to be done immeditely, even if sometimes it's clear from context.
+However, there is clearly a distinction between passing a function and invoking it. The same is true for capabilties: delegating the authority to do somtheing is not the same as asking for it to be done immediately, even if sometimes it's clear from context.
 
 ## 1.3 Separation of Concerns
 
 Information about the scheduling, order, and pipelining of actions is orthogonal to the flow of authority. An agent collaborating with the original executor does not need to know that their call is 3 invocations deep; they only need to know that they been asked to perform some action by the latest invoker.
 
-As we shall see in the [promise pipelining section](#6-promise-pipelining), asking an agent to perform a sequence of actions before you know the exact parameters requires delegating capabilties for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authorty that the executor has (since they can claim any value as having returned for any step).
+As we shall see in the [promise pipelining section](#6-promise-pipelining), asking an agent to perform a sequence of actions before you know the exact parameters requires delegating capabilties for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
 
 # 2 Roles
 
-Invocation adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delgate pricipals MUST persist to the invocation.
+Invocation adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
 
 | UCAN Field | Delegation                  | Invocation              |
 |------------|-----------------------------|-------------------------|
@@ -130,7 +130,7 @@ The OPTIONAL `ext` field MAY contain arbitrary data. If not present, the `ext` f
 
 The `sig` field MUST contain the signature of the other fields. To construct the payload, the other fields MUST first be canonicalized as `dag-cbor`.
 
-If serialzied as JSON, the `sig` field MUST be serialized as [unpadded base64url](https://datatracker.ietf.org/doc/html/rfc4648#section-5).
+If serialized as JSON, the `sig` field MUST be serialized as [unpadded base64url](https://datatracker.ietf.org/doc/html/rfc4648#section-5).
 
 ## 3.2 IPLD Schema
 
@@ -301,7 +301,7 @@ Note that this does not guarantee correctness of the result! The statement's ver
 
 | Field          | Type         | Description                                                                      | Required | Default |
 |----------------|--------------|----------------------------------------------------------------------------------|----------|---------|
-| `ucan/receipt` | `CID`        | CID of the Invocation that generated this respose                                | Yes      |         |
+| `ucan/receipt` | `CID`        | CID of the Invocation that generated this response                                | Yes      |         |
 | `rlt`          | `{CID: Any}` | The results of each call, indexed by the CID of the [isolated capability](#4-isolated-capabilities) | Yes      |         |
 | `v`            | `SemVer`     | SemVer of the UCAN invocation object schema                                      | Yes      |         |
 | `nnc`          | `String`     | A unique nonce, to distinguish each receipt                                      | Yes      |         |
@@ -364,11 +364,11 @@ type Receipt struct {
 
 At UCAN creation time, the UCAN MAY not yet have all of the information required to construct the next request in a sequence. Waiting for each request to complete before proceeding to the next action has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of earlier invocations into the input of a later one. This liberates the invoker from waiting for each step.
 
-The authority to execute later actions often cannot be fully attenuated in advance, since the executor controls the reported output of the prior step in a pipeline. When chosing to use pipelining, the invoker MUST delegate capabilities for any of the possible outputs. If tight control is required to limit authority, pipelining SHOULD NOT be used.
+The authority to execute later actions often cannot be fully attenuated in advance, since the executor controls the reported output of the prior step in a pipeline. When choosing to use pipelining, the invoker MUST delegate capabilities for any of the possible outputs. If tight control is required to limit authority, pipelining SHOULD NOT be used.
 
 A promise MUST contain the CID of the target invocation, and the path of the 
 
-becaus eth eresource may have a path in it, the resource needs to be broken out!
+because the resource may have a path in it, the resource needs to be broken out!
 
 Inverts the version from the outer invocation
 
@@ -385,7 +385,7 @@ the  know the concrete value required to scope the resource down sufficiently. T
 
 Variables relative to the result of some other action MAY be used. In this case, the attested (signed) receipt of the previous action MUST be included in the following form:
 
-Refeernced by invocation CID
+Referenced by invocation CID
 
 
 ## 6.2 IPLD Schema
@@ -458,6 +458,6 @@ Thanks to the [DAG House](https://dag.house) team for initially suggesting UCAN 
 
 Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering work](http://erights.org/talks/thesis/markm-thesis.pdf) on [capability systems](http://erights.org/).
 
-Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many conversations about capabaility systems and the programming models that they enable.
+Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many conversations about capability systems and the programming models that they enable.
 
 Thanks to [Quinn Wilton](https://github.com/QuinnWilton) and [Marc-Antoine Parent](https://github.com/maparent) for their discussion of the distinction between declarations and directives.
