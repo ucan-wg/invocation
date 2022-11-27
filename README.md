@@ -394,12 +394,12 @@ The authority to execute later actions often cannot be fully attenuated in advan
 
 ## 5.1 Fields
 
-| Field           | Type         | Description                                                                                        | Required |
-|-----------------|--------------|----------------------------------------------------------------------------------------------------|----------|
-| `ucan/promised` | `CID or "/"` | The Invocation being referenced                                                                    | Yes      |
-| `using`         | `URI`        | The URI of the resource called                                                                     | Yes      |
-| `called`        | `Ability`    | The Ability used                                                                                   | Yes      |
-| `selector`      | `String`     | The [JSON Path](https://datatracker.ietf.org/doc/draft-ietf-jsonpath-base/) to the specific output | No       |
+| Field           | Type         | Description                                                                                    | Required |
+|-----------------|--------------|------------------------------------------------------------------------------------------------|----------|
+| `ucan/promised` | `CID or "/"` | The Invocation being referenced                                                                | Yes      |
+| `using`         | `URI`        | The URI of the resource called                                                                 | Yes      |
+| `called`        | `Ability`    | The Ability used                                                                               | Yes      |
+| `selector`      | `String`     | The [RFC6901 JSON Pointer](https://www.rfc-editor.org/rfc/rfc6901.html) to the specific output | No       |
 
 The above table MUST be serialized as a tuple. In JSON, this SHOULD be represented as an array containing the values (but not keys) sequenced in the order they appear in the table.
 
@@ -421,7 +421,7 @@ type Promise struct {
 ["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/get"]
 
 // Only the status code
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/put", "$payload.users[*].company[:1].name"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/put", "/payload/users/0/employer/name"]
 ```
 
 # 6 Appendix
