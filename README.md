@@ -22,20 +22,32 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 # 1 Introduction
 
+> Just because you can doesn't mean that you should
+>
+> — Anon
+
 UCAN is a chained-capability certificate. It contains all of the information that one would need to perform some action, and the provable authority to do so. This begs the question: can UCAN be used directly as an RPC language?
 
-This is possible to use a UCAN directly as RPC  when the intention is clear from context. This generally requires by putting more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). The kinds of contextual information and features that this enabled are explored below.
- 
+It is possible to use a UCAN directly for RPC when the intention is clear from context. This generally requires by putting more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). Invocation includes strictly more information than delegation: all of the authorty, plus the command to perform the action.
+
 ## 1.1 Intuition
+
+## 1.1.1 Car Keys
+
+Akiko is going away for the weekend. Her good friend Boris is going to borrow her car while she's away. They meet at a nearby cafe, and Akiko hands Boris her car keys.
+
+Boris now has the capability to drive Alice's car whenever he wants to. Depending on their plans for the rest of the day, Akiko may find Boris quite rude if he immedietly leaves the cafe to drive her car. On the other hand, if Akiko asks Boris to run some last minute pre-vacation errands for that require a car, she may expect Boris to immedietly drive off.
+
+## 1.1.2 Lazy vs Eager Evaluation
 
 In a referentially transparent setting, the authority to perform some action is equalivalent to having done so: a function and its results are interchangable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be a very straightforward programming model for pure computation. Effects under this model requires special handling, and whwn something will run can sometimes be unclear. 
 
-Most languages use eager evaluation, and thus must contend directly with the distinction between a referance to a function and a command to run it. For instance, in JavaScript, adding parantheses to a function will run it. Omitting them lets the program pass around a reference to the function without immedietly invoking it.
+Most languages use eager evaluation. Eager languages must contend directly with the distinction between a referance to a function and a command to run it. For instance, in JavaScript, adding parantheses to a function will run it. Omitting them lets the program pass around a reference to the function without immedietly invoking it.
 
 ``` js
 const message = () => alert("hello world")
-message   // Nothing happens
-message() // Message interups user
+message // Nothing happens
+message() // A message interups the user
 ```
 
 Delegating a capability is like the statement `message`. Invocation is like `message()`. It's true that sometimes we know to run things from their surrounding context without the parentheses:
@@ -48,19 +60,11 @@ However, there is clearly a distinction between passing a function and invoking 
 
 The same is true for capabilties: delegating the authority to do something is not the same as asking for it to be done immeditely, even if sometimes it's clear from context.
 
-## 1.2 Intent
+## 1.3 Order of Evaluation
 
-> Just because you can doesn't mean that you should
->
-> — Anon
+Information about the scheduling, order, and [pipelining](FIXME) of actions is orthogonal to the flow of authority.
 
-"Just because you can, doens't mean you should". Granting a UCAN to a peer means that they are allowed to perform some actions for a period of time. This is a feature not a bug, but also says nothing about the intention of when it should be run. I may grant a collaborative process the ability to perform actions on an ongoing basis (hmm, but vioating POLA)
-
-1. Authority is not intent to execute. Authority transfer is first-class in UCAN, other actions are not
-2. Mixing the two levels means that invocation info will live with the token (as a proof) on subdelegations
-3. Pipelining 
-
-I could preload the service with `n` UCANs with narrow time windows and `nbf`s in the future. That would certainly be very secure, but it would be less convenient since I need to come online to issue more or to 
+As we shall see in the [promise pipelining section](FIXME), asking an agent to perform a sequence of actions before you know the exact parameters requires delegating capabilties for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authorty that the executor has (since they can claim any value as having returned for any step).
 
 # 2 Roles
 
