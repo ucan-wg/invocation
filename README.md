@@ -421,7 +421,7 @@ type Promise struct {
 ["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/get"]
 
 // Only the status code
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/put", "statusCode"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/put", "payload/boris/company/0/name"]
 ```
 
 # 6 Appendix
@@ -464,10 +464,8 @@ The [Object Capability Network (OCapN)](https://github.com/ocapn/ocapn) protocol
 
 # 8 Acknowledgements
 
-Thanks to the [DAG House](https://dag.house) team for initially suggesting UCAN as a generalized RPC framework.
-
 Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering work](http://erights.org/talks/thesis/markm-thesis.pdf) on [capability systems](http://erights.org/).
 
 Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many conversations about capability systems and the programming models that they enable.
 
-Thanks to [Quinn Wilton](https://github.com/QuinnWilton) and [Marc-Antoine Parent](https://github.com/maparent) for their discussion of the distinction between declarations and directives.
+Thanks to [Quinn Wilton](https://github.com/QuinnWilton) and [Marc-Antoine Parent](https://github.com/maparent) for their discussions of the distinction between declarations and directives both in and out of a UCAN context.
