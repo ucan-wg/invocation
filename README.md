@@ -152,8 +152,14 @@ type Invocation struct {
 
 type Scope enum {
   | All ("*")
-  | {URI : {Ability : [Any]}}
+  | Action
 }
+
+type Action enum {
+  using  URI 
+  do     Ability
+  inputs Any
+} 
 ```
 
 ## 3.3 JSON Examples
@@ -275,47 +281,6 @@ The following examples both express the following dataflow graph:
 ### 3.3.3 Serial Pipeline
 
 ```
-              ┌────────────────────────────┐
-              │                            │
-              │ dns://example.com?TYPE=TXT │
-              │        crud/update         │
-              │                            │
-              └───────┬──────────┬─────────┘
-                      │          │
-┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
-                      │          │
-                      │      ┌───▼────────────────────────┐
-                      │      │                            │
-                      │      │ mailto://alice@example.com │
-                      │      │          msg/send          │
-                      │      │      carol@exmaple.com     │
-                      │      │                            │
-                      │      └───┬────────────────────────┘
-                      │          │
-┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
-                      │          │
-┌─────────────────────▼───┐      │
-│                         │      │
-│ mailto:alice@exaple.com │      │
-│         msg/send        │      │
-│     bob@example.com     │      │
-│                         │      │
-└─────────────────────┬───┘      │
-                      │          │
-                      │          │
-             ┌────────▼──────────▼────────┐
-             │                            │
-             │ https://example.com/events │
-             │         crud/create        │
-             │                            │
-             └────────────────────────────┘
-             
-             
-             
-             
-             
-             
-             
                 ┌────────────────────────────┐
                 │                            │
                 │ dns://example.com?TYPE=TXT │
@@ -443,14 +408,14 @@ Note that this does not guarantee correctness of the result! The statement's ver
 
 ## 4.1 Fields
 
-| Field          | Type         | Description                                                                                                                        | Required | Default |
-|----------------|--------------|------------------------------------------------------------------------------------------------------------------------------------|----------|---------|
-| `ucan/receipt` | `CID`        | CID of the Invocation that generated this response                                                                                 | Yes      |         |
-| `rlt`          | `{CID: Any}` | The results of each call, indexed by the CID of the [canonicalized capability](https://github.com/ucan-wg/ucan-ipld#22-capability) | Yes      |         |
-| `v`            | `SemVer`     | SemVer of the UCAN invocation object schema                                                                                        | Yes      |         |
-| `nnc`          | `String`     | A unique nonce, to distinguish each receipt                                                                                        | Yes      |         |
-| `ext`          | `Any`        | Non-normative extended fields                                                                                                      | No       | `null`  |
-| `sig`          | `Bytes`      | Signature of the rest of the field canonicalized                                                                                   | Yes      |         |
+| Field          | Type         | Description                                                                                      | Required | Default |
+|----------------|--------------|--------------------------------------------------------------------------------------------------|----------|---------|
+| `ucan/receipt` | `CID`        | CID of the Invocation that generated this response                                               | Yes      |         |
+| `rlt`          | `{CID: Any}` | The results of each call, indexed by the CID of the `dag-cbor` encoded [Action](#32-ipld-schema) | Yes      |         |
+| `v`            | `SemVer`     | SemVer of the UCAN invocation object schema                                                      | Yes      |         |
+| `nnc`          | `String`     | A unique nonce, to distinguish each receipt                                                      | Yes      |         |
+| `ext`          | `Any`        | Non-normative extended fields                                                                    | No       | `null`  |
+| `sig`          | `Bytes`      | Signature of the rest of the field canonicalized                                                 | Yes      |         |
 
 ## 4.1 IPLD Schema
 
