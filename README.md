@@ -421,7 +421,7 @@ type Promise struct {
 ["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/get"]
 
 // Only the status code
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/put", "payload/boris/company/0/name"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/put", "payload.boris.company[0].name"]
 ```
 
 # 6 Appendix
