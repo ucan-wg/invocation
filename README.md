@@ -22,27 +22,43 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 # 1 Introduction
 
-## 1.1 Motivation
+UCAN is a chained-capability certificate. It contains all of the information that one would need to perform some action, and the provable authority to do so. This begs the question: can UCAN be used directly as an RPC language?
 
-Why separate the UCAN from the invocation format? Surely the UCAN itself already contains all the infomation required.
+This is possible to use a UCAN directly as RPC  when the intention is clear from context. This generally requires by putting more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). The kinds of contextual information and features that this enabled are explored below.
+ 
+## 1.1 Intuition
 
-A UCAN contains everythiung needed to execute a request
+In a referentially transparent setting, the authority to perform some action is equalivalent to having done so: a function and its results are interchangable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be a very straightforward programming model for pure computation. Effects under this model requires special handling, and whwn something will run can sometimes be unclear. 
 
-"intention"
+Most languages use eager evaluation, and thus must contend directly with the distinction between a referance to a function and a command to run it. For instance, in JavaScript, adding parantheses to a function will run it. Omitting them lets the program pass around a reference to the function without immedietly invoking it.
 
-Dleegation and execution are opposite pointing arrows
+``` js
+const message = () => alert("hello world")
+message   // Nothing happens
+message() // Message interups user
+```
 
-## 1.2 Separation
+Delegating a capability is like the statement `message`. Invocation is like `message()`. It's true that sometimes we know to run things from their surrounding context without the parentheses:
 
-I would argue that this is not the case for a few reasons.
+```js
+[1,2,3].map(message) // Message runs 3 times 
+```
+
+However, there is clearly a distinction between passing a function and invoking it.
+
+The same is true for capabilties: delegating the authority to do something is not the same as asking for it to be done immeditely, even if sometimes it's clear from context.
+
+## 1.2 Intent
+
+> Just because you can doesn't mean that you should
+>
+> — Anon
+
+"Just because you can, doens't mean you should". Granting a UCAN to a peer means that they are allowed to perform some actions for a period of time. This is a feature not a bug, but also says nothing about the intention of when it should be run. I may grant a collaborative process the ability to perform actions on an ongoing basis (hmm, but vioating POLA)
 
 1. Authority is not intent to execute. Authority transfer is first-class in UCAN, other actions are not
 2. Mixing the two levels means that invocation info will live with the token (as a proof) on subdelegations
-3. Other detail, such as scheduling
-
-## 1.3 Authority Is Not Intention
-
-"Just because you can, doens't mean you should". Granting a UCAN to a peer means that they are allowed to perform some actions for a period of time. This is a feature not a bug, but also says nothing about the intention of when it should be run. I may grant a collaborative process the ability to perform actions on an ongoing basis (hmm, but vioating POLA)
+3. Pipelining 
 
 I could preload the service with `n` UCANs with narrow time windows and `nbf`s in the future. That would certainly be very secure, but it would be less convenient since I need to come online to issue more or to 
 
@@ -68,16 +84,6 @@ The executor is directed to perform some task described in the UCAN by the invok
 The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field of the contained UCAN.
 
 # 3 Envelope
-
-<!-- 
-
-!!! Irakli thinks this envelope is not required -- FIXME either clearly justify it or cut it !!!
-Part of this may be lazy vs eager semantics.
-
-In a referentially transparent lazy langauge (Haskell), you can always substitute the value of the output for the expression, so there's no distinction between "running a function" and a value.
-
-In an eager langauge (Javascript) there's a difference between passing around the reference to a function, and actually running it (by adding parentheses to it)
--->
 
 The invocation envelope is a thin wrapper around a UCAN that conveys that all of the contained UCAN actions SHOULD be performed.
 
@@ -255,6 +261,32 @@ type Scope enum {
 }
 ```
 
+# 4 Isolated Capabilities
+
+It is often important to be able to reference a specific capability in isolation, disentangling it from the its sibling capabilities and other configuration. This is important for being able to reference a specific Capabilty in Results, promise pipelining, logging, and for building external caches.
+
+| Field | Type     | Description                                            | Required |
+|-------|----------|--------------------------------------------------------|----------|
+| `res` | `URI`    | The (canonicalized) URI of the resource being accessed | Yes      |
+| `aby` | `String` | The lowercase Ability called on the resource           | Yes      |
+| `ins` | `[Any]`  | Any other inputs required for the call                 | Yes      |
+
+``` ipldsch
+type Capability struct {
+  rsc URI     -- Resource
+  aby Ability -- Ability
+  ins [Any]   -- Inputs
+}
+```
+
+``` json
+{
+  "rsc": "dns://_dnslink.example.com?TYPE=TXT",
+  "aby": "crud/update",
+  "ins": [{"value": "QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f"}]
+}
+```
+
 # 4 Receipt
 
 An invocation receipt is an attested result about the output of an invocation. A receipt MUST be attested via signature of the principal (the `aud` of the associated UCAN).
@@ -263,14 +295,23 @@ Note that this does not guarantee correctness of the result! The statement's ver
 
 ## 4.1 Fields
 
-| Field          | Type                     | Descrption                                        | Required | Default |
-|----------------|--------------------------|---------------------------------------------------|----------|---------|
-| `ucan/receipt` | `CID`                    | CID of the Invocation that generated this respose | Yes      |         |
-| `rlt`          | `{URI : {Ability: Any}}` | The results of each call                          | Yes      |         |
-| `v`            | `SemVer`                 | SemVer of the UCAN invocation object schema       | Yes      |         |
-| `nnc`          | `String`                 | A unique nonce, to distinguish each receipt       | Yes      |         |
-| `ext`          | `Any`                    | Non-normative extended fields                     | No       | `null`  |
-| `sig`          | `Bytes`                  | Signature of the rest of the field canonicalized  | Yes      |         |
+| Field          | Type         | Description                                                                      | Required | Default |
+|----------------|--------------|----------------------------------------------------------------------------------|----------|---------|
+| `ucan/receipt` | `CID`        | CID of the Invocation that generated this respose                                | Yes      |         |
+| `rlt`          | `{CID: Any}` | The results of each call, indexed by the CID of the [isolated capability](FIXME) | Yes      |         |
+| `v`            | `SemVer`     | SemVer of the UCAN invocation object schema                                      | Yes      |         |
+| `nnc`          | `String`     | A unique nonce, to distinguish each receipt                                      | Yes      |         |
+| `ext`          | `Any`        | Non-normative extended fields                                                    | No       | `null`  |
+| `sig`          | `Bytes`      | Signature of the rest of the field canonicalized                                 | Yes      |         |
+
+``` json
+{
+  "QmCapability": {
+    "http/status": 200,
+    "http/payload": "hello world"
+  }
+}
+```
 
 ## 4.1 IPLD
 
@@ -292,8 +333,7 @@ type Receipt struct {
   "ucan/receipt": "QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f",
   "v": "0.1.0",
   "rlt": {
-    "https://example.com": {
-      "msg/read": [{
+    "QmYqbJBxCqqzDouPMbcrbNuB3WHWajSyq4RWin7ufs2ajf": [{
         "from": "alice@example.com",
         "text": "Hello world!"
       }, {
@@ -301,15 +341,12 @@ type Receipt struct {
         "text": "What's up?"
       }]
     },
-    "dns://sub.example.com?TYPE=TXT": {
-      "crud/update": {
-        "12345": {
-          "http": { 
-            "status": 200
-          },
-          "value": "lorem ipsum"
-        }
-      }
+    "QmXrfqKNUpRiyyi8r3hpSZyZuG3S2MY9rTw1p8iEC9FNh5": {
+      "http": { 
+        "status": 200,
+        "body": "hello world"
+      },
+      "ms": 476
     }
   },
   "nnc": "xyz",
@@ -320,6 +357,7 @@ type Receipt struct {
   "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt_VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
 }
 ```
+
 
 # 5 Promise Pipelining
 
@@ -345,9 +383,6 @@ Inverts the version from the outer invocation
 | `using`         | `URI`     | The resource called             | Yes      |
 | `called`        | `Ability` | The ability used                | Yes      |
 | `path`          | `Path`    | Path to the specific output     | Yes      |
-
-``` json
-```
 
 the  know the concrete value required to scope the resource down sufficiently. This MAY be caused either by invoking them both in the same payload, or following one after another by CID reference.
 
