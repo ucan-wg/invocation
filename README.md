@@ -335,7 +335,7 @@ Note that this does not guarantee correctness of the result! The statement's ver
 | `ext`          | `Any`        | Non-normative extended fields                                                                                                      | No       | `null`  |
 | `sig`          | `Bytes`      | Signature of the rest of the field canonicalized                                                                                   | Yes      |         |
 
-## 4.1 IPLD
+## 4.1 IPLD Schema
 
 ``` haskell
 type Receipt struct {
