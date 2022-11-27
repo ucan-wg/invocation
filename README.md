@@ -40,7 +40,7 @@ Akiko is going away for the weekend. Her good friend Boris is going to borrow he
 
 ## 1.1.2 Lazy vs Eager Evaluation
 
-In a referentially transparent setting, the description of an action is equivalent to having done so: a function and its results are interchangeable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be an elegant programming model, especially for pure functions. Effects under this model requires special handling, and when something will run can sometimes be unclear. 
+In a referentially transparent setting, the description of an action is equivalent to having done so: a function and its results are interchangeable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be an elegant programming model, especially for pure functions. However, _when_ something will run can sometimes be unclear. 
 
 Most languages use eager evaluation. Eager languages must contend directly with the distinction between a reference to a function and a command to run it. For instance, in JavaScript, adding parentheses to a function will run it. Omitting them lets the program pass around a reference to the function without immediately invoking it.
 
@@ -62,18 +62,16 @@ However, there is clearly a distinction between passing a function and invoking 
 
 Information about the scheduling, order, and pipelining of actions is orthogonal to the flow of authority. An agent collaborating with the original executor does not need to know that their call is 3 invocations deep; they only need to know that they been asked to perform some action by the latest invoker.
 
-As we shall see in the [promise pipelining section](#6-promise-pipelining), asking an agent to perform a sequence of actions before you know the exact parameters requires delegating capabilities for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
+As we shall see in the [discussion of promise pipelining](#6-promise-pipelining), asking an agent to perform a sequence of actions before you know the exact parameters requires delegating capabilities for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
 
 # 2 Roles
 
 Invocation adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
 
-| UCAN Field | Delegation                  | Invocation              |
-|------------|-----------------------------|-------------------------|
-| `iss`      | Transfer authority (active) | Request action (active) |
-| `aud`      | Receive authority (passive) | Perform action (active) |
-
-## 2.1 Invoker
+| UCAN Field | Delegation                             | Invocation                        |
+|------------|----------------------------------------|-----------------------------------|
+| `iss`      | Delegator: transfer authority (active) | Invoker: request action (active)  |
+| `aud`      | Delegate: gain authority (passive)     | Executor: perform action (active) |
 
 The invoker signals to the executor that a task associated with a UCAN SHOULD be performed.
 
