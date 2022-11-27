@@ -164,7 +164,7 @@ type Scope enum {
 
 The following examples both express the following call graph:
 
-``` json
+```
                  ┌────────────────────────────┐
                  │                            │
                  │ dns://example.com?TYPE=TXT │
