@@ -114,9 +114,11 @@ The `ucan/invoke` field MUST contain CIDs pointing to the UCANs to invoke. The o
 
 The `v` field MUST contain the version of the invocation object  schema.
 
-### 3.1.3 Capabilities
+### 3.1.3 Run Capabilities
 
-The OPTIONAL `run` field specifies which actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](FIXME)) are intended to be run, then they MUST be treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or lesser scope.
+The OPTIONAL `run` field MUST reference the actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](FIXME)) are intended to be run, then they MUST be treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or lesser scope.
+
+The only difference for the attenuated case is that [promises](FIXME) MAY also be used as inputs to fields.
 
 ### 3.1.4 Nonce
 
@@ -291,13 +293,13 @@ type Capability struct {
 }
 ```
 
-# 4 Receipt
+# 5 Receipt
 
 An invocation receipt is an attested result about the output of an invocation. A receipt MUST be attested via signature of the principal (the `aud` of the associated UCAN).
 
 Note that this does not guarantee correctness of the result! The statement's veracity MUST be only understood as an attestation from the executor.
 
-## 4.1 Fields
+## 5.1 Fields
 
 | Field          | Type         | Description                                                                      | Required | Default |
 |----------------|--------------|----------------------------------------------------------------------------------|----------|---------|
@@ -308,16 +310,7 @@ Note that this does not guarantee correctness of the result! The statement's ver
 | `ext`          | `Any`        | Non-normative extended fields                                                    | No       | `null`  |
 | `sig`          | `Bytes`      | Signature of the rest of the field canonicalized                                 | Yes      |         |
 
-``` json
-{
-  "QmCapability": {
-    "http/status": 200,
-    "http/payload": "hello world"
-  }
-}
-```
-
-## 4.1 IPLD
+## 5.1 IPLD
 
 ``` ipldsch
 type Receipt struct {
@@ -330,7 +323,7 @@ type Receipt struct {
 } 
 ```
 
-## 4.2 JSON Example
+## 5.2 JSON Example
 
 ``` json
 {
@@ -363,7 +356,7 @@ type Receipt struct {
 ```
 
 
-# 5 Promise Pipelining
+# 6 Promise Pipelining
 
 > Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
 >
@@ -379,7 +372,7 @@ becaus eth eresource may have a path in it, the resource needs to be broken out!
 
 Inverts the version from the outer invocation
 
-## 5.1 Fields
+## 6.1 Fields
 
 | Field           | Type      | Description                     | Required |
 |-----------------|-----------|---------------------------------|----------|
@@ -395,7 +388,7 @@ Variables relative to the result of some other action MAY be used. In this case,
 Refeernced by invocation CID
 
 
-## 5.2 IPLD Schema
+## 6.2 IPLD Schema
 
 ``` ipldsch
 type Promise struct {
@@ -406,7 +399,7 @@ type Promise struct {
 } representation tuple
 ```
 
-## 5.3 JSON Example
+## 6.3 JSON Example
 
 ``` json
 // IPLD
@@ -421,9 +414,9 @@ type Promise struct {
 }
 ```
 
-# 6 Appendix
+# 7 Appendix
 
-## 6.1 Support Types
+## 7.1 Support Types
 
 ``` ipldsch
 type CID = String
