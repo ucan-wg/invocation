@@ -40,7 +40,7 @@ Akiko is going away for the weekend. Her good friend Boris is going to borrow he
 
 ## 1.1.2 Lazy vs Eager Evaluation
 
-In a referentially transparent setting, the description of an action is equivalent to having done so: a function and its results are interchangable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be an elegant programming model, especially for pure functions. Effects under this model requires special handling, and when something will run can sometimes be unclear. 
+In a referentially transparent setting, the description of an action is equivalent to having done so: a function and its results are interchangeable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be an elegant programming model, especially for pure functions. Effects under this model requires special handling, and when something will run can sometimes be unclear. 
 
 Most languages use eager evaluation. Eager languages must contend directly with the distinction between a reference to a function and a command to run it. For instance, in JavaScript, adding parentheses to a function will run it. Omitting them lets the program pass around a reference to the function without immediately invoking it.
 
