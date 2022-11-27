@@ -62,7 +62,7 @@ However, there is clearly a distinction between passing a function and invoking 
 
 Information about the scheduling, order, and pipelining of actions is orthogonal to the flow of authority. An agent collaborating with the original executor does not need to know that their call is 3 invocations deep; they only need to know that they been asked to perform some action by the latest invoker.
 
-As we shall see in the [discussion of promise pipelining](#6-promise-pipelining), asking an agent to perform a sequence of actions before you know the exact parameters requires delegating capabilities for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
+As we shall see in the [discussion of promise pipelining](#5-promise-pipelining), asking an agent to perform a sequence of actions before you know the exact parameters requires delegating capabilities for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
 
 # 2 Roles
 
@@ -112,9 +112,13 @@ The `v` field MUST contain the version of the invocation object  schema.
 
 ### 3.1.3 Run Capabilities
 
-The OPTIONAL `run` field MUST reference the actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](#6-promise-pipelining)) are intended to be run, then they MUST be treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or lesser scope.
+The OPTIONAL `run` field MUST reference the actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](#5-promise-pipelining)) are intended to be run, then they MUST be treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or lesser scope.
 
-The only difference for the attenuated case is that [promises](#6-promise-pipelining) MAY also be used as inputs to fields.
+#### 3.1.3.1 Promises
+
+The only difference from general capabilities is that [promises](#5-promise-pipelining) MAY also be used as inputs to attenuated fields.
+
+If a capability input has the key `"_"` and the value is a promise, the input MUST be discarded and only used for determining sequencing actions.
 
 ### 3.1.4 Nonce
 
@@ -162,7 +166,7 @@ type Scope enum {
 
 ### 3.3.2 Pipelines
 
-The following examples both express the following call graph:
+The following examples both express the following dataflow graph:
 
 ```
                  ┌────────────────────────────┐
@@ -184,7 +188,7 @@ The following examples both express the following call graph:
                 ┌────────▼──────────▼────────┐
                 │                            │
                 │ https://example.com/events │
-                │         crud.create        │
+                │         crud/create        │
                 │                            │
                 └────────────────────────────┘
 ```
@@ -233,8 +237,8 @@ The following examples both express the following call graph:
         },
         {
           "_": [
-            {"ucan/promise": ["/", "mailto://alice@example.com", "msg/send", null]}
-            {"ucan/promise": ["/", "https://example.com", "crud/update", null]}
+            {"ucan/promise": ["/", "mailto://alice@example.com", "msg/send", ""]}
+            {"ucan/promise": ["/", "https://example.com", "crud/update", ""]}
           ]
         }
       ]
@@ -303,8 +307,8 @@ The following examples both express the following call graph:
         },
         {
           "_": [
-            {"ucan/promise": ["/", "mailto://alice@example.com", "msg/send", null]}
-            {"ucan/promise": ["/", "https://example.com", "crud/update", null]}
+            {"ucan/promise": ["/", "mailto://alice@example.com", "msg/send", ""]}
+            {"ucan/promise": ["/", "https://example.com", "crud/update", ""]}
           ]
         }
       ]
@@ -314,50 +318,24 @@ The following examples both express the following call graph:
 }
 ```
 
-# 4 Isolated Capabilities
+# 4 Receipt
 
-It is often important to be able to reference a specific capability in isolation, disentangling it from the its sibling capabilities and other configuration. This is important for being able to reference a specific Capability in Results, promise pipelining, logging, and for building external caches.
-
-| Field | Type     | Description                                            | Required |
-|-------|----------|--------------------------------------------------------|----------|
-| `res` | `URI`    | The (canonicalized) URI of the resource being accessed | Yes      |
-| `aby` | `String` | The lowercase Ability called on the resource           | Yes      |
-| `ins` | `[Any]`  | Any other inputs required for the call                 | Yes      |
-
-``` haskell
-type Capability struct {
-  rsc URI     -- Resource
-  aby Ability -- Ability
-  ins [Any]   -- Inputs
-}
-```
-
-``` json
-{
-  "rsc": "dns://_dnslink.example.com?TYPE=TXT",
-  "aby": "crud/update",
-  "ins": [{"value": "QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f"}]
-}
-```
-
-# 5 Receipt
-
-An invocation receipt is an attested result about the output of an invocation. A receipt MUST be attested via signature of the principal (the `aud` of the associated UCAN).
+An invocation receipt is an attestation of the output of an invocation. A receipt MUST be signed by the executor (the `aud` of the associated UCAN).
 
 Note that this does not guarantee correctness of the result! The statement's veracity MUST be only understood as an attestation from the executor.
 
-## 5.1 Fields
+## 4.1 Fields
 
-| Field          | Type         | Description                                                                      | Required | Default |
-|----------------|--------------|----------------------------------------------------------------------------------|----------|---------|
-| `ucan/receipt` | `CID`        | CID of the Invocation that generated this response                                | Yes      |         |
-| `rlt`          | `{CID: Any}` | The results of each call, indexed by the CID of the [isolated capability](#4-isolated-capabilities) | Yes      |         |
-| `v`            | `SemVer`     | SemVer of the UCAN invocation object schema                                      | Yes      |         |
-| `nnc`          | `String`     | A unique nonce, to distinguish each receipt                                      | Yes      |         |
-| `ext`          | `Any`        | Non-normative extended fields                                                    | No       | `null`  |
-| `sig`          | `Bytes`      | Signature of the rest of the field canonicalized                                 | Yes      |         |
+| Field          | Type         | Description                                                                                                                        | Required | Default |
+|----------------|--------------|------------------------------------------------------------------------------------------------------------------------------------|----------|---------|
+| `ucan/receipt` | `CID`        | CID of the Invocation that generated this response                                                                                 | Yes      |         |
+| `rlt`          | `{CID: Any}` | The results of each call, indexed by the CID of the [canonicalized capability](https://github.com/ucan-wg/ucan-ipld#22-capability) | Yes      |         |
+| `v`            | `SemVer`     | SemVer of the UCAN invocation object schema                                                                                        | Yes      |         |
+| `nnc`          | `String`     | A unique nonce, to distinguish each receipt                                                                                        | Yes      |         |
+| `ext`          | `Any`        | Non-normative extended fields                                                                                                      | No       | `null`  |
+| `sig`          | `Bytes`      | Signature of the rest of the field canonicalized                                                                                   | Yes      |         |
 
-## 5.1 IPLD
+## 4.1 IPLD
 
 ``` haskell
 type Receipt struct {
@@ -370,7 +348,7 @@ type Receipt struct {
 } 
 ```
 
-## 5.2 JSON Example
+## 4.2 JSON Example
 
 ``` json
 {
@@ -404,8 +382,7 @@ type Receipt struct {
  }
 ```
 
-
-# 6 Promise Pipelining
+# 5 Promise Pipelining
 
 > Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
 >
@@ -415,57 +392,41 @@ At UCAN creation time, the UCAN MAY not yet have all of the information required
 
 The authority to execute later actions often cannot be fully attenuated in advance, since the executor controls the reported output of the prior step in a pipeline. When choosing to use pipelining, the invoker MUST delegate capabilities for any of the possible outputs. If tight control is required to limit authority, pipelining SHOULD NOT be used.
 
-A promise MUST contain the CID of the target invocation, and the path of the 
+## 5.1 Fields
 
-because the resource may have a path in it, the resource needs to be broken out!
+| Field           | Type         | Description                     | Required |
+|-----------------|--------------|---------------------------------|----------|
+| `ucan/promised` | `CID or "/"` | The Invocation being referenced | Yes      |
+| `using`         | `URI`        | The resource called             | Yes      |
+| `called`        | `Ability`    | The ability used                | Yes      |
+| `path`          | `Path`       | Path to the specific output     | No       |
 
-Inverts the version from the outer invocation
+The above table MUST be serialzied as a tuple. In JSON, this SHOULD be represented as an array containing the values (but not keys) sequenced in the order they appear in the table.
 
-## 6.1 Fields
-
-| Field           | Type      | Description                     | Required |
-|-----------------|-----------|---------------------------------|----------|
-| `ucan/promised` | `CID`     | The invocation being referenced | Yes      |
-| `using`         | `URI`     | The resource called             | Yes      |
-| `called`        | `Ability` | The ability used                | Yes      |
-| `path`          | `Path`    | Path to the specific output     | Yes      |
-
-the  know the concrete value required to scope the resource down sufficiently. This MAY be caused either by invoking them both in the same payload, or following one after another by CID reference.
-
-Variables relative to the result of some other action MAY be used. In this case, the attested (signed) receipt of the previous action MUST be included in the following form:
-
-Referenced by invocation CID
-
-
-## 6.2 IPLD Schema
+## 5.2 IPLD Schema
 
 ``` haskell
 type Promise struct {
   pse &Invocation
   usg URI
   cll Ability -- output path
-  pth Path
+  pth optional Path
 } representation tuple
 ```
 
-## 6.3 JSON Example
+## 5.3 JSON Examples
 
-``` json
-// IPLD
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/put", "http/statusCode"]
+``` js
+// All outputs
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/get"]
 
-// Full struct representation
-{ 
-  "ucan/promise": "QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR",
-  "using": "example.com/foo/bar",
-  "called": "http/put",
-  "path": "http/status"
-}
+// Only the status code
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/put", "statusCode"]
 ```
 
-# 7 Appendix
+# 6 Appendix
 
-## 7.1 Support Types
+## 6.1 Support Types
 
 ``` haskell
 type CID = String
@@ -489,7 +450,7 @@ type NumVer struct {
 }
 ```
 
-# 8 Prior Art
+# 7 Prior Art
 
 [UCANTO](https://github.com/web3-storage/ucanto) from DAG House
 
@@ -501,7 +462,7 @@ type NumVer struct {
 
 [Spritely Goblins](https://spritely.institute/static/papers/spritely-core.html)
 
-# 9 Acknowledgements
+# 8 Acknowledgements
 
 Thanks to the [DAG House](https://dag.house) team for initially suggesting UCAN as a generalized RPC framework.
 
