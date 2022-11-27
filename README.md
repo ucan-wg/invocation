@@ -594,3 +594,5 @@ Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering wor
 Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many conversations about capability systems and the programming models that they enable.
 
 Thanks to [Quinn Wilton](https://github.com/QuinnWilton) and [Marc-Antoine Parent](https://github.com/maparent) for their discussions of the distinction between declarations and directives both in and out of a UCAN context.
+
+Many thanks to [Luke Marsen](https://github.com/lukemarsden) and [Simon Worthington](https://github.com/simonwo) for their feedback on invocation model from their work on [Bacalhau](https://www.bacalhau.org/) and [IPVM](https://github.com/ipvm-wg).
