@@ -452,15 +452,15 @@ type NumVer struct {
 
 # 7 Prior Art
 
-[UCANTO](https://github.com/web3-storage/ucanto) from DAG House
+[ucanto RPC](https://github.com/web3-storage/ucanto) from DAG House is a production system that uses UCAN as the basis for an RPC layer.
 
-[CapTP](http://erights.org/elib/distrib/captp/index.html) 
+The [Capability Transport Protocol (CapTP)](http://erights.org/elib/distrib/captp/index.html) is one of the most influential object-capability systems, and forms the basis for much of the rest of the items on this list.
 
-[OCapN](https://github.com/ocapn/ocapn)
+The [Object Capability Network (OCapN)](https://github.com/ocapn/ocapn) protocol extends CapTP with a generalized networking layer. It has implementations from the [Spritely Institute](https://www.spritely.institute/) and [Agoric](https://agoric.com/). At time of writing, it is in the process of being standardized.
 
-[Cap'N Proto](https://capnproto.org/) 
+[Electronic Rights Transfer Protocol (ERTP)](https://docs.agoric.com/guides/ertp/) builds on top of CapTP for blockchain & digital asset use cases.
 
-[Spritely Goblins](https://spritely.institute/static/papers/spritely-core.html)
+[Cap'n Proto RPC](https://capnproto.org/) is an influential RPC framework [based on concepts from CapTP](https://capnproto.org/rpc.html#specification).
 
 # 8 Acknowledgements
 
