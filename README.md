@@ -132,7 +132,7 @@ If serialized as JSON, the `sig` field MUST be serialized as [unpadded base64url
 
 ## 3.2 IPLD Schema
 
-``` ipldsch
+``` haskell
 type Invocation struct {
   inv &UCAN  -- The UCAN providing authority
   v   SemVer -- Version
@@ -273,7 +273,7 @@ It is often important to be able to reference a specific capability in isolation
 | `aby` | `String` | The lowercase Ability called on the resource           | Yes      |
 | `ins` | `[Any]`  | Any other inputs required for the call                 | Yes      |
 
-``` ipldsch
+``` haskell
 type Capability struct {
   rsc URI     -- Resource
   aby Ability -- Ability
@@ -308,7 +308,7 @@ Note that this does not guarantee correctness of the result! The statement's ver
 
 ## 5.1 IPLD
 
-``` ipldsch
+``` haskell
 type Receipt struct {
   rec &Invocation
   rlt {URI : {Ability : Any}}
@@ -388,7 +388,7 @@ Referenced by invocation CID
 
 ## 6.2 IPLD Schema
 
-``` ipldsch
+``` haskell
 type Promise struct {
   pse &Invocation
   usg URI
@@ -416,7 +416,7 @@ type Promise struct {
 
 ## 7.1 Support Types
 
-``` ipldsch
+``` haskell
 type CID = String
 type URI = String
 type Ability = String
