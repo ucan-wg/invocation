@@ -66,6 +66,52 @@ Information about the scheduling, order, and pipelining of actions is orthogonal
 
 As we shall see in the [discussion of promise pipelining](#5-promise-pipelining), asking an agent to perform a sequence of actions before you know the exact parameters requires delegating capabilities for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
 
+```
+  ────────────────────────────────────────────Time──────────────────────────────────────────────────────►
+
+┌──────────────────────────────────────────Delegation─────────────────────────────────────────────────────┐
+│                                                                                                         │
+│  ┌─────────┐   ┌─────────┐   ┌─────────┐         ┌─────────┐                ┌─────────┐                 │
+│  │         │   │         │   │         │         │         │                │         │                 │
+│  │  Alice  ├──►│   Bob   ├──►│  Carol  ├────────►│   Dan   ├───────────────►│  Erin   │                 │
+│  │         │   │         │   │         │         │         │                │         │                 │
+│  └─────────┘   └─────────┘   └─────────┘         └─────────┘                └─────────┘                 │
+│                                                                                                         │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────Invocation─────────────────────────────────────────────────────┐
+│                                                                                                         │
+│                              ┌─────────┐         ┌─────────┐                                            │
+│                              │         │         │         │                                            │
+│                              │  Carol  ╞═══All══►│   Dan   │                                            │
+│                              │         │         │         │                                            │
+│                              └─────────┘         └─────────┘                                            │
+│                                                                                                         │
+│                                                  ┌─────────┐               ┌─────────┐                  │
+│                                                  │         │               │         │                  │
+│                                                  │   Dan   ╞══Read Email══►│  Erin   │                  │
+│                                                  │         │               │         │                  │
+│                                                  └─────────┘               └─────────┘                  │
+│                                                                                                         │
+│                                                             ┌─────────┐                ┌─────────┐      │
+│                                                             │         │                │         │      │
+│                                                             │   Dan   ╞═══Read Email══►│  Erin   │      │
+│                                                             │         │          ▲     │         │      │
+│                                                             └─────────┘          ┆     └─────────┘      │
+│                                                                                  ┆                      │
+│                                                                                Using                    │
+│                                                                                Result                   │
+│                                                                                  Of                     │
+│                                                                                  ┆                      │
+│                                                                  ┌─────────┐     ┆        ┌─────────┐   │
+│                                                                  │         │     ┆        │         │   │
+│                                                                  │   Dan   ╞════Set DNS══►│  Erin   │   │
+│                                                                  │         │              │         │   │
+│                                                                  └─────────┘              └─────────┘   │
+│                                                                                                         │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
 # 2 Roles
 
 Invocation adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
