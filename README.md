@@ -89,7 +89,7 @@ As we shall see in the [discussion of promise pipelining](#5-promise-pipelining)
 │                                                                                                         │
 │                                                  ┌─────────┐                              ┌─────────┐   │
 │                                                  │         │                              │         │   │
-│                                                  │   Dan   ╞═══════════Read Email════════►│  Erin   │   │
+│                                                  │   Dan   ╞═══════════Update DB═════════►│  Erin   │   │
 │                                                  │         │                              │         │   │
 │                                                  └─────────┘                              └─────────┘   │
 │                                                                                                         │
