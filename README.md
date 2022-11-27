@@ -104,7 +104,7 @@ The invocation wrapper MUST be signed by the same principal that issued the UCAN
   
 ### 3.1.1 Invocation
 
-The `ucan/invoke` field MUST contain CIDs pointing to the UCANs to invoke. The outmost UCAN being invoked MUST NOT contain any actions that are not intended to be executed.
+The `ucan/invoke` field MUST contain CIDs pointing to the UCANs to invoke. The outmost UCAN being invoked SHOULD NOT contain any actions that are not intended to be executed.
 
 ### 3.1.2 Version
 
@@ -150,8 +150,6 @@ type Scope enum {
 
 ## 3.3 JSON Examples
 
-### 3.3.1 Simple
-
  ``` json
 {
   "ucan/invoke": "QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR",
@@ -162,7 +160,36 @@ type Scope enum {
 }
 ```
 
-### 3.3.2 Batched Pipeline
+### 3.3.2 Pipelines
+
+The following examples both express the following call graph:
+
+``` json
+                 ┌────────────────────────────┐
+                 │                            │
+                 │ dns://example.com?TYPE=TXT │
+                 │        crud/update         │
+                 │                            │
+                 └───────┬──────────┬─────────┘
+                         │          │
+                         │          │
+┌────────────────────────▼───┐  ┌───▼────────────────────────┐
+│                            │  │                            │
+│ https://example.com/report │  │ mailto://alice@example.com │
+│         crud/update        │  │          msg/send          │
+│                            │  │                            │
+└────────────────────────┬───┘  └───┬────────────────────────┘
+                         │          │
+                         │          │
+                ┌────────▼──────────▼────────┐
+                │                            │
+                │ https://example.com/events │
+                │         crud.create        │
+                │                            │
+                └────────────────────────────┘
+```
+
+#### 3.3.2.1 Batched 
 
  ``` json
 {
@@ -235,13 +262,13 @@ type Scope enum {
       ]
     }
   },
-  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
+  "sig": "kQHtTruysx4S8SrvSjTwr6ttTLzc7dd7atANUYT-SRK6v_SX8bjHegWoDak2x6vTAZ6CcVKBt6JGpgnjABpsoL"
 }
  
 {
-  "ucan/invoke": "Qmd4trNUhgWwsBbSsYBEWJqgiHyLrnhZ8u1DJsWsEKeuuF",
+  "ucan/invoke": "QmbXdT8QQMJ55Lb6MGJqTmwNzuUnHsE18t7zXGWeq9rQcV",
   "v": "0.1.0",
-  "nnc": "abcdef",
+  "nnc": "12345",
   "ext": null,
   "run": {
     "http://example.com/report": {
@@ -259,7 +286,31 @@ type Scope enum {
       ]
     }
   },
-  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
+  "sig": "XZRSmp5cHaXX6xWzSTxQqC95kQHtTruysx4S8SrvSjTwr6ttTLzc7dd7atANUQJXoWThUiVuCHWdMnQNQJgiJi"
+}
+
+{
+  "ucan/invoke": "QmY4jEVE35u8SHegWoDak2x6vTAZ6Cc4cpSD5LAUQ23W7L",
+  "v": "0.1.0",
+  "nnc": "02468",
+  "ext": null,
+  "run": {
+    "https://example.com/events": {
+      "crud/create": [
+        { 
+          "event": "update-dns",
+          "status": "done"
+        },
+        {
+          "_": [
+            {"ucan/promise": ["/", "mailto://alice@example.com", "msg/send", null]}
+            {"ucan/promise": ["/", "https://example.com", "crud/update", null]}
+          ]
+        }
+      ]
+    }
+  },
+  "sig": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"
 }
 ```
 
