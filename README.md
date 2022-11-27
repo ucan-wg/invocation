@@ -28,7 +28,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 UCAN is a chained-capability format. A UCAN contains all of the information that one would need to perform some action, and the provable authority to do so. This begs the question: can UCAN be used directly as an RPC language?
 
-Some teams have had success using UCAN directly for RPC when the intention is clear from context. This occurs when there is more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). Capability invocation contains strictly more information than delegation: all of the authorty of UCAN, plus the command to perform the action.
+Some teams have had success using UCAN directly for RPC when the intention is clear from context. This can be successful when there is more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). However, capability invocation contains strictly more information than delegation: all of the authorty of UCAN, plus the command to perform the action.
 
 ## 1.1 Intuition
 
@@ -36,11 +36,11 @@ Some teams have had success using UCAN directly for RPC when the intention is cl
 
 Consider the following fictitious scenario:
 
-Akiko is going away for the weekend. Her good friend Boris is going to borrow her car while she's away. They meet at a nearby cafe, and Akiko hands Boris her car keys. Boris now has the capability to drive Alice's car whenever he wants to. Depending on their plans for the rest of the day, Akiko may find Boris quite rude if he immedietly leaves the cafe to drive her car. On the other hand, if Akiko asks Boris to run some last minute pre-vacation errands for that require a car, she may expect Boris to immedietly drive off.
+Akiko is going away for the weekend. Her good friend Boris is going to borrow her car while she's away. They meet at a nearby cafe, and Akiko hands Boris her car keys. Boris now has the capability to drive Alice's car whenever he wants to. Depending on their plans for the rest of the day, Akiko may find Boris quite rude if he immedietly leaves the cafe to go for a drive. On the other hand, if Akiko asks Boris to run some last minute pre-vacation errands for that require a car, she may expect Boris to immedietly drive off.
 
 ## 1.1.2 Lazy vs Eager Evaluation
 
-In a referentially transparent setting, the authority to perform some action is equalivalent to having done so: a function and its results are interchangable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be a very straightforward programming model for pure computation. Effects under this model requires special handling, and whwn something will run can sometimes be unclear. 
+In a referentially transparent setting, the description of an action is equalivalent to having done so: a function and its results are interchangable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be an elegant programming model, especially for pure functions. Effects under this model requires special handling, and when something will run can sometimes be unclear. 
 
 Most languages use eager evaluation. Eager languages must contend directly with the distinction between a referance to a function and a command to run it. For instance, in JavaScript, adding parantheses to a function will run it. Omitting them lets the program pass around a reference to the function without immedietly invoking it.
 
