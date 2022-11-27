@@ -460,7 +460,7 @@ The [Object Capability Network (OCapN)](https://github.com/ocapn/ocapn) protocol
 
 [Electronic Rights Transfer Protocol (ERTP)](https://docs.agoric.com/guides/ertp/) builds on top of CapTP for blockchain & digital asset use cases.
 
-[Cap'n Proto RPC](https://capnproto.org/) is an influential RPC framework [based on concepts from CapTP](https://capnproto.org/rpc.html#specification).
+[Cap 'n Proto RPC](https://capnproto.org/) is an influential RPC framework [based on concepts from CapTP](https://capnproto.org/rpc.html#specification).
 
 # 8 Acknowledgements
 
