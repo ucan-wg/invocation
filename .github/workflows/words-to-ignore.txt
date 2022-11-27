@@ -1,3 +1,4 @@
+Acknowledgements
 Akiko
 CIDs
 Cap'N
@@ -40,10 +41,12 @@ outmost
 pipelined
 pipelining
 pre-vacation
+referentially
 requestor's
 responder
 signalling
 trustless
 unpadded
+url
 v0
 validator

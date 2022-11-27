@@ -40,7 +40,7 @@ Akiko is going away for the weekend. Her good friend Boris is going to borrow he
 
 ## 1.1.2 Lazy vs Eager Evaluation
 
-In a referentially transparent setting, the description of an action is equivalent to having done so: a function and its results are interchangable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be an elegant programming model, especially for pure functions. Effects under this model requires special handling, and when somtheing will run can sometimes be unclear. 
+In a referentially transparent setting, the description of an action is equivalent to having done so: a function and its results are interchangable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be an elegant programming model, especially for pure functions. Effects under this model requires special handling, and when something will run can sometimes be unclear. 
 
 Most languages use eager evaluation. Eager languages must contend directly with the distinction between a reference to a function and a command to run it. For instance, in JavaScript, adding parentheses to a function will run it. Omitting them lets the program pass around a reference to the function without immediately invoking it.
 
@@ -56,13 +56,13 @@ Delegating a capability is like the statement `message`. Invocation is akin to `
 [1,2,3].map(message) // Message runs 3 times 
 ```
 
-However, there is clearly a distinction between passing a function and invoking it. The same is true for capabilties: delegating the authority to do somtheing is not the same as asking for it to be done immediately, even if sometimes it's clear from context.
+However, there is clearly a distinction between passing a function and invoking it. The same is true for capabilities: delegating the authority to do something is not the same as asking for it to be done immediately, even if sometimes it's clear from context.
 
 ## 1.3 Separation of Concerns
 
 Information about the scheduling, order, and pipelining of actions is orthogonal to the flow of authority. An agent collaborating with the original executor does not need to know that their call is 3 invocations deep; they only need to know that they been asked to perform some action by the latest invoker.
 
-As we shall see in the [promise pipelining section](#6-promise-pipelining), asking an agent to perform a sequence of actions before you know the exact parameters requires delegating capabilties for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
+As we shall see in the [promise pipelining section](#6-promise-pipelining), asking an agent to perform a sequence of actions before you know the exact parameters requires delegating capabilities for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
 
 # 2 Roles
 
@@ -95,13 +95,13 @@ The invocation wrapper MUST be signed by the same principal that issued the UCAN
 
 ## 3.1 Fields
 
-| Field         | Type                               | Value     | Descrption                                       | Required | Default |
+| Field         | Type                               | Value     | Description                                      | Required | Default |
 |---------------|------------------------------------|-----------|--------------------------------------------------|----------|---------|
 | `ucan/invoke` | `CID`                              |           | The CID of the UCAN to invoke                    | Yes      |         |
 | `v`           | `SemVer`                           | `"0.1.0"` | SemVer of the UCAN invocation object schema      | Yes      |         |
 | `run`         | `"*" or {URI : {Ability : [Any]}}` |           | Which UCAN capabilities to run                   | No       | `"*"`   |
 | `nnc`         | `String`                           |           | A unique nonce, to distinguish each invocation   | Yes      |         |
-| `ext`         | `Any`                              |           | Nonnormative extended fields                     | No       | `null`  |
+| `ext`         | `Any`                              |           | Non-normative extended fields                    | No       | `null`  |
 | `sig`         | `Bytes`                            |           | Signature of the rest of the field canonicalized | Yes      |         |
   
 ### 3.1.1 Invocation
@@ -267,7 +267,7 @@ type Scope enum {
 
 # 4 Isolated Capabilities
 
-It is often important to be able to reference a specific capability in isolation, disentangling it from the its sibling capabilities and other configuration. This is important for being able to reference a specific Capabilty in Results, promise pipelining, logging, and for building external caches.
+It is often important to be able to reference a specific capability in isolation, disentangling it from the its sibling capabilities and other configuration. This is important for being able to reference a specific Capability in Results, promise pipelining, logging, and for building external caches.
 
 | Field | Type     | Description                                            | Required |
 |-------|----------|--------------------------------------------------------|----------|
