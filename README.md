@@ -401,7 +401,7 @@ The authority to execute later actions often cannot be fully attenuated in advan
 | `called`        | `Ability`    | The ability used                | Yes      |
 | `path`          | `Path`       | Path to the specific output     | No       |
 
-The above table MUST be serialzied as a tuple. In JSON, this SHOULD be represented as an array containing the values (but not keys) sequenced in the order they appear in the table.
+The above table MUST be serialized as a tuple. In JSON, this SHOULD be represented as an array containing the values (but not keys) sequenced in the order they appear in the table.
 
 ## 5.2 IPLD Schema
 
