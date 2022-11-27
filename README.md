@@ -444,7 +444,7 @@ type NumVer struct {
 
 [UCANTO](https://github.com/web3-storage/ucanto) from DAG House
 
-[CapTP](erights.org/elib/distrib/captp/index.html) 
+[CapTP](http://erights.org/elib/distrib/captp/index.html) 
 
 [OCapN](https://github.com/ocapn/ocapn)
 
