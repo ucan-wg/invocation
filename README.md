@@ -75,6 +75,8 @@ Invocation adds two new roles to UCAN: invoker and executor. The existing UCAN d
 | `iss`      | Delegator: transfer authority (active) | Invoker: request action (active)  |
 | `aud`      | Delegate: gain authority (passive)     | Executor: perform action (active) |
 
+## 2.1 Invoker
+
 The invoker signals to the executor that a task associated with a UCAN SHOULD be performed.
 
 The invoker MUST be the UCAN delegator. Their DID MUST be authenticated in the `iss` field of the contained UCAN.
