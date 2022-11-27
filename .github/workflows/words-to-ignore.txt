@@ -1,6 +1,7 @@
 Acknowledgements
 Agoric
 Akiko
+Bacalhau
 CIDs
 Cap'N
 Cap'n
@@ -10,11 +11,13 @@ Gozalishvili
 Hardt
 Holmgren
 IPLD
+IPVM
 Irakli
 JSON
 JWT
 JWT-encoded
 Lemmer-Webber
+Marsen
 OCapN
 Pre-Draft
 Proto
@@ -27,6 +30,7 @@ UCAN's
 UCANTO
 UCANs
 URI
+Worthington
 Zelenka
 auth
 backend
