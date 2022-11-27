@@ -60,7 +60,7 @@ Delegating a capability is like the statement `message`. Invocation is akin to `
 
 However, there is clearly a distinction between passing a function and invoking it. The same is true for capabilities: delegating the authority to do something is not the same as asking for it to be done immediately, even if sometimes it's clear from context.
 
-## 1.3 Separation of Concerns
+## 1.2 Separation of Concerns
 
 Information about the scheduling, order, and pipelining of actions is orthogonal to the flow of authority. An agent collaborating with the original executor does not need to know that their call is 3 invocations deep; they only need to know that they been asked to perform some action by the latest invoker.
 
