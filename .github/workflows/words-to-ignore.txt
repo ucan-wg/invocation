@@ -1,8 +1,11 @@
 Acknowledgements
+Agoric
 Akiko
 CIDs
 Cap'N
+Cap'n
 CapTP
+ERTP
 Gozalishvili
 Hardt
 Holmgren
@@ -29,6 +32,7 @@ auth
 backend
 base64url
 canonicalized
+dataflow
 de
 delegator
 dholms
@@ -46,6 +50,7 @@ requestor's
 responder
 signalling
 trustless
+ucanto
 unpadded
 url
 v0
