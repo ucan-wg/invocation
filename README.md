@@ -188,7 +188,7 @@ type Scope enum {
         {
           "performedBy": "did:key:zAlice",
           "tags": ["hello", "world"],
-          "status": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/statusCode"]}},
+          "status": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/statusCode"]},
           "payload": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
         }
       ]
@@ -330,14 +330,16 @@ type Receipt struct {
   "ucan/receipt": "QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f",
   "v": "0.1.0",
   "rlt": {
-    "QmYqbJBxCqqzDouPMbcrbNuB3WHWajSyq4RWin7ufs2ajf": [{
+    "QmYqbJBxCqqzDouPMbcrbNuB3WHWajSyq4RWin7ufs2ajf": [
+      {
         "from": "alice@example.com",
         "text": "Hello world!"
-      }, {
+      }, 
+      {
         "from": "bob@example.com",
         "text": "What's up?"
-      }]
-    },
+      }
+    ],
     "QmXrfqKNUpRiyyi8r3hpSZyZuG3S2MY9rTw1p8iEC9FNh5": {
       "http": { 
         "status": 200,
