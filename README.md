@@ -345,11 +345,11 @@ The authority to execute later actions often cannot be fully attenuated in advan
 
 ## 5.1.1 Fields
 
-| Field           | Type         | Description                                                                           | Required | Default  |
-|-----------------|--------------|---------------------------------------------------------------------------------------|----------|----------|
-| `ucan/promised` | `CID or "/"` | The Invocation being referenced                                                       | Yes      |          |
-| `label`         | `String`     | The action's label. If the actions were implicit (`"run": "*"`), the the CID is used  | Yes      |          |
-| `selector`      | `String`     | The [JSONPath](https://datatracker.ietf.org/doc/draft-ietf-jsonpath-base/) expression | No       | `"$..*"` |
+| Field         | Type         | Description                                                                           | Required | Default  |
+|---------------|--------------|---------------------------------------------------------------------------------------|----------|----------|
+| `promised`    | `CID or "/"` | The Invocation being referenced                                                       | Yes      |          |
+| `actionlabel` | `String`     | The action's label. If the actions were implicit (`"run": "*"`), the the CID is used  | Yes      |          |
+| `selector`    | `String`     | The [JSONPath](https://datatracker.ietf.org/doc/draft-ietf-jsonpath-base/) expression | No       | `"$..*"` |
 
 The above table MUST be serialized as a tuple. In JSON, this SHOULD be represented as an array containing the values (but not keys) sequenced in the order they appear in the table.
 
@@ -357,9 +357,9 @@ The above table MUST be serialized as a tuple. In JSON, this SHOULD be represent
 
 ``` ipldsch
 type Promise struct {
-  promised    Target
+  promised    Target 
   actionlabel String                   -- The label inside the invocation
-  jsonpath    String (implicit "$..*") -- JSONPath Expression
+  selector    String (implicit "$..*") -- JSONPath Expression
 } representation tuple
 
 type Target enum {
