@@ -14,6 +14,7 @@ IPLD
 IPVM
 Irakli
 JSON
+JSONPath
 JWT
 JWT-encoded
 Lemmer-Webber
