@@ -284,7 +284,7 @@ The following examples both express the following dataflow graph:
         {
           "to": "bob@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "update-dns", "http/body"]}
+          "body": {"ucan/promise": ["/", "update-dns", "$http.body"]}
         }
       ]
     },
@@ -295,7 +295,7 @@ The following examples both express the following dataflow graph:
         {
           "to": "carol@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "update-dns", "http/body"]}
+          "body": {"ucan/promise": ["/", "update-dns", "$http.body"]}
         }
       ]
     },
@@ -309,10 +309,10 @@ The following examples both express the following dataflow graph:
           "event": "email-notification",
         },
         {
-          "_": {"ucan/promise": ["/", "notify-bob", "http/body"]}
+          "_": {"ucan/promise": ["/", "notify-bob", "$http.body"]}
         },
         {
-          "_": {"ucan/promise": ["/", "notify-carol", "http/body"]}
+          "_": {"ucan/promise": ["/", "notify-carol", "$http.body"]}
         }
       ]
     }
@@ -396,7 +396,7 @@ The following examples both express the following dataflow graph:
         {
           "to": "carol@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["QmcKi4Z1L7VH4HahyrXb8Rzjex5U7DiY12PnTnysxviuDT", "update-dns", http/body"]}
+          "body": {"ucan/promise": ["QmcKi4Z1L7VH4HahyrXb8Rzjex5U7DiY12PnTnysxviuDT", "update-dns", "$http.body"]}
         }
       ]
     }
@@ -417,7 +417,7 @@ The following examples both express the following dataflow graph:
         {
           "to": "bob@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["QmcKi4Z1L7VH4HahyrXb8Rzjex5U7DiY12PnTnysxviuDT", "update-dns", http/body"]}
+          "body": {"ucan/promise": ["QmcKi4Z1L7VH4HahyrXb8Rzjex5U7DiY12PnTnysxviuDT", "update-dns", $http.body"]}
         }
       ]
     },
@@ -431,10 +431,10 @@ The following examples both express the following dataflow graph:
           "event": "email-notification",
         },
         {
-          "_": {"ucan/promise": ["/", "notify-bob", http/body"]}
+          "_": {"ucan/promise": ["/", "notify-bob", "$http.body"]}
         },
         {
-          "_": {"ucan/promise": ["QmaCRSugy2sXEKxjDDwcqLx2Bs7CUGpZSrtsASsNyntyC9", "notify-carol", http/body"]}
+          "_": {"ucan/promise": ["QmaCRSugy2sXEKxjDDwcqLx2Bs7CUGpZSrtsASsNyntyC9", "notify-carol", "$http.body"]}
         }
       ]
     }
@@ -519,12 +519,11 @@ The authority to execute later actions often cannot be fully attenuated in advan
 
 ## 5.1 Fields
 
-| Field           | Type         | Description                                                                                    | Required |
-|-----------------|--------------|------------------------------------------------------------------------------------------------|----------|
-| `ucan/promised` | `CID or "/"` | The Invocation being referenced                                                                | Yes      |
-| `using`         | `URI`        | The URI of the resource called                                                                 | Yes      |
-| `called`        | `Ability`    | The Ability used                                                                               | Yes      |
-| `selector`      | `String`     | The [RFC6901 JSON Pointer](https://www.rfc-editor.org/rfc/rfc6901.html) to the specific output | No       |
+| Field           | Type         | Description                                                                           | Required | Default  |
+|-----------------|--------------|---------------------------------------------------------------------------------------|----------|----------|
+| `ucan/promised` | `CID or "/"` | The Invocation being referenced                                                       | Yes      |          |
+| `label`         | `String`     | The action's label. If the actions were implicit (`"run": "*"`), the the CID is used  | Yes      |          |
+| `selector`      | `String`     | The [JSONPath](https://datatracker.ietf.org/doc/draft-ietf-jsonpath-base/) expression | No       | `"$..*"` |
 
 The above table MUST be serialized as a tuple. In JSON, this SHOULD be represented as an array containing the values (but not keys) sequenced in the order they appear in the table.
 
@@ -532,21 +531,35 @@ The above table MUST be serialized as a tuple. In JSON, this SHOULD be represent
 
 ``` haskell
 type Promise struct {
-  pse &Invocation
-  usg URI
-  cll Ability -- output path
-  sel optional String
+  promised    Target
+  actionlabel String                   -- The label inside the invocation
+  jsonpath    String (implicit "$..*") -- JSONPath Expression
 } representation tuple
+
+type Target enum {
+  | Local (rename "/")
+  | Rmeote(CID)
+}
 ```
 
 ## 5.3 JSON Examples
 
 ``` js
 // All outputs
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/get"]
+
+["/", "some-label"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "QmeURvKzGm85Ekt1t1wDJ3niHAXuhexi281N2ig311pLZv"]
+
+["/", "some-label", "$..*"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label", "$..*"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "QmeURvKzGm85Ekt1t1wDJ3niHAXuhexi281N2ig311pLZv", "$..*"]
 
 // Only the status code
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "example.com/foo/bar", "http/put", "/payload/users/0/employer/name"]
+["/", "some-label" "$payload.users[0].employer.name"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label", "$payload.users[0].employer.name"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label", "$payload.users[0].employer.name"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "QmeURvKzGm85Ekt1t1wDJ3niHAXuhexi281N2ig311pLZv", "$payload.users[0].employer.name"]
 ```
 
 # 6 Appendix
@@ -561,7 +574,7 @@ type Path = String
 
 type SemVer struct {
   num NumVer
-  tag nullable optional String
+  tag String (implicit Null)
 } representation stringjoin {
   join "+"
 }
