@@ -230,9 +230,167 @@ type Action enum {
 }
 ```
 
-### 3.3.2 Pipelines
+### 3.3.2 Promise Pipelines
 
-The following examples both express the following dataflow graph:
+Promise pipelines are handled in more detail in [section 5](#5-promise-pipelining). In brief, they enable taking the output of an action that has not yet run as the input to another action. Here is a simple example:
+
+``` js
+{
+  "ucan/invoke": "QmY4jEVE35u8SHegWoDak2x6vTAZ6Cc4cpSD5LAUQ23W7L",
+  "v": "0.1.0",
+  "nnc": "02468",
+  "ext": null,
+  "run": {
+    "notify-bob": {
+      "using": "mailto://alice@example.com",
+      "do": "msg/send",
+      "inputs": [
+        {
+          "to": "bob@example.com",
+          "subject": "DNSLink for example.com",
+          "body": "Hello Bob!"
+        }
+      ]
+    },
+    "log-as-done": {
+      "using": "https://example.com/report"
+      "do": "crud/update"
+      "inputs": {
+        "from": "mailto://alice@exmaple.com",
+        "to": ["bob@exmaple.com"],
+        "event": "email-notification",
+        "value": {"ucan/promise": ["/", "notify-bob"]} // Pipelined promise
+      }
+    }
+  },
+  "sig": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"
+}
+```
+
+# 4 Receipt
+
+An invocation receipt is an attestation of the output of an invocation. A receipt MUST be signed by the executor (the `aud` of the associated UCAN).
+
+Note that this does not guarantee correctness of the result! The statement's veracity MUST be only understood as an attestation from the executor.
+
+## 4.1 Fields
+
+| Field          | Type         | Description                                                                                      | Required | Default |
+|----------------|--------------|--------------------------------------------------------------------------------------------------|----------|---------|
+| `ucan/receipt` | `CID`        | CID of the Invocation that generated this response                                               | Yes      |         |
+| `rlt`          | `{CID: Any}` | The results of each call, indexed by the CID of the `dag-cbor` encoded [Action](#32-ipld-schema) | Yes      |         |
+| `v`            | `SemVer`     | SemVer of the UCAN invocation object schema                                                      | Yes      |         |
+| `nnc`          | `String`     | A unique nonce, to distinguish each receipt                                                      | Yes      |         |
+| `ext`          | `Any`        | Non-normative extended fields                                                                    | No       | `null`  |
+| `sig`          | `Bytes`      | Signature of the rest of the field canonicalized                                                 | Yes      |         |
+
+## 4.1 IPLD Schema
+
+``` ipldsch
+type Receipt struct {
+  rec &Invocation
+  rlt {URI : {Ability : Any}}
+  v   SemVer
+  nnc String
+  ext optional Any
+  sig Bytes
+} 
+```
+
+## 4.2 JSON Example
+
+``` json
+{
+  "ucan/receipt": "QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f",
+  "v": "0.1.0",
+  "rlt": {
+    "QmYqbJBxCqqzDouPMbcrbNuB3WHWajSyq4RWin7ufs2ajf": [
+      {
+        "from": "alice@example.com",
+        "text": "Hello world!"
+      }, 
+      {
+        "from": "bob@example.com",
+        "text": "What's up?"
+      }
+    ],
+    "QmXrfqKNUpRiyyi8r3hpSZyZuG3S2MY9rTw1p8iEC9FNh5": {
+      "http": { 
+        "status": 200,
+        "body": "hello world"
+      },
+      "ms": 476
+    }
+  },
+  "nnc": "xyz",
+  "ext": {
+    "notes": "very receipt. such wow.",
+    "tags": ["dag-house", "fission"]
+  },
+  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt_VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
+ }
+```
+
+# 5 Promise Pipelining
+
+> Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
+>
+> Mark Miller, Robust Composition
+
+At UCAN creation time, the UCAN MAY not yet have all of the information required to construct the next request in a sequence. Waiting for each request to complete before proceeding to the next action has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of earlier invocations into the input of a later one. This liberates the invoker from waiting for each step.
+
+The authority to execute later actions often cannot be fully attenuated in advance, since the executor controls the reported output of the prior step in a pipeline. When choosing to use pipelining, the invoker MUST delegate capabilities for any of the possible outputs. If tight control is required to limit authority, pipelining SHOULD NOT be used.
+
+## 5.1 Promises
+
+## 5.1.1 Fields
+
+| Field           | Type         | Description                                                                           | Required | Default  |
+|-----------------|--------------|---------------------------------------------------------------------------------------|----------|----------|
+| `ucan/promised` | `CID or "/"` | The Invocation being referenced                                                       | Yes      |          |
+| `label`         | `String`     | The action's label. If the actions were implicit (`"run": "*"`), the the CID is used  | Yes      |          |
+| `selector`      | `String`     | The [JSONPath](https://datatracker.ietf.org/doc/draft-ietf-jsonpath-base/) expression | No       | `"$..*"` |
+
+The above table MUST be serialized as a tuple. In JSON, this SHOULD be represented as an array containing the values (but not keys) sequenced in the order they appear in the table.
+
+## 5.1.2 IPLD Schema
+
+``` ipldsch
+type Promise struct {
+  promised    Target
+  actionlabel String                   -- The label inside the invocation
+  jsonpath    String (implicit "$..*") -- JSONPath Expression
+} representation tuple
+
+type Target enum {
+  | Local (rename "/")
+  | Rmeote(CID)
+}
+```
+
+## 5.1.3 JSON Examples
+
+``` js
+// All outputs
+
+["/", "some-label"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "QmeURvKzGm85Ekt1t1wDJ3niHAXuhexi281N2ig311pLZv"]
+
+["/", "some-label", "$..*"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label", "$..*"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "QmeURvKzGm85Ekt1t1wDJ3niHAXuhexi281N2ig311pLZv", "$..*"]
+
+// Only the status code
+["/", "some-label" "$payload.users[0].employer.name"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label", "$payload.users[0].employer.name"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label", "$payload.users[0].employer.name"]
+["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "QmeURvKzGm85Ekt1t1wDJ3niHAXuhexi281N2ig311pLZv", "$payload.users[0].employer.name"]
+```
+
+## 5.2 Pipelining
+
+Pipelining uses promises as inputs to determine the required dataflow graph. The following examples both express the following dataflow graph:
 
 ```
               ┌────────────────────────────┐
@@ -260,7 +418,13 @@ The following examples both express the following dataflow graph:
              └────────────────────────────┘
 ```
 
-#### 3.3.2.1 Batched 
+To keep things simple, we expect the shape of the return data of all of these steps to include:
+
+``` json
+{"http": {"body": "some text"}}
+```
+
+#### 5.2.1 Batched 
 
  ``` json
 {
@@ -284,7 +448,7 @@ The following examples both express the following dataflow graph:
         {
           "to": "bob@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "update-dns", "$http.body"]}
+          "body": {"ucan/promise": ["/", "update-dns"]}
         }
       ]
     },
@@ -295,7 +459,7 @@ The following examples both express the following dataflow graph:
         {
           "to": "carol@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "update-dns", "$http.body"]}
+          "body": {"ucan/promise": ["/", "update-dns"]}
         }
       ]
     },
@@ -309,10 +473,10 @@ The following examples both express the following dataflow graph:
           "event": "email-notification",
         },
         {
-          "_": {"ucan/promise": ["/", "notify-bob", "$http.body"]}
+          "_": {"ucan/promise": ["/", "notify-bob"]}
         },
         {
-          "_": {"ucan/promise": ["/", "notify-carol", "$http.body"]}
+          "_": {"ucan/promise": ["/", "notify-carol"]}
         }
       ]
     }
@@ -321,7 +485,7 @@ The following examples both express the following dataflow graph:
 }
 ```
 
-### 3.3.3 Serial Pipeline
+### 5.2.2 Serial Pipeline
 
 ```
                 ┌────────────────────────────┐
@@ -443,125 +607,6 @@ The following examples both express the following dataflow graph:
 }
 ```
 
-# 4 Receipt
-
-An invocation receipt is an attestation of the output of an invocation. A receipt MUST be signed by the executor (the `aud` of the associated UCAN).
-
-Note that this does not guarantee correctness of the result! The statement's veracity MUST be only understood as an attestation from the executor.
-
-## 4.1 Fields
-
-| Field          | Type         | Description                                                                                      | Required | Default |
-|----------------|--------------|--------------------------------------------------------------------------------------------------|----------|---------|
-| `ucan/receipt` | `CID`        | CID of the Invocation that generated this response                                               | Yes      |         |
-| `rlt`          | `{CID: Any}` | The results of each call, indexed by the CID of the `dag-cbor` encoded [Action](#32-ipld-schema) | Yes      |         |
-| `v`            | `SemVer`     | SemVer of the UCAN invocation object schema                                                      | Yes      |         |
-| `nnc`          | `String`     | A unique nonce, to distinguish each receipt                                                      | Yes      |         |
-| `ext`          | `Any`        | Non-normative extended fields                                                                    | No       | `null`  |
-| `sig`          | `Bytes`      | Signature of the rest of the field canonicalized                                                 | Yes      |         |
-
-## 4.1 IPLD Schema
-
-``` ipldsch
-type Receipt struct {
-  rec &Invocation
-  rlt {URI : {Ability : Any}}
-  v   SemVer
-  nnc String
-  ext optional Any
-  sig Bytes
-} 
-```
-
-## 4.2 JSON Example
-
-``` json
-{
-  "ucan/receipt": "QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f",
-  "v": "0.1.0",
-  "rlt": {
-    "QmYqbJBxCqqzDouPMbcrbNuB3WHWajSyq4RWin7ufs2ajf": [
-      {
-        "from": "alice@example.com",
-        "text": "Hello world!"
-      }, 
-      {
-        "from": "bob@example.com",
-        "text": "What's up?"
-      }
-    ],
-    "QmXrfqKNUpRiyyi8r3hpSZyZuG3S2MY9rTw1p8iEC9FNh5": {
-      "http": { 
-        "status": 200,
-        "body": "hello world"
-      },
-      "ms": 476
-    }
-  },
-  "nnc": "xyz",
-  "ext": {
-    "notes": "very receipt. such wow.",
-    "tags": ["dag-house", "fission"]
-  },
-  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt_VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
- }
-```
-
-# 5 Promise Pipelining
-
-> Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
->
-> Mark Miller, Robust Composition
-
-At UCAN creation time, the UCAN MAY not yet have all of the information required to construct the next request in a sequence. Waiting for each request to complete before proceeding to the next action has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of earlier invocations into the input of a later one. This liberates the invoker from waiting for each step.
-
-The authority to execute later actions often cannot be fully attenuated in advance, since the executor controls the reported output of the prior step in a pipeline. When choosing to use pipelining, the invoker MUST delegate capabilities for any of the possible outputs. If tight control is required to limit authority, pipelining SHOULD NOT be used.
-
-## 5.1 Fields
-
-| Field           | Type         | Description                                                                           | Required | Default  |
-|-----------------|--------------|---------------------------------------------------------------------------------------|----------|----------|
-| `ucan/promised` | `CID or "/"` | The Invocation being referenced                                                       | Yes      |          |
-| `label`         | `String`     | The action's label. If the actions were implicit (`"run": "*"`), the the CID is used  | Yes      |          |
-| `selector`      | `String`     | The [JSONPath](https://datatracker.ietf.org/doc/draft-ietf-jsonpath-base/) expression | No       | `"$..*"` |
-
-The above table MUST be serialized as a tuple. In JSON, this SHOULD be represented as an array containing the values (but not keys) sequenced in the order they appear in the table.
-
-## 5.2 IPLD Schema
-
-``` ipldsch
-type Promise struct {
-  promised    Target
-  actionlabel String                   -- The label inside the invocation
-  jsonpath    String (implicit "$..*") -- JSONPath Expression
-} representation tuple
-
-type Target enum {
-  | Local (rename "/")
-  | Rmeote(CID)
-}
-```
-
-## 5.3 JSON Examples
-
-``` js
-// All outputs
-
-["/", "some-label"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "QmeURvKzGm85Ekt1t1wDJ3niHAXuhexi281N2ig311pLZv"]
-
-["/", "some-label", "$..*"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label", "$..*"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "QmeURvKzGm85Ekt1t1wDJ3niHAXuhexi281N2ig311pLZv", "$..*"]
-
-// Only the status code
-["/", "some-label" "$payload.users[0].employer.name"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label", "$payload.users[0].employer.name"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label", "$payload.users[0].employer.name"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "QmeURvKzGm85Ekt1t1wDJ3niHAXuhexi281N2ig311pLZv", "$payload.users[0].employer.name"]
-```
-
 # 6 Appendix
 
 ## 6.1 Support Types
@@ -606,6 +651,8 @@ Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering wor
 
 Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many conversations about capability systems and the programming models that they enable.
 
-Thanks to [Quinn Wilton](https://github.com/QuinnWilton) and [Marc-Antoine Parent](https://github.com/maparent) for their discussions of the distinction between declarations and directives both in and out of a UCAN context.
+Thanks to [Marc-Antoine Parent](https://github.com/maparent) for his discussions of the distinction between declarations and directives both in and out of a UCAN context.
+
+Many thanks to [Quinn Wilton](https://github.com/QuinnWilton) for her discussion of speech acts, and for sharing her positives experiences with JSONPath.
 
 Many thanks to [Luke Marsen](https://github.com/lukemarsden) and [Simon Worthington](https://github.com/simonwo) for their feedback on invocation model from their work on [Bacalhau](https://www.bacalhau.org/) and [IPVM](https://github.com/ipvm-wg).
