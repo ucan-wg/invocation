@@ -448,7 +448,7 @@ To keep things simple, we expect the shape of the return data of all of these st
         {
           "to": "bob@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "update-dns"]}
+          "body": {"ucan/promise": ["/", "update-dns", "$http.body"]}
         }
       ]
     },
@@ -459,7 +459,7 @@ To keep things simple, we expect the shape of the return data of all of these st
         {
           "to": "carol@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "update-dns"]}
+          "body": {"ucan/promise": ["/", "update-dns", "$http.body"]}
         }
       ]
     },
@@ -595,10 +595,10 @@ To keep things simple, we expect the shape of the return data of all of these st
           "event": "email-notification",
         },
         {
-          "_": {"ucan/promise": ["/", "notify-bob", "$http.body"]}
+          "_": {"ucan/promise": ["/", "notify-bob"]}
         },
         {
-          "_": {"ucan/promise": ["QmaCRSugy2sXEKxjDDwcqLx2Bs7CUGpZSrtsASsNyntyC9", "notify-carol", "$http.body"]}
+          "_": {"ucan/promise": ["QmaCRSugy2sXEKxjDDwcqLx2Bs7CUGpZSrtsASsNyntyC9", "notify-carol"]}
         }
       ]
     }
