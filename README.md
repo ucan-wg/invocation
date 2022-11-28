@@ -284,7 +284,7 @@ The following examples both express the following dataflow graph:
         {
           "to": "bob@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+          "body": {"ucan/promise": ["/", "update-dns", "http/body"]}
         }
       ]
     },
@@ -295,7 +295,7 @@ The following examples both express the following dataflow graph:
         {
           "to": "carol@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+          "body": {"ucan/promise": ["/", "update-dns", "http/body"]}
         }
       ]
     },
@@ -309,10 +309,10 @@ The following examples both express the following dataflow graph:
           "event": "email-notification",
         },
         {
-          "_": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+          "_": {"ucan/promise": ["/", "notify-bob", "http/body"]}
         },
         {
-          "_": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+          "_": {"ucan/promise": ["/", "notify-carol", "http/body"]}
         }
       ]
     }
@@ -396,7 +396,7 @@ The following examples both express the following dataflow graph:
         {
           "to": "carol@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+          "body": {"ucan/promise": ["QmcKi4Z1L7VH4HahyrXb8Rzjex5U7DiY12PnTnysxviuDT", "update-dns", http/body"]}
         }
       ]
     }
@@ -417,7 +417,7 @@ The following examples both express the following dataflow graph:
         {
           "to": "bob@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+          "body": {"ucan/promise": ["QmcKi4Z1L7VH4HahyrXb8Rzjex5U7DiY12PnTnysxviuDT", "update-dns", http/body"]}
         }
       ]
     },
@@ -431,10 +431,10 @@ The following examples both express the following dataflow graph:
           "event": "email-notification",
         },
         {
-          "_": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+          "_": {"ucan/promise": ["/", "notify-bob", http/body"]}
         },
         {
-          "_": {"ucan/promise": ["/", "dns://example.com?TYPE=TXT", "crud/update", "http/body"]}
+          "_": {"ucan/promise": ["QmaCRSugy2sXEKxjDDwcqLx2Bs7CUGpZSrtsASsNyntyC9", "notify-carol", http/body"]}
         }
       ]
     }
