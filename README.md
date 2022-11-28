@@ -417,7 +417,7 @@ The following examples both express the following dataflow graph:
         {
           "to": "bob@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["QmcKi4Z1L7VH4HahyrXb8Rzjex5U7DiY12PnTnysxviuDT", "update-dns", $http.body"]}
+          "body": {"ucan/promise": ["QmcKi4Z1L7VH4HahyrXb8Rzjex5U7DiY12PnTnysxviuDT", "update-dns", "$http.body"]}
         }
       ]
     },
