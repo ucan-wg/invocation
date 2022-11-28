@@ -224,7 +224,7 @@ type Action enum {
   "ucan/invoke": "QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR",
   "v": "0.1.0",
   "nnc": "abcdef",
-  "run": "*", // Exmplicitely "run all"
+  "run": "*", // Explicitly "run all"
   "ext": null,
   "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
 }
