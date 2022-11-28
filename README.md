@@ -183,7 +183,7 @@ If serialized as JSON, the `sig` field MUST be serialized as [unpadded base64url
 
 ## 3.2 IPLD Schema
 
-``` haskell
+``` ipldsch
 type Invocation struct {
   inv &UCAN  -- The UCAN providing authority
   v   SemVer -- Version
@@ -462,7 +462,7 @@ Note that this does not guarantee correctness of the result! The statement's ver
 
 ## 4.1 IPLD Schema
 
-``` haskell
+``` ipldsch
 type Receipt struct {
   rec &Invocation
   rlt {URI : {Ability : Any}}
@@ -529,7 +529,7 @@ The above table MUST be serialized as a tuple. In JSON, this SHOULD be represent
 
 ## 5.2 IPLD Schema
 
-``` haskell
+``` ipldsch
 type Promise struct {
   promised    Target
   actionlabel String                   -- The label inside the invocation
@@ -566,7 +566,7 @@ type Target enum {
 
 ## 6.1 Support Types
 
-``` haskell
+``` ipldsch
 type CID = String
 type URI = String
 type Ability = String
