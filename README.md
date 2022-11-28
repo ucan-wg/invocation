@@ -169,7 +169,7 @@ If a capability input has the key `"_"` and the value is a promise, the input MU
 
 ### 3.1.4 Nonce
 
-The `nnc` field MUS contain a unique nonce. This field makes each invocation unique.
+The `nnc` field MUST contain a unique nonce. This field makes each invocation unique.
 
 ### 3.1.5 Extended Fields
 
