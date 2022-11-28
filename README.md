@@ -364,7 +364,7 @@ type Promise struct {
 
 type Target enum {
   | Local (rename "/")
-  | Rmeote(CID)
+  | Remote(CID)
 }
 ```
 
