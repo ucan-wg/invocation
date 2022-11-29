@@ -290,14 +290,15 @@ An invocation receipt is an attestation of the output of an invocation. A receip
 
 **NB: a Receipt this does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
+Receipts don't have their own version field. Receipts MUST use the same version as the invocation that they contain.
+
 ## 4.1 Fields
 
-| Field | Type            | Description                                        | Required | Default |
-|-------|-----------------|----------------------------------------------------|----------|---------|
-| `inv` | `&Invocation`   | CID of the Invocation that generated this response | Yes      |         |
-| `rlt` | `{String: Any}` | The results of each call, the action's label       | Yes      |         |
-| `v`   | `SemVer`        | SemVer of the UCAN invocation object schema        | Yes      |         |
-| `ext` | `Any`           | Non-normative extended fields                      | No       | `null`  |
+| Field  | Type            | Description                                        | Required | Default |
+|--------|-----------------|----------------------------------------------------|----------|---------|
+| `inv`  | `&Invocation`   | CID of the Invocation that generated this response | Yes      |         |
+| `rlt`  | `{String: Any}` | The results of each call, the action's label       | Yes      |         |
+| `meta` | `Any`           | Non-normative extended fields                      | No       | `null`  |
 
 ### 4.1.1 Invocation
 
@@ -309,22 +310,17 @@ The `rlt` field MUST contain steps of the call graph, indexed by the action name
 
 Results MAY omit any actions that have not yet completed, or whos results are not public.
 
-### 4.1.3 Version
+### 4.1.3 Metadata Fields
 
-The `v` field MUST contain the Receipt schema version.
-
-### 4.1.4 Extended Fields
-
-The extended fields MAY be omitted or used to contain additional data about the reciept. This field MAY be used for tags, commentary, trace information, and so on.
+The metadata field MAY be omitted or used to contain additional data about the reciept. This field MAY be used for tags, commentary, trace information, and so on.
 
 ## 4.2 IPLD Schema
 
 ``` ipldsch
 type Receipt struct {
-  inv &SignedInvocation
-  rlt {String : Any}}
-  v   SemVer
-  ext optional Any
+  inv  &SignedInvocation
+  rlt  {String : Any}}
+  meta optional Any
 } 
 
 type SignedReceipt struct {
