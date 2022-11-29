@@ -213,7 +213,7 @@ type Action enum {
 
  ``` js
 {
-  "ucan/invoke": "QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR",
+  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
   "v": "0.1.0",
   "nnc": "abcdef",
   "ext": null,
@@ -223,7 +223,7 @@ type Action enum {
 
  ``` js
 {
-  "ucan/invoke": "QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR",
+  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
   "v": "0.1.0",
   "nnc": "abcdef",
   "run": "*", // Explicitly "run all"
@@ -238,7 +238,7 @@ Promise pipelines are handled in more detail in [section 5](#5-promise-pipelinin
 
 ``` js
 {
-  "ucan/invoke": "QmY4jEVE35u8SHegWoDak2x6vTAZ6Cc4cpSD5LAUQ23W7L",
+  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
   "v": "0.1.0",
   "nnc": "02468",
   "ext": null,
@@ -303,10 +303,10 @@ type Receipt struct {
 
 ``` json
 {
-  "ucan/receipt": "QmWqWBitVJX69QrEjzKsVTy3KQRK6snUoHaPSjmQpxvP1f",
+  "ucan/receipt": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
   "v": "0.1.0",
   "rlt": {
-    "QmYqbJBxCqqzDouPMbcrbNuB3WHWajSyq4RWin7ufs2ajf": [
+    "bafkreiakkqwuffzsxrzseo7fweeicqlnqanhvyffjieh3etsbnnkjxbphi": [
       {
         "from": "alice@example.com",
         "text": "Hello world!"
@@ -316,7 +316,7 @@ type Receipt struct {
         "text": "What's up?"
       }
     ],
-    "QmXrfqKNUpRiyyi8r3hpSZyZuG3S2MY9rTw1p8iEC9FNh5": {
+    "bafkreienxymjwglxlb3rkdyeyjt54ddoe4x4qi7a7hyfce3z56zspmy6pm": {
       "http": { 
         "status": 200,
         "body": "hello world"
@@ -359,12 +359,12 @@ The above table MUST be serialized as a tuple. In JSON, this SHOULD be represent
 ``` ipldsch
 type Promise struct {
   promised    Target 
-  actionlabel String                   -- The label inside the invocation
+  actionlabel String -- The label inside the invocation
 } representation tuple
 
-type Target enum {
-  | Local (rename "/")
-  | Remote(CID)
+type Target union {
+  | Local "/"
+  | &Invocation
 }
 ```
 
@@ -372,8 +372,8 @@ type Target enum {
 
 ``` js
 ["/", "some-label"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "QmeURvKzGm85Ekt1t1wDJ3niHAXuhexi281N2ig311pLZv"]
+["bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie", "some-label"]
+["bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie", "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"]
 ```
 
 ## 5.2 Pipelining
@@ -406,17 +406,11 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
              └────────────────────────────┘
 ```
 
-To keep things simple, we expect the shape of the return data of all of these steps to include:
-
-``` json
-{"http": {"body": "some text"}}
-```
-
 #### 5.2.1 Batched 
 
  ``` json
 {
-  "ucan/invoke": "QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR",
+  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
   "v": "0.1.0",
   "nnc": "abcdef",
   "ext": null,
@@ -436,7 +430,7 @@ To keep things simple, we expect the shape of the return data of all of these st
         {
           "to": "bob@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "update-dns", "$http.body"]}
+          "body": {"ucan/promise": ["/", "update-dns"]}
         }
       ]
     },
@@ -447,7 +441,7 @@ To keep things simple, we expect the shape of the return data of all of these st
         {
           "to": "carol@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "update-dns", "$http.body"]}
+          "body": {"ucan/promise": ["/", "update-dns"]}
         }
       ]
     },
@@ -516,7 +510,7 @@ To keep things simple, we expect the shape of the return data of all of these st
 
  ``` json
 {
-  "ucan/invoke": "Qmd4trNUhgWwsBbSsYBEWJqgiHyLrnhZ8u1DJsWsEKeuuF",
+  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
   "v": "0.1.0",
   "nnc": "abcdef",
   "ext": null,
@@ -536,7 +530,7 @@ To keep things simple, we expect the shape of the return data of all of these st
 }
  
 {
-  "ucan/invoke": "QmbXdT8QQMJ55Lb6MGJqTmwNzuUnHsE18t7zXGWeq9rQcV",
+  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
   "v": "0.1.0",
   "nnc": "12345",
   "ext": null,
@@ -548,7 +542,7 @@ To keep things simple, we expect the shape of the return data of all of these st
         {
           "to": "carol@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["QmcKi4Z1L7VH4HahyrXb8Rzjex5U7DiY12PnTnysxviuDT", "update-dns", "$http.body"]}
+          "body": {"ucan/promise": ["bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu", "update-dns"]}
         }
       ]
     }
@@ -557,7 +551,7 @@ To keep things simple, we expect the shape of the return data of all of these st
 }
 
 {
-  "ucan/invoke": "QmY4jEVE35u8SHegWoDak2x6vTAZ6Cc4cpSD5LAUQ23W7L",
+  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
   "v": "0.1.0",
   "nnc": "02468",
   "ext": null,
@@ -569,7 +563,7 @@ To keep things simple, we expect the shape of the return data of all of these st
         {
           "to": "bob@example.com",
           "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["QmcKi4Z1L7VH4HahyrXb8Rzjex5U7DiY12PnTnysxviuDT", "update-dns", "$http.body"]}
+          "body": {"ucan/promise": ["bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu", "update-dns"]}
         }
       ]
     },
@@ -586,7 +580,7 @@ To keep things simple, we expect the shape of the return data of all of these st
           "_": {"ucan/promise": ["/", "notify-bob"]}
         },
         {
-          "_": {"ucan/promise": ["QmaCRSugy2sXEKxjDDwcqLx2Bs7CUGpZSrtsASsNyntyC9", "notify-carol"]}
+          "_": {"ucan/promise": ["bafkreidcqdxosqave5u5pml3pyikiglozyscgqikvb6foppobtk3hwkjn4", "notify-carol"]}
         }
       ]
     }
@@ -641,6 +635,8 @@ Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many con
 
 Thanks to [Marc-Antoine Parent](https://github.com/maparent) for his discussions of the distinction between declarations and directives both in and out of a UCAN context.
 
-Many thanks to [Quinn Wilton](https://github.com/QuinnWilton) for her discussion of speech acts, and for sharing her positives experiences with JSONPath.
+Many thanks to [Quinn Wilton](https://github.com/QuinnWilton) for her discussion of speech acts, the dangers of signing canonicalized data, and ergonomics.
+
+Thanks to [Blaine Cook](https://github.com/blaine) for sharing their experiences with OAuth 1, irreversable design decisions, and advocating for keeping the spec simple-but-evolvable.
 
 Many thanks to [Luke Marsen](https://github.com/lukemarsden) and [Simon Worthington](https://github.com/simonwo) for their feedback on invocation model from their work on [Bacalhau](https://www.bacalhau.org/) and [IPVM](https://github.com/ipvm-wg).
