@@ -19,6 +19,7 @@ JWT
 JWT-encoded
 Lemmer-Webber
 Marsen
+OAuth
 OCapN
 Pre-Draft
 Proto
@@ -54,6 +55,7 @@ referentially
 requestor's
 responder
 signalling
+simple-but-evolvable
 trustless
 ucanto
 unpadded
