@@ -424,7 +424,7 @@ To keep things simple, we expect the shape of the return data of all of these st
       "do": "crud/update",
       "inputs": { 
          "value": "hello world",
-         "retries": 5
+         "content-type": "text/plain; charset=utf-8"
       }
     },
     "notify-bob": {
@@ -525,7 +525,7 @@ To keep things simple, we expect the shape of the return data of all of these st
       "inputs": [
         { 
           "value": "hello world",
-          "retries": 5
+          "content-type": "text/plain; charset=utf-8"
         }
       ]
     }
