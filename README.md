@@ -11,7 +11,8 @@
 
 ## Depends On
 
-* [UCAN](https://github.com/ucan-wg/spec/)
+* [`dag-cbor`](https://ipld.io/specs/codecs/dag-cbor/spec/)
+* [`ucan`](https://github.com/ucan-wg/spec/)
 * [`ucan-ipld`](https://github.com/ucan-wg/ucan-ipld/)
 
 # 0 Abstract
@@ -140,18 +141,18 @@ The invocation wrapper MUST be signed by the same principal that issued the UCAN
 
 ## 3.1 Fields
 
-| Field         | Type                                         | Value     | Description                                      | Required | Default |
-|---------------|----------------------------------------------|-----------|--------------------------------------------------|----------|---------|
-| `ucan/invoke` | `[&UCAN]`                                    |           | The CID of UCANs to invoke                       | Yes      |         |
-| `v`           | `SemVer`                                     | `"0.1.0"` | SemVer of the UCAN invocation this schema        | Yes      |         |
-| `run`         | `"*" or {String: {URI : {Ability : [Any]}}}` |           | Which UCAN capabilities to run                   | No       | `"*"`   |
-| `nnc`         | `String`                                     |           | A unique nonce, to distinguish each invocation   | Yes      |         |
-| `ext`         | `Any`                                        |           | Non-normative extended fields                    | No       | `null`  |
-| `sig`         | `Bytes`                                      |           | Signature of the rest of the field canonicalized | Yes      |         |
+| Field | Type                                         | Value     | Description                                             | Required | Default |
+|-------|----------------------------------------------|-----------|---------------------------------------------------------|----------|---------|
+| `v`   | `SemVer`                                     | `"0.1.0"` | SemVer of the UCAN invocation this schema               | Yes      |         |
+| `prf` | `[&UCAN]`                                    |           | The CIDs of the UCANs that provide the authority to run | Yes      |         |
+| `run` | `"*" or {String: {URI : {Ability : [Any]}}}` |           | Which UCAN capabilities to run                          | Yes      |         |
+| `nnc` | `String`                                     |           | A unique nonce, to distinguish each invocation          | Yes      |         |
+| `ext` | `Any`                                        |           | Non-normative extended fields                           | No       | `null`  |
+| `sig` | `Bytes`                                      |           | Signature of the rest of the field canonicalized        | Yes      |         |
   
-### 3.1.1 Invocation
+### 3.1.1 Proofs
 
-The `ucan/invoke` field MUST contain CIDs pointing to the UCANs to invoke. The outmost UCAN being invoked SHOULD NOT contain any actions that are not intended to be executed.
+The `prf` field MUST contain CIDs pointing to the UCANs that provide the authority to run these actions. Restricting the outmost UCANs to only the authprity required for the current invocation is RECOMMENDED.
 
 ### 3.1.2 Version
 
@@ -185,11 +186,15 @@ If serialized as JSON, the `sig` field MUST be serialized as [unpadded base64url
 
 ``` ipldsch
 type Invocation struct {
-  inv [&UCAN]  (rename "ucan/invoke") -- The UCAN providing authority
-  v   SemVer -- Version
-  run Scope  -- Which actions to invoke
-  nnc String -- Nonce
-  ext nullable Any (implicit null)  -- Extended fields
+  prf [&UCAN] -- The UCANs providing authority
+  v   SemVer  -- Version
+  run Scope   -- Which actions to invoke
+  nnc String  -- Nonce
+  ext nullable Any (implicit null) -- Extended fields
+}
+
+type SignedInvocation struct {
+  inv Invocation (rename "ucan/invoke") 
   sig VarSig  -- Signature
 }
 
@@ -213,21 +218,13 @@ type Action enum {
 
  ``` js
 {
-  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
-  "v": "0.1.0",
-  "nnc": "abcdef",
-  "ext": null,
-  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
-}
-```
-
- ``` js
-{
-  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
-  "v": "0.1.0",
-  "nnc": "abcdef",
-  "run": "*", // Explicitly "run all"
-  "ext": null,
+  "ucan/invoke": {
+    "v": "0.1.0",
+    "prf": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
+    "nnc": "abcdef",
+    "run": "*", // Explicitly "run all"
+    "ext": null
+  }
   "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
 }
 ```
@@ -238,30 +235,32 @@ Promise pipelines are handled in more detail in [section 5](#5-promise-pipelinin
 
 ``` js
 {
-  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
-  "v": "0.1.0",
-  "nnc": "02468",
-  "ext": null,
-  "run": {
-    "notify-bob": {
-      "using": "mailto://alice@example.com",
-      "do": "msg/send",
-      "inputs": [
-        {
-          "to": "bob@example.com",
-          "subject": "DNSLink for example.com",
-          "body": "Hello Bob!"
+  "ucan/invoke": {
+    "v": "0.1.0",
+    "prf": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
+    "nnc": "02468",
+    "ext": null,
+    "run": {
+      "notify-bob": {
+        "using": "mailto://alice@example.com",
+        "do": "msg/send",
+        "inputs": [
+          {
+            "to": "bob@example.com",
+            "subject": "DNSLink for example.com",
+            "body": "Hello Bob!"
+          }
+        ]
+      },
+      "log-as-done": {
+        "using": "https://example.com/report"
+        "do": "crud/update"
+        "inputs": {
+          "from": "mailto://alice@exmaple.com",
+          "to": ["bob@exmaple.com"],
+          "event": "email-notification",
+          "value": {"ucan/promise": ["/", "notify-bob"]} // Pipelined promise
         }
-      ]
-    },
-    "log-as-done": {
-      "using": "https://example.com/report"
-      "do": "crud/update"
-      "inputs": {
-        "from": "mailto://alice@exmaple.com",
-        "to": ["bob@exmaple.com"],
-        "event": "email-notification",
-        "value": {"ucan/promise": ["/", "notify-bob"]} // Pipelined promise
       }
     }
   },
@@ -277,57 +276,65 @@ Note that this does not guarantee correctness of the result! The statement's ver
 
 ## 4.1 Fields
 
-| Field          | Type         | Description                                                                                      | Required | Default |
-|----------------|--------------|--------------------------------------------------------------------------------------------------|----------|---------|
-| `ucan/receipt` | `CID`        | CID of the Invocation that generated this response                                               | Yes      |         |
-| `rlt`          | `{CID: Any}` | The results of each call, indexed by the CID of the `dag-cbor` encoded [Action](#32-ipld-schema) | Yes      |         |
-| `v`            | `SemVer`     | SemVer of the UCAN invocation object schema                                                      | Yes      |         |
-| `nnc`          | `String`     | A unique nonce, to distinguish each receipt                                                      | Yes      |         |
-| `ext`          | `Any`        | Non-normative extended fields                                                                    | No       | `null`  |
-| `sig`          | `Bytes`      | Signature of the rest of the field canonicalized                                                 | Yes      |         |
+| Field | Type          | Description                                                                                      | Required | Default |
+|-------|---------------|--------------------------------------------------------------------------------------------------|----------|---------|
+| `inv` | `&Invocation` | CID of the Invocation that generated this response                                               | Yes      |         |
+| `rlt` | `{CID: Any}`  | The results of each call, indexed by the CID of the `dag-cbor` encoded [Action](#32-ipld-schema) | Yes      |         |
+| `v`   | `SemVer`      | SemVer of the UCAN invocation object schema                                                      | Yes      |         |
+| `nnc` | `String`      | A unique nonce, to distinguish each receipt                                                      | Yes      |         |
+| `ext` | `Any`         | Non-normative extended fields                                                                    | No       | `null`  |
+| `sig` | `Bytes`       | Signature of the rest of the field canonicalized                                                 | Yes      |         |
 
 ## 4.1 IPLD Schema
 
 ``` ipldsch
 type Receipt struct {
-  rec &Invocation
+  inv &SignedInvocation
   rlt {URI : {Ability : Any}}
   v   SemVer
   nnc String
   ext optional Any
-  sig Bytes
 } 
+
+type SignedReceipt struct {
+  rec Receipt (rename "ucan/receipt")
+  sig VarSig
+}
+
+type VarSig Bytes
 ```
 
 ## 4.2 JSON Example
 
 ``` json
 {
-  "ucan/receipt": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
-  "v": "0.1.0",
-  "rlt": {
-    "bafkreiakkqwuffzsxrzseo7fweeicqlnqanhvyffjieh3etsbnnkjxbphi": [
-      {
-        "from": "alice@example.com",
-        "text": "Hello world!"
-      }, 
-      {
-        "from": "bob@example.com",
-        "text": "What's up?"
+  "ucan/receipt": {
+    "v": "0.1.0",
+    "inv": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e",
+    "rlt": {
+      "bafkreiakkqwuffzsxrzseo7fweeicqlnqanhvyffjieh3etsbnnkjxbphi": [
+        {
+          "from": "alice@example.com",
+          "text": "Hello world!"
+        }, 
+        {
+          "from": "bob@example.com",
+          "text": "What's up?"
+        }
+      ],
+      "bafkreienxymjwglxlb3rkdyeyjt54ddoe4x4qi7a7hyfce3z56zspmy6pm": {
+        "http": { 
+          "status": 200,
+          "body": "hello world"
+        },
+        "ms": 476
       }
-    ],
-    "bafkreienxymjwglxlb3rkdyeyjt54ddoe4x4qi7a7hyfce3z56zspmy6pm": {
-      "http": { 
-        "status": 200,
-        "body": "hello world"
-      },
-      "ms": 476
+    },
+    "nnc": "xyz",
+    "ext": {
+      "notes": "very receipt. such wow.",
+      "tags": ["dag-house", "fission"]
     }
-  },
-  "nnc": "xyz",
-  "ext": {
-    "notes": "very receipt. such wow.",
-    "tags": ["dag-house", "fission"]
   },
   "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt_VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
  }
@@ -410,57 +417,59 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 
  ``` json
 {
-  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
-  "v": "0.1.0",
-  "nnc": "abcdef",
-  "ext": null,
-  "run": {
-    "update-dns" : {
-      "using": "dns://example.com?TYPE=TXT":
-      "do": "crud/update",
-      "inputs": { 
-         "value": "hello world",
-         "content-type": "text/plain; charset=utf-8"
+  "ucan/invoke": {
+    "v": "0.1.0",
+    "prf": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
+    "nnc": "abcdef",
+    "ext": null,
+    "run": {
+      "update-dns" : {
+        "using": "dns://example.com?TYPE=TXT":
+        "do": "crud/update",
+        "inputs": { 
+          "value": "hello world",
+          "content-type": "text/plain; charset=utf-8"
+        }
+      },
+      "notify-bob": {
+        "using": "mailto://alice@example.com",
+        "do": "msg/send",
+        "inputs": [
+          {
+            "to": "bob@example.com",
+            "subject": "DNSLink for example.com",
+            "body": {"ucan/promise": ["/", "update-dns"]}
+          }
+        ]
+      },
+      "notify-carol": {
+        "using": "mailto://alice@example.com",
+        "do": "msg/send",
+        "inputs": [
+          {
+            "to": "carol@example.com",
+            "subject": "DNSLink for example.com",
+            "body": {"ucan/promise": ["/", "update-dns"]}
+          }
+        ]
+      },
+      "log-as-done": {
+        "using": "https://example.com/report"
+        "do": "crud/update"
+        "inputs": [
+          {
+            "from": "mailto://alice@exmaple.com",
+            "to": ["bob@exmaple.com", "carol@example.com"],
+            "event": "email-notification",
+          },
+          {
+            "_": {"ucan/promise": ["/", "notify-bob"]}
+          },
+          {
+            "_": {"ucan/promise": ["/", "notify-carol"]}
+          }
+        ]
       }
-    },
-    "notify-bob": {
-      "using": "mailto://alice@example.com",
-      "do": "msg/send",
-      "inputs": [
-        {
-          "to": "bob@example.com",
-          "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "update-dns"]}
-        }
-      ]
-    },
-    "notify-carol": {
-      "using": "mailto://alice@example.com",
-      "do": "msg/send",
-      "inputs": [
-        {
-          "to": "carol@example.com",
-          "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["/", "update-dns"]}
-        }
-      ]
-    },
-    "log-as-done": {
-      "using": "https://example.com/report"
-      "do": "crud/update"
-      "inputs": [
-        {
-          "from": "mailto://alice@exmaple.com",
-          "to": ["bob@exmaple.com", "carol@example.com"],
-          "event": "email-notification",
-        },
-        {
-          "_": {"ucan/promise": ["/", "notify-bob"]}
-        },
-        {
-          "_": {"ucan/promise": ["/", "notify-carol"]}
-        }
-      ]
     }
   },
   "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
@@ -510,79 +519,85 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 
  ``` json
 {
-  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
-  "v": "0.1.0",
-  "nnc": "abcdef",
-  "ext": null,
-  "run": {
-    "update-dns": {
-      "using": "dns://example.com?TYPE=TXT",
-      "do": "crud/update"
-      "inputs": [
-        { 
-          "value": "hello world",
-          "content-type": "text/plain; charset=utf-8"
-        }
-      ]
+  "ucan/invoke": {
+    "v": "0.1.0",
+    "inv": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
+    "nnc": "abcdef",
+    "ext": null,
+    "run": {
+      "update-dns": {
+        "using": "dns://example.com?TYPE=TXT",
+        "do": "crud/update"
+        "inputs": [
+          { 
+            "value": "hello world",
+            "content-type": "text/plain; charset=utf-8"
+          }
+        ]
+      }
     }
   },
   "sig": "kQHtTruysx4S8SrvSjTwr6ttTLzc7dd7atANUYT-SRK6v_SX8bjHegWoDak2x6vTAZ6CcVKBt6JGpgnjABpsoL"
 }
  
 {
-  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
-  "v": "0.1.0",
-  "nnc": "12345",
-  "ext": null,
-  "run": {
-    "notify-carol": {
-      "using": "mailto://alice@example.com",
-      "do": "msg/send",
-      "inputs": [
-        {
-          "to": "carol@example.com",
-          "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu", "update-dns"]}
-        }
-      ]
+  "ucan/invoke": {
+    "v": "0.1.0",
+    "prf": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
+    "nnc": "12345",
+    "ext": null,
+    "run": {
+      "notify-carol": {
+        "using": "mailto://alice@example.com",
+        "do": "msg/send",
+        "inputs": [
+          {
+            "to": "carol@example.com",
+            "subject": "DNSLink for example.com",
+            "body": {"ucan/promise": ["bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu", "update-dns"]}
+          }
+        ]
+      }
     }
   },
   "sig": "XZRSmp5cHaXX6xWzSTxQqC95kQHtTruysx4S8SrvSjTwr6ttTLzc7dd7atANUQJXoWThUiVuCHWdMnQNQJgiJi"
 }
 
 {
-  "ucan/invoke": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
-  "v": "0.1.0",
-  "nnc": "02468",
-  "ext": null,
-  "run": {
-    "notify-bob": {
-      "using": "mailto://alice@example.com",
-      "do": "msg/send",
-      "inputs": [
-        {
-          "to": "bob@example.com",
-          "subject": "DNSLink for example.com",
-          "body": {"ucan/promise": ["bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu", "update-dns"]}
-        }
-      ]
-    },
-    "log-as-done": {
-      "using": "https://example.com/report"
-      "do": "crud/update"
-      "inputs": [
-        {
-          "from": "mailto://alice@exmaple.com",
-          "to": ["bob@exmaple.com", "carol@example.com"],
-          "event": "email-notification",
-        },
-        {
-          "_": {"ucan/promise": ["/", "notify-bob"]}
-        },
-        {
-          "_": {"ucan/promise": ["bafkreidcqdxosqave5u5pml3pyikiglozyscgqikvb6foppobtk3hwkjn4", "notify-carol"]}
-        }
-      ]
+  "ucan/invoke": {
+    "v": "0.1.0",
+    "prf": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
+    "nnc": "02468",
+    "ext": null,
+    "run": {
+      "notify-bob": {
+        "using": "mailto://alice@example.com",
+        "do": "msg/send",
+        "inputs": [
+          {
+            "to": "bob@example.com",
+            "subject": "DNSLink for example.com",
+            "body": {"ucan/promise": ["bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu", "update-dns"]}
+          }
+        ]
+      },
+      "log-as-done": {
+        "using": "https://example.com/report"
+        "do": "crud/update"
+        "inputs": [
+          {
+            "from": "mailto://alice@exmaple.com",
+            "to": ["bob@exmaple.com", "carol@example.com"],
+            "event": "email-notification",
+          },
+          {
+            "_": {"ucan/promise": ["/", "notify-bob"]}
+          },
+          {
+            "_": {"ucan/promise": ["bafkreidcqdxosqave5u5pml3pyikiglozyscgqikvb6foppobtk3hwkjn4", "notify-carol"]}
+          }
+        ]
+      }
     }
   },
   "sig": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"
@@ -631,6 +646,8 @@ The [Object Capability Network (OCapN)](https://github.com/ocapn/ocapn) protocol
 
 Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering work](http://erights.org/talks/thesis/markm-thesis.pdf) on [capability systems](http://erights.org/).
 
+Many thanks to [Luke Marsen](https://github.com/lukemarsden) and [Simon Worthington](https://github.com/simonwo) for their feedback on invocation model from their work on [Bacalhau](https://www.bacalhau.org/) and [IPVM](https://github.com/ipvm-wg).
+
 Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many conversations about capability systems and the programming models that they enable.
 
 Thanks to [Marc-Antoine Parent](https://github.com/maparent) for his discussions of the distinction between declarations and directives both in and out of a UCAN context.
@@ -639,4 +656,4 @@ Many thanks to [Quinn Wilton](https://github.com/QuinnWilton) for her discussion
 
 Thanks to [Blaine Cook](https://github.com/blaine) for sharing their experiences with OAuth 1, irreversible design decisions, and advocating for keeping the spec simple-but-evolvable.
 
-Many thanks to [Luke Marsen](https://github.com/lukemarsden) and [Simon Worthington](https://github.com/simonwo) for their feedback on invocation model from their work on [Bacalhau](https://www.bacalhau.org/) and [IPVM](https://github.com/ipvm-wg).
+Thanks to [Philipp Krüger](https://github.com/matheus23/) for the enthusiastic feedback on the overall design and encoding.
