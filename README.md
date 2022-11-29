@@ -185,7 +185,7 @@ If serialized as JSON, the `sig` field MUST be serialized as [unpadded base64url
 
 ``` ipldsch
 type Invocation struct {
-  inv &UCAN  -- The UCAN providing authority
+  inv &UCAN  (rename "ucan/invoke") -- The UCAN providing authority
   v   SemVer -- Version
   run Scope  -- Which actions to invoke
   nnc String -- Nonce
