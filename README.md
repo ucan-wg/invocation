@@ -160,7 +160,7 @@ The `v` field MUST contain the version of the invocation object  schema.
 
 ### 3.1.3 Run Capabilities
 
-The OPTIONAL `run` field MUST reference the actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](#5-promise-pipelining)) are intended to be run, then they MUST be prefixed with an arbitrary label and treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or greater authority.
+The `run` field MUST reference the actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](#5-promise-pipelining)) are intended to be run, then they MUST be prefixed with an arbitrary label and treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or greater authority.
 
 #### 3.1.3.1 Promises
 
@@ -224,7 +224,7 @@ type Action enum {
     "nnc": "abcdef",
     "run": "*", // Explicitly "run all"
     "ext": null
-  }
+  },
   "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
 }
 ```
