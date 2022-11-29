@@ -646,7 +646,7 @@ type Path = String
 
 type SemVer struct {
   num NumVer
-  tag String (implicit Null)
+  tag optional String
 } representation stringjoin {
   join "+"
 }
