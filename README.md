@@ -123,7 +123,7 @@ The JSON examples below are given in [DAG-JSON](https://ipld.io/docs/codecs/know
 {"/": {"bytes": "s0m3Byte5"}}
 ```
 
-This format help disambiguate type information in generical DAG-JSON tooling. However, your presentation need not be in this specific format, as long as it can be converted to and from this cleanly. As it is used for the signature format, DAG-CBOR is RECOMMENDED.
+This format help disambiguate type information in generic DAG-JSON tooling. However, your presentation need not be in this specific format, as long as it can be converted to and from this cleanly. As it is used for the signature format, DAG-CBOR is RECOMMENDED.
 
 ## 1.4 Signatures
 
@@ -308,11 +308,11 @@ The `inv` field MUST include a link to the Invocation that the Receipt is for.
 
 The `rlt` field MUST contain steps of the call graph, indexed by the action name inside the invocation. If the invocation is the implicit `"*"`, then the base64 hash of the concatenation of the URI, Ability and extensional fields MUST be used.
 
-Results MAY omit any actions that have not yet completed, or whos results are not public.
+Results MAY omit any actions that have not yet completed, or results which are not public.
 
 ### 4.1.3 Metadata Fields
 
-The metadata field MAY be omitted or used to contain additional data about the reciept. This field MAY be used for tags, commentary, trace information, and so on.
+The metadata field MAY be omitted or used to contain additional data about the receipt. This field MAY be used for tags, commentary, trace information, and so on.
 
 ## 4.2 IPLD Schema
 

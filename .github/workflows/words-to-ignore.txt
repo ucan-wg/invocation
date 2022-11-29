@@ -6,6 +6,7 @@ CIDs
 Cap'N
 Cap'n
 CapTP
+DAG-JSON
 ERTP
 Gozalishvili
 Hardt
@@ -34,6 +35,7 @@ UCAN's
 UCANTO
 UCANs
 URI
+VarSig
 Worthington
 Zelenka
 auth
