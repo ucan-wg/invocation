@@ -295,18 +295,18 @@ Receipts don't have their own version field. Receipts MUST use the same version 
 | Field  | Type            | Description                                                             | Required | Default |
 |--------|-----------------|-------------------------------------------------------------------------|----------|---------|
 | `inv`  | `&Invocation`   | CID of the Invocation that generated this response                      | Yes      |         |
-| `rlt`  | `{String: Any}` | The results of each call, the action's label. MAY contain sub-receipts. | Yes      |         |
+| `out`  | `{String: Any}` | The results of each call, the action's label. MAY contain sub-receipts. | Yes      |         |
 | `meta` | `Any`           | Non-normative extended fields                                           | No       | `null`  |
 
 ### 4.1.1 Invocation
 
 The `inv` field MUST include a link to the Invocation that the Receipt is for.
 
-### 4.1.2 Result
+### 4.1.2 Output
 
-The `rlt` field MUST contain steps of the call graph, indexed by the action name inside the invocation. If the invocation is the implicit `"*"`, then the base64 hash of the concatenation of the URI, Ability and extensional fields MUST be used.
+The `out` field MUST contain the output of steps of the call graph, indexed by the action name inside the invocation. If the invocation is the implicit `"*"`, then the base64 hash of the concatenation of the URI, Ability and extensional fields MUST be used.
 
-Results MAY omit any actions that have not yet completed, or results which are not public.
+The `out` field MAY omit any actions that have not yet completed, or results which are not public. In this case, it is RECOMMENDED that 
 
 ### 4.1.3 Metadata Fields
 
@@ -322,7 +322,7 @@ type SignedReceipt struct {
 
 type Receipt struct {
   inv  &SignedInvocation
-  rlt  {String : Result}
+  out  {String : Result}
   meta Any (implicit Null)
 } 
 
@@ -339,7 +339,7 @@ type Result union {
   "ucan/receipt": {
     "v": "0.1.0",
     "inv": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
-    "rlt": {
+    "out": {
       "bafkreiakkqwuffzsxrzseo7fweeicqlnqanhvyffjieh3etsbnnkjxbphi": [
         {
           "from": "alice@example.com",
