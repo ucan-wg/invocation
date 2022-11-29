@@ -142,7 +142,7 @@ The invocation wrapper MUST be signed by the same principal that issued the UCAN
 
 | Field         | Type                                         | Value     | Description                                      | Required | Default |
 |---------------|----------------------------------------------|-----------|--------------------------------------------------|----------|---------|
-| `ucan/invoke` | `CID`                                        |           | The CID of the UCAN to invoke                    | Yes      |         |
+| `ucan/invoke` | `[&UCAN]`                                    |           | The CID of UCANs to invoke                       | Yes      |         |
 | `v`           | `SemVer`                                     | `"0.1.0"` | SemVer of the UCAN invocation this schema        | Yes      |         |
 | `run`         | `"*" or {String: {URI : {Ability : [Any]}}}` |           | Which UCAN capabilities to run                   | No       | `"*"`   |
 | `nnc`         | `String`                                     |           | A unique nonce, to distinguish each invocation   | Yes      |         |
@@ -169,7 +169,7 @@ If a capability input has the key `"_"` and the value is a promise, the input MU
 
 ### 3.1.4 Nonce
 
-The `nnc` field MUST contain a unique nonce. This field makes each invocation unique.
+The `nnc` field MUST contain a unique nonce. This field exists to enable making the CID of each invocation unique. While this field MAY be an empty string, it is NOT RECOMMENDED.
 
 ### 3.1.5 Extended Fields
 
@@ -185,11 +185,11 @@ If serialized as JSON, the `sig` field MUST be serialized as [unpadded base64url
 
 ``` ipldsch
 type Invocation struct {
-  inv &UCAN  (rename "ucan/invoke") -- The UCAN providing authority
+  inv [&UCAN]  (rename "ucan/invoke") -- The UCAN providing authority
   v   SemVer -- Version
   run Scope  -- Which actions to invoke
-  nnc String (implicit "") -- Nonce
-  ext nullable Any  (implicit null)  -- Extended fields
+  nnc String -- Nonce
+  ext nullable Any (implicit null)  -- Extended fields
   sig VarSig  -- Signature
 }
 
