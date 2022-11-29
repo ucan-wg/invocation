@@ -7,6 +7,7 @@ Cap'N
 Cap'n
 CapTP
 DAG-JSON
+DAG_CBOR
 ERTP
 Gozalishvili
 Hardt
@@ -32,6 +33,7 @@ Spritely
 TTL
 UCAN
 UCAN's
+UCAN-IPLD
 UCANTO
 UCANs
 URI
