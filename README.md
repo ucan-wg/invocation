@@ -201,6 +201,11 @@ The `sig` field MUST contain the signature of the other fields. The signature MU
 ## 3.2 IPLD Schema
 
 ``` ipldsch
+type SignedInvocation struct {
+  inv Invocation (rename "ucan/invoke") 
+  sig VarSig  -- Signature
+}
+
 type Invocation struct {
   prf [&UCAN] -- The UCANs providing authority
   v   SemVer  -- Version
@@ -208,13 +213,6 @@ type Invocation struct {
   nnc String  -- Nonce
   ext nullable Any (implicit null) -- Extended fields
 }
-
-type SignedInvocation struct {
-  inv Invocation (rename "ucan/invoke") 
-  sig VarSig  -- Signature
-}
-
-type VarSig Bytes
 
 type Scope enum {
   | All ("*")
@@ -317,16 +315,16 @@ The metadata field MAY be omitted or used to contain additional data about the r
 ## 4.2 IPLD Schema
 
 ``` ipldsch
-type Receipt struct {
-  inv  &SignedInvocation
-  rlt  {String : Result}}
-  meta optional Any
-} 
- 
 type SignedReceipt struct {
   rec Receipt (rename "ucan/receipt")
   sig VarSig
 }
+
+type Receipt struct {
+  inv  &SignedInvocation
+  rlt  {String : Result}
+  meta Any (implicit Null)
+} 
 
 type Result union {
   | Payload Any
@@ -639,10 +637,11 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 ## 6.1 Support Types
 
 ``` ipldsch
-type CID = String
-type URI = String
-type Ability = String
-type Path = String
+type CID String
+type URI String
+type Ability String
+type Path String
+type VarSig Bytes
 
 type SemVer struct {
   num NumVer
