@@ -294,11 +294,11 @@ Receipts don't have their own version field. Receipts MUST use the same version 
 
 ## 4.1 Fields
 
-| Field  | Type            | Description                                        | Required | Default |
-|--------|-----------------|----------------------------------------------------|----------|---------|
-| `inv`  | `&Invocation`   | CID of the Invocation that generated this response | Yes      |         |
-| `rlt`  | `{String: Any}` | The results of each call, the action's label       | Yes      |         |
-| `meta` | `Any`           | Non-normative extended fields                      | No       | `null`  |
+| Field  | Type            | Description                                                             | Required | Default |
+|--------|-----------------|-------------------------------------------------------------------------|----------|---------|
+| `inv`  | `&Invocation`   | CID of the Invocation that generated this response                      | Yes      |         |
+| `rlt`  | `{String: Any}` | The results of each call, the action's label. MAY contain sub-receipts. | Yes      |         |
+| `meta` | `Any`           | Non-normative extended fields                                           | No       | `null`  |
 
 ### 4.1.1 Invocation
 
@@ -319,13 +319,18 @@ The metadata field MAY be omitted or used to contain additional data about the r
 ``` ipldsch
 type Receipt struct {
   inv  &SignedInvocation
-  rlt  {String : Any}}
+  rlt  {String : Result}}
   meta optional Any
 } 
-
+ 
 type SignedReceipt struct {
   rec Receipt (rename "ucan/receipt")
   sig VarSig
+}
+
+type Result union {
+  | Payload Any
+  | &SignedReceipt
 }
 ```
 
@@ -353,10 +358,10 @@ type SignedReceipt struct {
           "body": "hello world"
         },
         "ms": 476
-      }
-    },
-    "nnc": "xyz",
-    "ext": {
+      },
+      "delegated-action": {"/": "bafkreieiupg4smeb5ammpsydbiea4yvwzwne5ly4hiripy4cjocqiat3ce"}
+    }
+    "meta": {
       "notes": "very receipt. such wow.",
       "tags": ["dag-house", "fission"]
     }
