@@ -113,7 +113,7 @@ As we shall see in the [discussion of promise pipelining](#5-promise-pipelining)
 
 ## 1.3 A Note On Serialization
 
-The JSON examples below are given in [DAG-JSON](https://ipld.io/docs/codecs/known/dag-json/), but UCAN Invocation is actually defined as IPLD. This makes UCAN Invocation agnotsic to encoding. DAG-JSON follows particular conventions around wrapping CIDs and binary data in tags like so:
+The JSON examples below are given in [DAG-JSON](https://ipld.io/docs/codecs/known/dag-json/), but UCAN Invocation is actually defined as IPLD. This makes UCAN Invocation agnostic to encoding. DAG-JSON follows particular conventions around wrapping CIDs and binary data in tags like so:
 
 ``` json
 // CID
