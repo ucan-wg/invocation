@@ -190,8 +190,10 @@ type Invocation struct {
   run Scope  -- Which actions to invoke
   nnc String (implicit "") -- Nonce
   ext nullable Any  (implicit null)  -- Extended fields
-  sig Bytes  -- Signature
+  sig VarSig  -- Signature
 }
+
+type VarSig Bytes
 
 type Scope enum {
   | All ("*")
