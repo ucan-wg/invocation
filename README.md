@@ -637,6 +637,6 @@ Thanks to [Marc-Antoine Parent](https://github.com/maparent) for his discussions
 
 Many thanks to [Quinn Wilton](https://github.com/QuinnWilton) for her discussion of speech acts, the dangers of signing canonicalized data, and ergonomics.
 
-Thanks to [Blaine Cook](https://github.com/blaine) for sharing their experiences with OAuth 1, irreversable design decisions, and advocating for keeping the spec simple-but-evolvable.
+Thanks to [Blaine Cook](https://github.com/blaine) for sharing their experiences with OAuth 1, irreversible design decisions, and advocating for keeping the spec simple-but-evolvable.
 
 Many thanks to [Luke Marsen](https://github.com/lukemarsden) and [Simon Worthington](https://github.com/simonwo) for their feedback on invocation model from their work on [Bacalhau](https://www.bacalhau.org/) and [IPVM](https://github.com/ipvm-wg).
