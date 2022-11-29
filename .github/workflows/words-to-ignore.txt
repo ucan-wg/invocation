@@ -17,10 +17,12 @@ JSON
 JSONPath
 JWT
 JWT-encoded
+Krüger
 Lemmer-Webber
 Marsen
 OAuth
 OCapN
+Philipp
 Pre-Draft
 Proto
 RPC

@@ -152,7 +152,7 @@ The invocation wrapper MUST be signed by the same principal that issued the UCAN
   
 ### 3.1.1 Proofs
 
-The `prf` field MUST contain CIDs pointing to the UCANs that provide the authority to run these actions. Restricting the outmost UCANs to only the authprity required for the current invocation is RECOMMENDED.
+The `prf` field MUST contain CIDs pointing to the UCANs that provide the authority to run these actions. Restricting the outmost UCANs to only the authority required for the current invocation is RECOMMENDED.
 
 ### 3.1.2 Version
 
