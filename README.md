@@ -189,7 +189,7 @@ type Invocation struct {
   v   SemVer -- Version
   run Scope  -- Which actions to invoke
   nnc String -- Nonce
-  ext Any    -- Extended fields
+  ext nullable Any  (implicit null)  -- Extended fields
   sig Bytes  -- Signature
 }
 
