@@ -173,7 +173,7 @@ The `nnc` field MUST contain a unique nonce. This field makes each invocation un
 
 ### 3.1.5 Extended Fields
 
-The OPTIONAL `ext` field MAY contain arbitrary data. If not present, the `ext` field MUST me interpreted as `null`, including for [signature](#315-signature).
+The OPTIONAL `ext` field MAY contain arbitrary data. If not present, the `ext` field MUST be interpreted as `null`, including for [signature](#315-signature).
 
 ### 3.1.6 Signature
 
