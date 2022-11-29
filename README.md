@@ -188,7 +188,7 @@ type Invocation struct {
   inv &UCAN  (rename "ucan/invoke") -- The UCAN providing authority
   v   SemVer -- Version
   run Scope  -- Which actions to invoke
-  nnc String -- Nonce
+  nnc String (implicit "") -- Nonce
   ext nullable Any  (implicit null)  -- Extended fields
   sig Bytes  -- Signature
 }
