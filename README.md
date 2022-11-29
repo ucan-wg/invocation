@@ -159,7 +159,7 @@ The `v` field MUST contain the version of the invocation object  schema.
 
 ### 3.1.3 Run Capabilities
 
-The OPTIONAL `run` field MUST reference the actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](#5-promise-pipelining)) are intended to be run, then they MUST be prefixed with an arbitrary label and treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or lesser scope.
+The OPTIONAL `run` field MUST reference the actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](#5-promise-pipelining)) are intended to be run, then they MUST be prefixed with an arbitrary label and treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or greater authority.
 
 #### 3.1.3.1 Promises
 
@@ -349,7 +349,6 @@ The authority to execute later actions often cannot be fully attenuated in advan
 |---------------|--------------|---------------------------------------------------------------------------------------|----------|----------|
 | `promised`    | `CID or "/"` | The Invocation being referenced                                                       | Yes      |          |
 | `actionlabel` | `String`     | The action's label. If the actions were implicit (`"run": "*"`), the the CID is used  | Yes      |          |
-| `selector`    | `String`     | The [JSONPath](https://datatracker.ietf.org/doc/draft-ietf-jsonpath-base/) expression | No       | `"$..*"` |
 
 The above table MUST be serialized as a tuple. In JSON, this SHOULD be represented as an array containing the values (but not keys) sequenced in the order they appear in the table.
 
@@ -359,7 +358,6 @@ The above table MUST be serialized as a tuple. In JSON, this SHOULD be represent
 type Promise struct {
   promised    Target 
   actionlabel String                   -- The label inside the invocation
-  selector    String (implicit "$..*") -- JSONPath Expression
 } representation tuple
 
 type Target enum {
@@ -371,21 +369,9 @@ type Target enum {
 ## 5.1.3 JSON Examples
 
 ``` js
-// All outputs
-
 ["/", "some-label"]
 ["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label"]
 ["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "QmeURvKzGm85Ekt1t1wDJ3niHAXuhexi281N2ig311pLZv"]
-
-["/", "some-label", "$..*"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label", "$..*"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "QmeURvKzGm85Ekt1t1wDJ3niHAXuhexi281N2ig311pLZv", "$..*"]
-
-// Only the status code
-["/", "some-label" "$payload.users[0].employer.name"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label", "$payload.users[0].employer.name"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "some-label", "$payload.users[0].employer.name"]
-["QmYW8Z58V1v8R25USVPUuFHtU7nGouApdGTk3vRPXmVHPR", "QmeURvKzGm85Ekt1t1wDJ3niHAXuhexi281N2ig311pLZv", "$payload.users[0].employer.name"]
 ```
 
 ## 5.2 Pipelining
