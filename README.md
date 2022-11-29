@@ -14,6 +14,7 @@
 * [DAG-CBOR](https://ipld.io/specs/codecs/dag-cbor/spec/)
 * [UCAN](https://github.com/ucan-wg/spec/)
 * [UCAN-IPLD](https://github.com/ucan-wg/ucan-ipld/)
+* [VarSig](https://github.com/ChainAgnostic/varsig/)
 
 # 0 Abstract
 
@@ -124,6 +125,10 @@ The JSON examples below are given in [DAG-JSON](https://ipld.io/docs/codecs/know
 
 This format help disambiguate type information in generical DAG-JSON tooling. However, your presentation need not be in this specific format, as long as it can be converted to and from this cleanly. As it is used for the signature format, DAG-CBOR is RECOMMENDED.
 
+## 1.4 Signatures
+
+All payloads described below MUST be signed with a [VarSig](https://github.com/ChainAgnostic/varsig/).
+
 # 2 Roles
 
 Invocation adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
@@ -162,7 +167,6 @@ The invocation wrapper MUST be signed by the same principal that issued the UCAN
 | `run` | `"*" or {String: {URI : {Ability : [Any]}}}` |           | Which UCAN capabilities to run                          | Yes      |         |
 | `nnc` | `String`                                     |           | A unique nonce, to distinguish each invocation          | Yes      |         |
 | `ext` | `Any`                                        |           | Non-normative extended fields                           | No       | `null`  |
-| `sig` | `Bytes`                                      |           | Signature of the rest of the field canonicalized        | Yes      |         |
   
 ### 3.1.1 Proofs
 
@@ -193,8 +197,6 @@ The OPTIONAL `ext` field MAY contain arbitrary data. If not present, the `ext` f
 ### 3.1.6 Signature
 
 The `sig` field MUST contain the signature of the other fields. The signature MUST be given as a [VarSig](https://github.com/ChainAgnostic/varsig), which includes the payload encoding information.
-
-If serialized as JSON, the `sig` field MUST be serialized as [unpadded base64url](https://datatracker.ietf.org/doc/html/rfc4648#section-5).
 
 ## 3.2 IPLD Schema
 
@@ -290,23 +292,38 @@ An invocation receipt is an attestation of the output of an invocation. A receip
 
 ## 4.1 Fields
 
-| Field | Type          | Description                                                                                      | Required | Default |
-|-------|---------------|--------------------------------------------------------------------------------------------------|----------|---------|
-| `inv` | `&Invocation` | CID of the Invocation that generated this response                                               | Yes      |         |
-| `rlt` | `{CID: Any}`  | The results of each call, indexed by the CID of the `dag-cbor` encoded [Action](#32-ipld-schema) | Yes      |         |
-| `v`   | `SemVer`      | SemVer of the UCAN invocation object schema                                                      | Yes      |         |
-| `nnc` | `String`      | A unique nonce, to distinguish each receipt                                                      | Yes      |         |
-| `ext` | `Any`         | Non-normative extended fields                                                                    | No       | `null`  |
-| `sig` | `Bytes`       | Signature of the rest of the field canonicalized                                                 | Yes      |         |
+| Field | Type            | Description                                        | Required | Default |
+|-------|-----------------|----------------------------------------------------|----------|---------|
+| `inv` | `&Invocation`   | CID of the Invocation that generated this response | Yes      |         |
+| `rlt` | `{String: Any}` | The results of each call, the action's label       | Yes      |         |
+| `v`   | `SemVer`        | SemVer of the UCAN invocation object schema        | Yes      |         |
+| `ext` | `Any`           | Non-normative extended fields                      | No       | `null`  |
 
-## 4.1 IPLD Schema
+### 4.1.1 Invocation
+
+The `inv` field MUST include a link to the Invocation that the Receipt is for.
+
+### 4.1.2 Result
+
+The `rlt` field MUST contain steps of the call graph, indexed by the action name inside the invocation. If the invocation is the implicit `"*"`, then the base64 hash of the concatenation of the URI, Ability and extensional fields MUST be used.
+
+Results MAY omit any actions that have not yet completed, or whos results are not public.
+
+### 4.1.3 Version
+
+The `v` field MUST contain the Receipt schema version.
+
+### 4.1.4 Extended Fields
+
+The extended fields MAY be omitted or used to contain additional data about the reciept. This field MAY be used for tags, commentary, trace information, and so on.
+
+## 4.2 IPLD Schema
 
 ``` ipldsch
 type Receipt struct {
   inv &SignedInvocation
-  rlt {Hash : Any}} FIXME!!!
+  rlt {String : Any}}
   v   SemVer
-  nnc String
   ext optional Any
 } 
 
@@ -314,11 +331,9 @@ type SignedReceipt struct {
   rec Receipt (rename "ucan/receipt")
   sig VarSig
 }
-
-type Hash Bytes
 ```
 
-## 4.2 JSON Example
+## 4.3 JSON Example
 
 ``` json
 {
