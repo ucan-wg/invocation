@@ -32,7 +32,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 UCAN is a chained-capability format. A UCAN contains all of the information that one would need to perform some action, and the provable authority to do so. This begs the question: can UCAN be used directly as an RPC language?
 
-Some teams have had success using UCAN directly for RPC when the intention is clear from context. This can be successful when there is more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). However, capability invocation contains strictly more information than delegation: all of the authority of UCAN, plus the command to perform the action.
+Some teams have had success with UCAN directly for RPC when the intention is clear from context. This can be successful when there is more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). However, capability invocation contains strictly more information than delegation: all of the authority of UCAN, plus the command to perform the action.
 
 ## 1.1 Intuition
 
@@ -100,7 +100,7 @@ As we shall see in the [discussion of promise pipelining](#5-promise-pipelining)
 │                                                           │   Dan   ╞═══Read Email══►│  Erin   │        │
 │                                                           │         │           ▲    │         │        │
 │                                                           └─────────┘           ┆    └─────────┘        │
-│                                                                               Using                     │
+│                                                                               With                     │
 │                                                                               Result                    │
 │                                                                  ┌─────────┐   Of         ┌─────────┐   │
 │                                                                  │         │    ┆         │         │   │
@@ -220,7 +220,7 @@ type Scope enum {
 }
 
 type Action enum {
-  using  URI 
+  with  URI 
   do     Ability
   inputs Any
 } 
@@ -256,7 +256,7 @@ Promise pipelines are handled in more detail in [section 5](#5-promise-pipelinin
     "ext": null,
     "run": {
       "notify-bob": {
-        "using": "mailto://alice@example.com",
+        "with": "mailto://alice@example.com",
         "do": "msg/send",
         "inputs": [
           {
@@ -267,7 +267,7 @@ Promise pipelines are handled in more detail in [section 5](#5-promise-pipelinin
         ]
       },
       "log-as-done": {
-        "using": "https://example.com/report"
+        "with": "https://example.com/report"
         "do": "crud/update"
         "inputs": {
           "from": "mailto://alice@exmaple.com",
@@ -452,7 +452,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
     "ext": null,
     "run": {
       "update-dns" : {
-        "using": "dns://example.com?TYPE=TXT":
+        "with": "dns://example.com?TYPE=TXT":
         "do": "crud/update",
         "inputs": { 
           "value": "hello world",
@@ -460,7 +460,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
         }
       },
       "notify-bob": {
-        "using": "mailto://alice@example.com",
+        "with": "mailto://alice@example.com",
         "do": "msg/send",
         "inputs": [
           {
@@ -471,7 +471,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
         ]
       },
       "notify-carol": {
-        "using": "mailto://alice@example.com",
+        "with": "mailto://alice@example.com",
         "do": "msg/send",
         "inputs": [
           {
@@ -482,7 +482,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
         ]
       },
       "log-as-done": {
-        "using": "https://example.com/report"
+        "with": "https://example.com/report"
         "do": "crud/update"
         "inputs": [
           {
@@ -554,7 +554,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
     "ext": null,
     "run": {
       "update-dns": {
-        "using": "dns://example.com?TYPE=TXT",
+        "with": "dns://example.com?TYPE=TXT",
         "do": "crud/update"
         "inputs": [
           { 
@@ -576,7 +576,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
     "ext": null,
     "run": {
       "notify-carol": {
-        "using": "mailto://alice@example.com",
+        "with": "mailto://alice@example.com",
         "do": "msg/send",
         "inputs": [
           {
@@ -599,7 +599,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
     "ext": null,
     "run": {
       "notify-bob": {
-        "using": "mailto://alice@example.com",
+        "with": "mailto://alice@example.com",
         "do": "msg/send",
         "inputs": [
           {
@@ -610,7 +610,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
         ]
       },
       "log-as-done": {
-        "using": "https://example.com/report"
+        "with": "https://example.com/report"
         "do": "crud/update"
         "inputs": [
           {
