@@ -11,9 +11,9 @@
 
 ## Depends On
 
-* [`dag-cbor`](https://ipld.io/specs/codecs/dag-cbor/spec/)
-* [`ucan`](https://github.com/ucan-wg/spec/)
-* [`ucan-ipld`](https://github.com/ucan-wg/ucan-ipld/)
+* [DAG-CBOR](https://ipld.io/specs/codecs/dag-cbor/spec/)
+* [UCAN](https://github.com/ucan-wg/spec/)
+* [UCAN-IPLD](https://github.com/ucan-wg/ucan-ipld/)
 
 # 0 Abstract
 
@@ -110,6 +110,20 @@ As we shall see in the [discussion of promise pipelining](#5-promise-pipelining)
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+## 1.3 A Note On Serialization
+
+The JSON examples below are given in [DAG-JSON](https://ipld.io/docs/codecs/known/dag-json/), but UCAN Invocation is actually defined as IPLD. This makes UCAN Invocation agnotsic to encoding. DAG-JSON follows particular conventions around wrapping CIDs and binary data in tags like so:
+
+``` json
+// CID
+{"/": Qmf412jQZiuVUtdgnB36FXFX7xg5V6KEbSJ4dpQuhkLyfD"}
+
+// Bytes (e.g. signature)
+{"/": {"bytes": "s0m3Byte5"}}
+```
+
+This format help disambiguate type information in generical DAG-JSON tooling. However, your presentation need not be in this specific format, as long as it can be converted to and from this cleanly. As it is used for the signature format, DAG-CBOR is RECOMMENDED.
+
 # 2 Roles
 
 Invocation adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
@@ -152,7 +166,7 @@ The invocation wrapper MUST be signed by the same principal that issued the UCAN
   
 ### 3.1.1 Proofs
 
-The `prf` field MUST contain CIDs pointing to the UCANs that provide the authority to run these actions. Restricting the outmost UCANs to only the authority required for the current invocation is RECOMMENDED.
+The `prf` field MUST contain CIDs pointing to the UCANs that provide the authority to run these actions. The elements of this array MUST be sorted in ascending numeric order. Restricting the outmost UCANs to only the authority required for the current invocation is RECOMMENDED.
 
 ### 3.1.2 Version
 
@@ -178,7 +192,7 @@ The OPTIONAL `ext` field MAY contain arbitrary data. If not present, the `ext` f
 
 ### 3.1.6 Signature
 
-The `sig` field MUST contain the signature of the other fields. To construct the payload, the other fields MUST first be canonicalized as `dag-cbor`.
+The `sig` field MUST contain the signature of the other fields. The signature MUST be given as a [VarSig](https://github.com/ChainAgnostic/varsig), which includes the payload encoding information.
 
 If serialized as JSON, the `sig` field MUST be serialized as [unpadded base64url](https://datatracker.ietf.org/doc/html/rfc4648#section-5).
 
@@ -220,12 +234,12 @@ type Action enum {
 {
   "ucan/invoke": {
     "v": "0.1.0",
-    "prf": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
+    "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "nnc": "abcdef",
     "run": "*", // Explicitly "run all"
     "ext": null
   },
-  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
+  "sig": { "/": { "bytes:": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA" } }
 }
 ```
 
@@ -237,7 +251,7 @@ Promise pipelines are handled in more detail in [section 5](#5-promise-pipelinin
 {
   "ucan/invoke": {
     "v": "0.1.0",
-    "prf": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
+    "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "nnc": "02468",
     "ext": null,
     "run": {
@@ -264,7 +278,7 @@ Promise pipelines are handled in more detail in [section 5](#5-promise-pipelinin
       }
     }
   },
-  "sig": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"
+  "sig": {"/": {"bytes:": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
 }
 ```
 
@@ -272,7 +286,7 @@ Promise pipelines are handled in more detail in [section 5](#5-promise-pipelinin
 
 An invocation receipt is an attestation of the output of an invocation. A receipt MUST be signed by the executor (the `aud` of the associated UCAN).
 
-Note that this does not guarantee correctness of the result! The statement's veracity MUST be only understood as an attestation from the executor.
+**NB: a Receipt this does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
 ## 4.1 Fields
 
@@ -290,7 +304,7 @@ Note that this does not guarantee correctness of the result! The statement's ver
 ``` ipldsch
 type Receipt struct {
   inv &SignedInvocation
-  rlt {URI : {Ability : Any}}
+  rlt {Hash : Any}} FIXME!!!
   v   SemVer
   nnc String
   ext optional Any
@@ -301,7 +315,7 @@ type SignedReceipt struct {
   sig VarSig
 }
 
-type VarSig Bytes
+type Hash Bytes
 ```
 
 ## 4.2 JSON Example
@@ -310,7 +324,7 @@ type VarSig Bytes
 {
   "ucan/receipt": {
     "v": "0.1.0",
-    "inv": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e",
+    "inv": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "rlt": {
       "bafkreiakkqwuffzsxrzseo7fweeicqlnqanhvyffjieh3etsbnnkjxbphi": [
         {
@@ -336,7 +350,7 @@ type VarSig Bytes
       "tags": ["dag-house", "fission"]
     }
   },
-  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt_VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
+  "sig": {"/": {"bytes": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt_VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"}}
  }
 ```
 
@@ -379,8 +393,8 @@ type Target union {
 
 ``` js
 ["/", "some-label"]
-["bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie", "some-label"]
-["bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie", "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"]
+[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, "some-label"]
+[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, {"/": {"bytes": "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"}}]
 ```
 
 ## 5.2 Pipelining
@@ -419,7 +433,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 {
   "ucan/invoke": {
     "v": "0.1.0",
-    "prf": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
+    "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "nnc": "abcdef",
     "ext": null,
     "run": {
@@ -472,7 +486,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
       }
     }
   },
-  "sig": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"
+  "sig": {"/": {"bytes": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"}}
 }
 ```
 
@@ -521,7 +535,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 {
   "ucan/invoke": {
     "v": "0.1.0",
-    "inv": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
+    "inv": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "nnc": "abcdef",
     "ext": null,
     "run": {
@@ -537,13 +551,13 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
       }
     }
   },
-  "sig": "kQHtTruysx4S8SrvSjTwr6ttTLzc7dd7atANUYT-SRK6v_SX8bjHegWoDak2x6vTAZ6CcVKBt6JGpgnjABpsoL"
+  "sig": {"/": {"bytes": kQHtTruysx4S8SrvSjTwr6ttTLzc7dd7atANUYT-SRK6v_SX8bjHegWoDak2x6vTAZ6CcVKBt6JGpgnjABpsoL"}}
 }
  
 {
   "ucan/invoke": {
     "v": "0.1.0",
-    "prf": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
+    "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "nnc": "12345",
     "ext": null,
     "run": {
@@ -560,13 +574,13 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
       }
     }
   },
-  "sig": "XZRSmp5cHaXX6xWzSTxQqC95kQHtTruysx4S8SrvSjTwr6ttTLzc7dd7atANUQJXoWThUiVuCHWdMnQNQJgiJi"
+  "sig": {"/": {"bytes": "XZRSmp5cHaXX6xWzSTxQqC95kQHtTruysx4S8SrvSjTwr6ttTLzc7dd7atANUQJXoWThUiVuCHWdMnQNQJgiJi"}}
 }
 
 {
   "ucan/invoke": {
     "v": "0.1.0",
-    "prf": ["bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"],
+    "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "nnc": "02468",
     "ext": null,
     "run": {
@@ -577,7 +591,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
           {
             "to": "bob@example.com",
             "subject": "DNSLink for example.com",
-            "body": {"ucan/promise": ["bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu", "update-dns"]}
+            "body": {"ucan/promise": [{"/": "bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu"}, "update-dns"]}
           }
         ]
       },
@@ -594,13 +608,13 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
             "_": {"ucan/promise": ["/", "notify-bob"]}
           },
           {
-            "_": {"ucan/promise": ["bafkreidcqdxosqave5u5pml3pyikiglozyscgqikvb6foppobtk3hwkjn4", "notify-carol"]}
+            "_": {"ucan/promise": [{"/": "bafkreidcqdxosqave5u5pml3pyikiglozyscgqikvb6foppobtk3hwkjn4"}, "notify-carol"]}
           }
         ]
       }
     }
   },
-  "sig": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"
+  "sig": {"/": {"bytes": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
 }
 ```
 
@@ -648,8 +662,6 @@ Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering wor
 
 Many thanks to [Luke Marsen](https://github.com/lukemarsden) and [Simon Worthington](https://github.com/simonwo) for their feedback on invocation model from their work on [Bacalhau](https://www.bacalhau.org/) and [IPVM](https://github.com/ipvm-wg).
 
-Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many conversations about capability systems and the programming models that they enable.
-
 Thanks to [Marc-Antoine Parent](https://github.com/maparent) for his discussions of the distinction between declarations and directives both in and out of a UCAN context.
 
 Many thanks to [Quinn Wilton](https://github.com/QuinnWilton) for her discussion of speech acts, the dangers of signing canonicalized data, and ergonomics.
@@ -657,3 +669,5 @@ Many thanks to [Quinn Wilton](https://github.com/QuinnWilton) for her discussion
 Thanks to [Blaine Cook](https://github.com/blaine) for sharing their experiences with OAuth 1, irreversible design decisions, and advocating for keeping the spec simple-but-evolvable.
 
 Thanks to [Philipp Krüger](https://github.com/matheus23/) for the enthusiastic feedback on the overall design and encoding.
+
+Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many conversations about capability systems and the programming models that they enable.
