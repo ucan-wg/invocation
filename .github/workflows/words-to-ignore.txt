@@ -7,7 +7,7 @@ Cap'N
 Cap'n
 CapTP
 DAG-JSON
-DAG_CBOR
+DAG-CBOR
 ERTP
 Gozalishvili
 Hardt
