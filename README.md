@@ -198,7 +198,6 @@ type SignedInvocation struct {
 }
 
 type Invocation struct {
-  prf [&UCAN] -- The UCANs providing authority
   v   SemVer  -- Version
   run Scope   -- Which actions to invoke
   nnc String  -- Nonce
