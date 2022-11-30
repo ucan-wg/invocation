@@ -1,13 +1,12 @@
-Acknowledgements
-Agoric
+AcknowleAgoric
 Akiko
 Bacalhau
 CIDs
 Cap'N
 Cap'n
 CapTP
-DAG-JSON
 DAG-CBOR
+DAG-JSON
 ERTP
 Gozalishvili
 Hardt
@@ -37,6 +36,7 @@ UCAN-IPLD
 UCANTO
 UCANs
 URI
+Vagg
 VarSig
 Worthington
 Zelenka
@@ -47,9 +47,11 @@ canonicalized
 dataflow
 de
 delegator
+dgements
 dholms
 expede
 facto
+implicits
 interpretable
 invoker
 multiformat
