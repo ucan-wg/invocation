@@ -172,7 +172,7 @@ The invocation wrapper MUST be signed by the same principal that issued the UCAN
 
 The `v` field MUST contain the version of the invocation object  schema.
 
-### 3.1.2
+### 3.1.2 Proofs
 
 The `prf` field MUST contain CIDs pointing to the UCANs that provide the authority to run these actions. The elements of this array MUST be sorted in ascending numeric order. Restricting the outmost UCANs to only the authority required for the current invocation is RECOMMENDED.
 
@@ -215,10 +215,11 @@ type Scope union {
   | {String : Action}
 }
 
-type Action enum {
-  with  URI 
+type Action struct {
+  with   URI 
   do     Ability
   inputs Any
+  meta   {String : Any}
 } 
 ```
 
