@@ -30,9 +30,9 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 >
 > — Anonymous
 
-UCAN is a chained-capability format. A UCAN contains all of the information that one would need to perform some action, and the provable authority to do so. This begs the question: can UCAN be used directly as an RPC language?
+UCAN is a chained-capability format. A UCAN contains all of the information that one would need to perform some task, and the provable authority to do so. This begs the question: can UCAN be used directly as an RPC language?
 
-Some teams have had success with UCAN directly for RPC when the intention is clear from context. This can be successful when there is more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). However, capability invocation contains strictly more information than delegation: all of the authority of UCAN, plus the command to perform the action.
+Some teams have had success with UCAN directly for RPC when the intention is clear from context. This can be successful when there is more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). However, capability invocation contains strictly more information than delegation: all of the authority of UCAN, plus the command to perform the task.
 
 ## 1.1 Intuition
 
@@ -44,7 +44,7 @@ Akiko is going away for the weekend. Her good friend Boris is going to borrow he
 
 ## 1.1.2 Lazy vs Eager Evaluation
 
-In a referentially transparent setting, the description of an action is equivalent to having done so: a function and its results are interchangeable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be an elegant programming model, especially for pure functions. However, _when_ something will run can sometimes be unclear. 
+In a referentially transparent setting, the description of a task is equivalent to having done so: a function and its results are interchangeable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be an elegant programming model, especially for pure functions. However, _when_ something will run can sometimes be unclear. 
 
 Most languages use eager evaluation. Eager languages must contend directly with the distinction between a reference to a function and a command to run it. For instance, in JavaScript, adding parentheses to a function will run it. Omitting them lets the program pass around a reference to the function without immediately invoking it.
 
@@ -64,9 +64,9 @@ However, there is clearly a distinction between passing a function and invoking 
 
 ## 1.2 Separation of Concerns
 
-Information about the scheduling, order, and pipelining of actions is orthogonal to the flow of authority. An agent collaborating with the original executor does not need to know that their call is 3 invocations deep; they only need to know that they been asked to perform some action by the latest invoker.
+Information about the scheduling, order, and pipelining of tasks is orthogonal to the flow of authority. An agent collaborating with the original executor does not need to know that their call is 3 invocations deep; they only need to know that they been asked to perform some task by the latest invoker.
 
-As we shall see in the [discussion of promise pipelining](#5-promise-pipelining), asking an agent to perform a sequence of actions before you know the exact parameters requires delegating capabilities for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
+As we shall see in the [discussion of promise pipelining](#5-promise-pipelining), asking an agent to perform a sequence of tasks before you know the exact parameters requires delegating capabilities for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
 
 ```
   ────────────────────────────────────────────Time──────────────────────────────────────────────────────►
@@ -133,10 +133,10 @@ All payloads described below MUST be signed with a [VarSig](https://github.com/C
 
 Invocation adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
 
-| UCAN Field | Delegation                             | Invocation                        |
-|------------|----------------------------------------|-----------------------------------|
-| `iss`      | Delegator: transfer authority (active) | Invoker: request action (active)  |
-| `aud`      | Delegate: gain authority (passive)     | Executor: perform action (active) |
+| UCAN Field | Delegation                             | Invocation                      |
+|------------|----------------------------------------|---------------------------------|
+| `iss`      | Delegator: transfer authority (active) | Invoker: request task (active)  |
+| `aud`      | Delegate: gain authority (passive)     | Executor: perform task (active) |
 
 ## 2.1 Invoker
 
@@ -152,7 +152,7 @@ The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field
 
 # 3 Envelope
 
-The invocation envelope is a thin wrapper around a UCAN that conveys that all of the contained UCAN actions SHOULD be performed.
+The invocation envelope is a thin wrapper around a UCAN that conveys that all of the contained tasks SHOULD be performed.
 
 All of the roles from the referenced UCANs MUST persist to the invocation per the [roles table](#2-roles).
 
@@ -160,13 +160,13 @@ The invocation wrapper MUST be signed by the same principal that issued the UCAN
 
 ## 3.1 Fields
 
-| Field | Type                       | Description                                            | Required | Default |
-|-------|----------------------------|--------------------------------------------------------|----------|---------|
-| `v`   | `SemVer`                   | SemVer of the UCAN invocation this schema (v0.1.0)     | Yes      |         |
-| `prf` | `[&UCAN]`                  | UCANs that supply the authority to run this invocation | Yes      |         |
-| `run` | `"*" or {String : Action}` | Which UCAN capabilities to run                         | Yes      |         |
-| `nnc` | `String`                   | A unique nonce, to distinguish each invocation         | Yes      |         |
-| `ext` | `Any`                      | Non-normative extended fields                          | No       | `null`  |
+| Field | Type                     | Description                                            | Required | Default |
+|-------|--------------------------|--------------------------------------------------------|----------|---------|
+| `v`   | `SemVer`                 | SemVer of the UCAN invocation this schema (v0.1.0)     | Yes      |         |
+| `prf` | `[&UCAN]`                | UCANs that supply the authority to run this invocation | Yes      |         |
+| `run` | `"*" or {String : Task}` | Which UCAN capabilities to run                         | Yes      |         |
+| `nnc` | `String`                 | A unique nonce, to distinguish each invocation         | Yes      |         |
+| `ext` | `Any`                    | Non-normative extended fields                          | No       | `null`  |
     
 ### 3.1.1 Version
 
@@ -174,17 +174,17 @@ The `v` field MUST contain the version of the invocation object  schema.
 
 ### 3.1.2 Proofs
 
-The `prf` field MUST contain CIDs pointing to the UCANs that provide the authority to run these actions. The elements of this array MUST be sorted in ascending numeric order. Restricting the outmost UCANs to only the authority required for the current invocation is RECOMMENDED.
+The `prf` field MUST contain CIDs pointing to the UCANs that provide the authority to run these tasks. The elements of this array MUST be sorted in ascending numeric order. Restricting the outmost UCANs to only the authority required for the current invocation is RECOMMENDED.
 
 ### 3.1.3 Run Capabilities
 
-The `run` field MUST reference the actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](#5-promise-pipelining)) are intended to be run, then they MUST be prefixed with an arbitrary label and treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or greater authority.
+The `run` field MUST reference the tasks contained in the UCAN are to be run during the invocation. To run all tasks in the underlying UCAN, the `"*"` value MUST be used. If only specific tasks (or [pipelines](#5-promise-pipelining)) are intended to be run, then they MUST be prefixed with an arbitrary label and treated as a UCAN attenuation: all tasks MUST be backed by a matching capability of equal or greater authority.
 
 #### 3.1.3.1 Promises
 
 The only difference from general capabilities is that [promises](#5-promise-pipelining) MAY also be used as inputs to attenuated fields.
 
-If a capability input has the key `"_"` and the value is a promise, the input MUST be discarded and only used for determining sequencing actions.
+If a capability input has the key `"_"` and the value is a promise, the input MUST be discarded and only used for determining sequencing tasks.
 
 ### 3.1.4 Nonce
 
@@ -205,17 +205,17 @@ type SignedInvocation struct {
 type Invocation struct {
   v   SemVer  -- Version
   prf [&UCAN] -- Authority to run this invocation
-  run Scope   -- Which actions to invoke
+  run Scope   -- Which tasks to invoke
   nnc String  -- Nonce
   ext nullable Any (implicit null) -- Extended fields
 }
 
 type Scope union {
   | All "*"
-  | {String : Action}
+  | {String : Task}
 }
 
-type Action struct {
+type Task struct {
   with   URI 
   do     Ability
   inputs Any
@@ -245,7 +245,7 @@ type Action struct {
 
 ### 3.3.2 Promise Pipelines
 
-Promise pipelines are handled in more detail in [section 5](#5-promise-pipelining). In brief, they enable taking the output of an action that has not yet run as the input to another action. Here is a simple example:
+Promise pipelines are handled in more detail in [section 5](#5-promise-pipelining). In brief, they enable taking the output of a task that has not yet run as the input to another task. Here is a simple example:
 
 ``` js
 {
@@ -295,11 +295,11 @@ Receipts don't have their own version field. Receipts MUST use the same version 
 
 ## 4.1 Fields
 
-| Field  | Type            | Description                                                             | Required | Default |
-|--------|-----------------|-------------------------------------------------------------------------|----------|---------|
-| `inv`  | `&Invocation`   | CID of the Invocation that generated this response                      | Yes      |         |
-| `out`  | `{String: Any}` | The results of each call, the action's label. MAY contain sub-receipts. | Yes      |         |
-| `meta` | `Any`           | Non-normative extended fields                                           | No       | `null`  |
+| Field  | Type            | Description                                                           | Required | Default |
+|--------|-----------------|-----------------------------------------------------------------------|----------|---------|
+| `inv`  | `&Invocation`   | CID of the Invocation that generated this response                    | Yes      |         |
+| `out`  | `{String: Any}` | The results of each call, the task's label. MAY contain sub-receipts. | Yes      |         |
+| `meta` | `Any`           | Non-normative extended fields                                         | No       | `null`  |
 
 ### 4.1.1 Invocation
 
@@ -307,9 +307,9 @@ The `inv` field MUST include a link to the Invocation that the Receipt is for.
 
 ### 4.1.2 Output
 
-The `out` field MUST contain the output of steps of the call graph, indexed by the action name inside the invocation. If the invocation is the implicit `"*"`, then the base64 hash of the concatenation of the URI, Ability and extensional fields MUST be used.
+The `out` field MUST contain the output of steps of the call graph, indexed by the task name inside the invocation. If the invocation is the implicit `"*"`, then the base64 hash of the concatenation of the URI, Ability and extensional fields MUST be used.
 
-The `out` field MAY omit any actions that have not yet completed, or results which are not public. In this case, it is RECOMMENDED that 
+The `out` field MAY omit any tasks that have not yet completed, or results which are not public. In this case, it is RECOMMENDED that 
 
 ### 4.1.3 Metadata Fields
 
@@ -360,7 +360,7 @@ type Result union {
         },
         "ms": 476
       },
-      "delegated-action": {"/": "bafkreieiupg4smeb5ammpsydbiea4yvwzwne5ly4hiripy4cjocqiat3ce"}
+      "delegated-task": {"/": "bafkreieiupg4smeb5ammpsydbiea4yvwzwne5ly4hiripy4cjocqiat3ce"}
     }
     "meta": {
       "notes": "very receipt. such wow.",
@@ -377,18 +377,18 @@ type Result union {
 >
 > — [Mark Miller](https://github.com/erights), [Robust Composition](http://www.erights.org/talks/thesis/markm-thesis.pdf)
 
-At UCAN creation time, the UCAN MAY not yet have all of the information required to construct the next request in a sequence. Waiting for each request to complete before proceeding to the next action has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of earlier invocations into the input of a later one. This liberates the invoker from waiting for each step.
+At UCAN creation time, the UCAN MAY not yet have all of the information required to construct the next request in a sequence. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of earlier invocations into the input of a later one. This liberates the invoker from waiting for each step.
 
-The authority to execute later actions often cannot be fully attenuated in advance, since the executor controls the reported output of the prior step in a pipeline. When choosing to use pipelining, the invoker MUST delegate capabilities for any of the possible outputs. If tight control is required to limit authority, pipelining SHOULD NOT be used.
+The authority to execute later task often cannot be fully attenuated in advance, since the executor controls the reported output of the prior step in a pipeline. When choosing to use pipelining, the invoker MUST delegate capabilities for any of the possible outputs. If tight control is required to limit authority, pipelining SHOULD NOT be used.
 
 ## 5.1 Promises
 
 ## 5.1.1 Fields
 
-| Field         | Type         | Description                                                                           | Required | Default  |
-|---------------|--------------|---------------------------------------------------------------------------------------|----------|----------|
-| `promised`    | `CID or "/"` | The Invocation being referenced                                                       | Yes      |          |
-| `actionlabel` | `String`     | The action's label. If the actions were implicit (`"run": "*"`), the the CID is used  | Yes      |          |
+| Field       | Type         | Description                                                                      | Required |
+|-------------|--------------|----------------------------------------------------------------------------------|----------|
+| `promised`  | `CID or "/"` | The Invocation being referenced                                                  | Yes      |
+| `taskLabel` | `String`     | The task's label. If the tasks were implicit (`"run": "*"`), the the CID is used | Yes      |
 
 The above table MUST be serialized as a tuple. In JSON, this SHOULD be represented as an array containing the values (but not keys) sequenced in the order they appear in the table.
 
@@ -397,7 +397,7 @@ The above table MUST be serialized as a tuple. In JSON, this SHOULD be represent
 ``` ipldsch
 type Promise struct {
   promised    Target 
-  actionlabel String -- The label inside the invocation
+  taskLabel String -- The label inside the invocation
 } representation tuple
 
 type Target union {
