@@ -119,7 +119,7 @@ The JSON examples below are given in [DAG-JSON](https://ipld.io/docs/codecs/know
 // CID
 {"/": Qmf412jQZiuVUtdgnB36FXFX7xg5V6KEbSJ4dpQuhkLyfD"}
 
-// Bytes (e.g. signature)
+// Bytes (e.g. a signature)
 {"/": {"bytes": "s0m3Byte5"}}
 ```
 
@@ -160,50 +160,41 @@ The invocation wrapper MUST be signed by the same principal that issued the UCAN
 
 ## 3.1 Fields
 
-| Field | Type                                         | Value     | Description                                             | Required | Default |
-|-------|----------------------------------------------|-----------|---------------------------------------------------------|----------|---------|
-| `v`   | `SemVer`                                     | `"0.1.0"` | SemVer of the UCAN invocation this schema               | Yes      |         |
-| `prf` | `[&UCAN]`                                    |           | The CIDs of the UCANs that provide the authority to run | Yes      |         |
-| `run` | `"*" or {String: {URI : {Ability : [Any]}}}` |           | Which UCAN capabilities to run                          | Yes      |         |
-| `nnc` | `String`                                     |           | A unique nonce, to distinguish each invocation          | Yes      |         |
-| `ext` | `Any`                                        |           | Non-normative extended fields                           | No       | `null`  |
-  
-### 3.1.1 Proofs
-
-The `prf` field MUST contain CIDs pointing to the UCANs that provide the authority to run these actions. The elements of this array MUST be sorted in ascending numeric order. Restricting the outmost UCANs to only the authority required for the current invocation is RECOMMENDED.
-
-### 3.1.2 Version
+| Field | Type                         | Description                                             | Required | Default |
+|-------|------------------------------|---------------------------------------------------------|----------|---------|
+| `v`   | `SemVer`                     | SemVer of the UCAN invocation this schema (v0.1.0)      | Yes      |         |
+| `run` | `[CID] or {String : Action}` | Which UCAN capabilities to run                          | Yes      |         |
+| `nnc` | `String`                     | A unique nonce, to distinguish each invocation          | Yes      |         |
+| `ext` | `Any`                        | Non-normative extended fields                           | No       | `null`  |
+    
+### 3.1.1 Version
 
 The `v` field MUST contain the version of the invocation object  schema.
 
-### 3.1.3 Run Capabilities
+### 3.1.2 Run Capabilities
 
 The `run` field MUST reference the actions contained in the UCAN are to be run during the invocation. To run all actions in the underlying UCAN, the `"*"` value MUST be used. If only specific actions (or [pipelines](#5-promise-pipelining)) are intended to be run, then they MUST be prefixed with an arbitrary label and treated as a UCAN attenuation: all actions MUST be backed by a matching capability of equal or greater authority.
 
-#### 3.1.3.1 Promises
+#### 3.1.2.1 Promises
 
 The only difference from general capabilities is that [promises](#5-promise-pipelining) MAY also be used as inputs to attenuated fields.
 
 If a capability input has the key `"_"` and the value is a promise, the input MUST be discarded and only used for determining sequencing actions.
 
-### 3.1.4 Nonce
+### 3.1.3 Nonce
 
 The `nnc` field MUST contain a unique nonce. This field exists to enable making the CID of each invocation unique. While this field MAY be an empty string, it is NOT RECOMMENDED.
 
-### 3.1.5 Extended Fields
+### 3.1.4 Extended Fields
 
 The OPTIONAL `ext` field MAY contain arbitrary data. If not present, the `ext` field MUST be interpreted as `null`, including for [signature](#315-signature).
-
-### 3.1.6 Signature
-
-The `sig` field MUST contain the signature of the other fields. The signature MUST be given as a [VarSig](https://github.com/ChainAgnostic/varsig), which includes the payload encoding information.
 
 ## 3.2 IPLD Schema
 
 ``` ipldsch
 type SignedInvocation struct {
   inv Invocation (rename "ucan/invoke") 
-  sig VarSig  -- Signature
+  sig VarSig
 }
 
 type Invocation struct {
@@ -214,9 +205,9 @@ type Invocation struct {
   ext nullable Any (implicit null) -- Extended fields
 }
 
-type Scope enum {
-  | All ("*")
-  | Action
+type Scope union {
+  | [&UCAN]
+  | {String : Action}
 }
 
 type Action enum {
@@ -236,10 +227,10 @@ type Action enum {
     "v": "0.1.0",
     "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "nnc": "abcdef",
-    "run": "*", // Explicitly "run all"
+    "run": [{"/": "bafkreie2cyfsaqv5jjy2gadr7mmupmearkvcg7llybfdd7b6fvzzmhazuy"}],
     "ext": null
   },
-  "sig": { "/": { "bytes:": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA" } }
+  "sig": {"/": { "bytes:": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA" }}
 }
 ```
 
