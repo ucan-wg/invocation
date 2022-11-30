@@ -224,7 +224,6 @@ type Action enum {
 {
   "ucan/invoke": {
     "v": "0.1.0",
-    "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "nnc": "abcdef",
     "run": [{"/": "bafkreie2cyfsaqv5jjy2gadr7mmupmearkvcg7llybfdd7b6fvzzmhazuy"}],
     "ext": null
@@ -436,7 +435,6 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 {
   "ucan/invoke": {
     "v": "0.1.0",
-    "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "nnc": "abcdef",
     "ext": null,
     "run": {
@@ -560,7 +558,6 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 {
   "ucan/invoke": {
     "v": "0.1.0",
-    "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "nnc": "12345",
     "ext": null,
     "run": {
@@ -583,7 +580,6 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 {
   "ucan/invoke": {
     "v": "0.1.0",
-    "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "nnc": "02468",
     "ext": null,
     "run": {
