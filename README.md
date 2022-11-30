@@ -457,7 +457,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
     ],
     "run": {
       "update-dns" : {
-        "with": "dns://example.com?TYPE=TXT":
+        "with": "dns://example.com?TYPE=TXT",
         "do": "crud/update",
         "inputs": { 
           "value": "hello world",
@@ -487,8 +487,8 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
         ]
       },
       "log-as-done": {
-        "with": "https://example.com/report"
-        "do": "crud/update"
+        "with": "https://example.com/report",
+        "do": "crud/update",
         "inputs": [
           {
             "from": "mailto://alice@exmaple.com",
@@ -559,7 +559,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
     "run": {
       "update-dns": {
         "with": "dns://example.com?TYPE=TXT",
-        "do": "crud/update"
+        "do": "crud/update",
         "inputs": [
           { 
             "value": "hello world",
@@ -615,8 +615,8 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
         ]
       },
       "log-as-done": {
-        "with": "https://example.com/report"
-        "do": "crud/update"
+        "with": "https://example.com/report",
+        "do": "crud/update",
         "inputs": [
           {
             "from": "mailto://alice@exmaple.com",
