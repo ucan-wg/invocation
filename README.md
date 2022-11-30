@@ -241,7 +241,6 @@ Promise pipelines are handled in more detail in [section 5](#5-promise-pipelinin
 {
   "ucan/invoke": {
     "v": "0.1.0",
-    "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "nnc": "02468",
     "ext": null,
     "run": {
