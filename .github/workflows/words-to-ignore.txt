@@ -64,6 +64,7 @@ requestor's
 responder
 signalling
 simple-but-evolvable
+subdelegation
 trustless
 ucanto
 unpadded
