@@ -395,7 +395,7 @@ At UCAN creation time, the UCAN MAY not yet have all of the information required
 
 The authority to execute later task often cannot be fully attenuated in advance, since the executor controls the reported output of the prior step in a pipeline. When choosing to use pipelining, the invoker MUST delegate capabilities for any of the possible outputs. If tight control is required to limit authority, pipelining SHOULD NOT be used.
 
-Promises MUST resolve to a [`Result`](#42-ipld-schema). If a promise resolves to the `Success` branch, the value in the `val` MUST be extracted and substituted for the promise. Behaviour is left undefined if the promise returns on the `Failure` branch.
+Promises MUST resolve to a [`Result`](#42-ipld-schema). If a promise resolves to the `Success` branch, the value in the `val` MUST be extracted and substituted for the promise. Behavior is left undefined if the promise returns on the `Failure` branch.
 
 Values MUST only be pipelined if they resolve to the `"ok"` branch of the `Result`. In the success case, the value inside the `"ok"` field MUST be extracted and replace the promise.
 
