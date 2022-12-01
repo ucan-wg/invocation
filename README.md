@@ -117,7 +117,7 @@ The JSON examples below are given in [DAG-JSON](https://ipld.io/docs/codecs/know
 
 ``` json
 // CID
-{"/": Qmf412jQZiuVUtdgnB36FXFX7xg5V6KEbSJ4dpQuhkLyfD"}
+{"/": "Qmf412jQZiuVUtdgnB36FXFX7xg5V6KEbSJ4dpQuhkLyfD"}
 
 // Bytes (e.g. a signature)
 {"/": {"bytes": "s0m3Byte5"}}
