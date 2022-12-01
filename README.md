@@ -309,7 +309,9 @@ The `inv` field MUST include a link to the Invocation that the Receipt is for.
 
 The `out` field MUST contain the output of steps of the call graph, indexed by the task name inside the invocation. If the invocation is the implicit `"*"`, then the base64 hash of the concatenation of the URI, Ability and extensional fields MUST be used.
 
-The `out` field MAY omit any tasks that have not yet completed, or results which are not public. In this case, it is RECOMMENDED that 
+The `out` field MAY omit any tasks that have not yet completed, or results which are not public. An `Invocation` may be associated to zero or more `Receipts`.
+
+A `Result` MAY include recursive `Receipt` CIDs in on the `Success` branch. As a Task may require subdelegation, the OPTIONAL `rec` field MAY be used to include recursive `Receipt`s.
 
 ### 4.1.3 Metadata Fields
 
@@ -326,12 +328,22 @@ type SignedReceipt struct {
 type Receipt struct {
   inv  &SignedInvocation
   out  {String : Result}
-  meta Any (implicit Null)
+  meta optional Any
 } 
 
 type Result union {
-  | Payload Any
-  | &SignedReceipt
+  | Success
+  | Failure
+}
+
+type Failure struct {
+  err   nullable String
+  trace Any
+}
+
+type Success struct {
+  val Any
+  rec optional &SignedReceipt
 }
 ```
 
@@ -343,28 +355,30 @@ type Result union {
     "v": "0.1.0",
     "inv": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
     "out": {
-      "bafkreiakkqwuffzsxrzseo7fweeicqlnqanhvyffjieh3etsbnnkjxbphi": [
-        {
-          "from": "alice@example.com",
-          "text": "Hello world!"
-        }, 
-        {
-          "from": "bob@example.com",
-          "text": "What's up?"
-        }
-      ],
-      "bafkreienxymjwglxlb3rkdyeyjt54ddoe4x4qi7a7hyfce3z56zspmy6pm": {
-        "http": { 
-          "status": 200,
-          "body": "hello world"
+      "ok": {
+        "bafkreiakkqwuffzsxrzseo7fweeicqlnqanhvyffjieh3etsbnnkjxbphi": [
+          {
+            "from": "alice@example.com",
+            "text": "Hello world!"
+          }, 
+          {
+            "from": "bob@example.com",
+            "text": "What's up?"
+          }
+        ],
+        "bafkreienxymjwglxlb3rkdyeyjt54ddoe4x4qi7a7hyfce3z56zspmy6pm": {
+          "http": { 
+            "status": 200,
+            "body": "hello world"
+          },
+          "ms": 476
         },
-        "ms": 476
-      },
-      "delegated-task": {"/": "bafkreieiupg4smeb5ammpsydbiea4yvwzwne5ly4hiripy4cjocqiat3ce"}
-    }
-    "meta": {
-      "notes": "very receipt. such wow.",
-      "tags": ["dag-house", "fission"]
+        "delegated-task": {"/": "bafkreieiupg4smeb5ammpsydbiea4yvwzwne5ly4hiripy4cjocqiat3ce"}
+      }
+      "meta": {
+        "notes": "very receipt. such wow.",
+        "tags": ["dag-house", "fission"]
+      }
     }
   },
   "sig": {"/": {"bytes": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt_VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"}}
@@ -380,6 +394,12 @@ type Result union {
 At UCAN creation time, the UCAN MAY not yet have all of the information required to construct the next request in a sequence. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of earlier invocations into the input of a later one. This liberates the invoker from waiting for each step.
 
 The authority to execute later task often cannot be fully attenuated in advance, since the executor controls the reported output of the prior step in a pipeline. When choosing to use pipelining, the invoker MUST delegate capabilities for any of the possible outputs. If tight control is required to limit authority, pipelining SHOULD NOT be used.
+
+Promises MUST resolve to a [`Result`](#42-ipld-schema). If a promise resolves to the `Success` branch, the value in the `val` MUST be extracted and substituted for the promise. Behaviour is left undefined if the promise returns on the `Failure` branch.
+
+Values MUST only be pipelined if they resolve to the `"ok"` branch of the `Result`. In the success case, the value inside the `"ok"` field MUST be extracted and replace the promise.
+
+A promise MAY be placed in any Task field.
 
 ## 5.1 Promises
 
@@ -408,7 +428,7 @@ type Target union {
 
 ## 5.1.3 JSON Examples
 
-``` js
+``` json
 ["/", "some-label"]
 [{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, "some-label"]
 [{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, {"/": {"bytes": "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"}}]
