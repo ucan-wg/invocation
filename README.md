@@ -399,10 +399,10 @@ Promises MUST resolve to a [`Result`](#42-ipld-schema). If a promise resolves to
 
 Values MUST only be pipelined if they resolve to the `"ok"` branch of the `Result`. In the success case, the value inside the `"ok"` field MUST be extracted and replace the promise.
 
-A promise MAY be placed in any Task field.
+A promise MAY be placed in any Task field. Substituting into the `with` and `do` fields is NOT RECOMMENDED in fully trustless contexts, as it makes it difficult to understand what is involved in the invocation in advance.
 
 ## 5.1 Promises
-
+ 
 ## 5.1.1 Fields
 
 | Field       | Type         | Description                                                                      | Required |
