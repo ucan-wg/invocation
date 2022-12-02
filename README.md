@@ -14,7 +14,7 @@
 * [DAG-CBOR](https://ipld.io/specs/codecs/dag-cbor/spec/)
 * [UCAN](https://github.com/ucan-wg/spec/)
 * [UCAN-IPLD](https://github.com/ucan-wg/ucan-ipld/)
-* [VarSig](https://github.com/ChainAgnostic/varsig/)
+* [Varsig](https://github.com/ChainAgnostic/varsig/)
 
 # 0 Abstract
 
@@ -127,7 +127,7 @@ This format help disambiguate type information in generic DAG-JSON tooling. Howe
 
 ## 1.4 Signatures
 
-All payloads described below MUST be signed with a [VarSig](https://github.com/ChainAgnostic/varsig/).
+All payloads described below MUST be signed with a [Varsig](https://github.com/ChainAgnostic/varsig/).
 
 # 2 Roles
 
@@ -199,7 +199,7 @@ The OPTIONAL `ext` field MAY contain arbitrary data. If not present, the `ext` f
 ``` ipldsch
 type SignedInvocation struct {
   inv Invocation (rename "ucan/invoke") 
-  sig VarSig
+  sig Varsig
 }
 
 type Invocation struct {
@@ -322,7 +322,7 @@ The metadata field MAY be omitted or used to contain additional data about the r
 ``` ipldsch
 type SignedReceipt struct {
   rec Receipt (rename "ucan/receipt")
-  sig VarSig
+  sig Varsig
 }
 
 type Receipt struct {
@@ -666,7 +666,7 @@ type CID String
 type URI String
 type Ability String
 type Path String
-type VarSig Bytes
+type Varsig Bytes
 
 type SemVer struct {
   num NumVer
