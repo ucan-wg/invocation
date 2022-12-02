@@ -38,7 +38,7 @@ UCANTO
 UCANs
 URI
 Vagg
-VarSig
+Varsig
 Worthington
 Zelenka
 auth
