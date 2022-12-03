@@ -6,7 +6,7 @@ digraph {
       shape=box
     ]
 
-    Invocation -> Batch -> Pipeline
     Invocation -> Pointer -> Memoization
+    Invocation -> Batch -> Pipeline
     Invocation -> Receipt -> Promise -> Pipeline
 }
