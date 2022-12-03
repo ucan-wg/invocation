@@ -17,38 +17,38 @@
 <!-- Pointer -->
 <g id="node2" class="node">
 <title>Pointer</title>
-<path fill="none" stroke="black" d="M185,-140C185,-140 140,-140 140,-140 134,-140 128,-134 128,-128 128,-128 128,-116 128,-116 128,-110 134,-104 140,-104 140,-104 185,-104 185,-104 191,-104 197,-110 197,-116 197,-116 197,-128 197,-128 197,-134 191,-140 185,-140"/>
-<text text-anchor="middle" x="162.5" y="-118.3" font-family="Times,serif" font-size="14.00">Pointer</text>
+<path fill="none" stroke="black" d="M185,-144C185,-144 140,-144 140,-144 134,-144 128,-138 128,-132 128,-132 128,-120 128,-120 128,-114 134,-108 140,-108 140,-108 185,-108 185,-108 191,-108 197,-114 197,-120 197,-120 197,-132 197,-132 197,-138 191,-144 185,-144"/>
+<text text-anchor="middle" x="162.5" y="-122.3" font-family="Times,serif" font-size="14.00">Pointer</text>
 </g>
 <!-- Invocation&#45;&gt;Pointer -->
 <g id="edge1" class="edge">
 <title>Invocation&#45;&gt;Pointer</title>
-<path fill="none" stroke="black" d="M88.34,-90.05C98.14,-94.33 108.63,-98.91 118.5,-103.22"/>
-<polygon fill="black" stroke="black" points="117.18,-106.47 127.75,-107.26 119.98,-100.05 117.18,-106.47"/>
-</g>
-<!-- Batch -->
-<g id="node4" class="node">
-<title>Batch</title>
-<path fill="none" stroke="black" d="M297.5,-90C297.5,-90 267.5,-90 267.5,-90 261.5,-90 255.5,-84 255.5,-78 255.5,-78 255.5,-66 255.5,-66 255.5,-60 261.5,-54 267.5,-54 267.5,-54 297.5,-54 297.5,-54 303.5,-54 309.5,-60 309.5,-66 309.5,-66 309.5,-78 309.5,-78 309.5,-84 303.5,-90 297.5,-90"/>
-<text text-anchor="middle" x="282.5" y="-68.3" font-family="Times,serif" font-size="14.00">Batch</text>
-</g>
-<!-- Invocation&#45;&gt;Batch -->
-<g id="edge3" class="edge">
-<title>Invocation&#45;&gt;Batch</title>
-<path fill="none" stroke="black" d="M92.21,-72C136.78,-72 204.02,-72 245.21,-72"/>
-<polygon fill="black" stroke="black" points="245.34,-75.5 255.34,-72 245.34,-68.5 245.34,-75.5"/>
+<path fill="none" stroke="black" d="M85.45,-90.13C96.1,-95.16 107.73,-100.64 118.62,-105.78"/>
+<polygon fill="black" stroke="black" points="117.41,-109.08 127.95,-110.18 120.4,-102.75 117.41,-109.08"/>
 </g>
 <!-- Receipt -->
-<g id="node6" class="node">
+<g id="node4" class="node">
 <title>Receipt</title>
-<path fill="none" stroke="black" d="M185,-40C185,-40 140,-40 140,-40 134,-40 128,-34 128,-28 128,-28 128,-16 128,-16 128,-10 134,-4 140,-4 140,-4 185,-4 185,-4 191,-4 197,-10 197,-16 197,-16 197,-28 197,-28 197,-34 191,-40 185,-40"/>
-<text text-anchor="middle" x="162.5" y="-18.3" font-family="Times,serif" font-size="14.00">Receipt</text>
+<path fill="none" stroke="black" d="M185,-90C185,-90 140,-90 140,-90 134,-90 128,-84 128,-78 128,-78 128,-66 128,-66 128,-60 134,-54 140,-54 140,-54 185,-54 185,-54 191,-54 197,-60 197,-66 197,-66 197,-78 197,-78 197,-84 191,-90 185,-90"/>
+<text text-anchor="middle" x="162.5" y="-68.3" font-family="Times,serif" font-size="14.00">Receipt</text>
 </g>
 <!-- Invocation&#45;&gt;Receipt -->
-<g id="edge5" class="edge">
+<g id="edge4" class="edge">
 <title>Invocation&#45;&gt;Receipt</title>
-<path fill="none" stroke="black" d="M88.34,-53.95C98.14,-49.67 108.63,-45.09 118.5,-40.78"/>
-<polygon fill="black" stroke="black" points="119.98,-43.95 127.75,-36.74 117.18,-37.53 119.98,-43.95"/>
+<path fill="none" stroke="black" d="M92.25,-72C100.6,-72 109.31,-72 117.62,-72"/>
+<polygon fill="black" stroke="black" points="117.88,-75.5 127.88,-72 117.88,-68.5 117.88,-75.5"/>
+</g>
+<!-- Batch -->
+<g id="node7" class="node">
+<title>Batch</title>
+<path fill="none" stroke="black" d="M297.5,-36C297.5,-36 267.5,-36 267.5,-36 261.5,-36 255.5,-30 255.5,-24 255.5,-24 255.5,-12 255.5,-12 255.5,-6 261.5,0 267.5,0 267.5,0 297.5,0 297.5,0 303.5,0 309.5,-6 309.5,-12 309.5,-12 309.5,-24 309.5,-24 309.5,-30 303.5,-36 297.5,-36"/>
+<text text-anchor="middle" x="282.5" y="-14.3" font-family="Times,serif" font-size="14.00">Batch</text>
+</g>
+<!-- Invocation&#45;&gt;Batch -->
+<g id="edge7" class="edge">
+<title>Invocation&#45;&gt;Batch</title>
+<path fill="none" stroke="black" d="M92.06,-55.67C103.67,-51.83 116.22,-47.98 128,-45 167.71,-34.95 214.13,-27.34 245.44,-22.81"/>
+<polygon fill="black" stroke="black" points="246.04,-26.26 255.45,-21.39 245.06,-19.33 246.04,-26.26"/>
 </g>
 <!-- Memoization -->
 <g id="node3" class="node">
@@ -59,38 +59,44 @@
 <!-- Pointer&#45;&gt;Memoization -->
 <g id="edge2" class="edge">
 <title>Pointer&#45;&gt;Memoization</title>
-<path fill="none" stroke="black" d="M197.31,-123.15C205.24,-123.42 213.92,-123.71 222.6,-124"/>
-<polygon fill="black" stroke="black" points="222.62,-127.51 232.73,-124.35 222.86,-120.51 222.62,-127.51"/>
+<path fill="none" stroke="black" d="M197.31,-126C205.24,-126 213.92,-126 222.6,-126"/>
+<polygon fill="black" stroke="black" points="222.73,-129.5 232.73,-126 222.73,-122.5 222.73,-129.5"/>
+</g>
+<!-- Receipt&#45;&gt;Memoization -->
+<g id="edge3" class="edge">
+<title>Receipt&#45;&gt;Memoization</title>
+<path fill="none" stroke="black" d="M197.31,-87.47C208.28,-92.49 220.67,-98.16 232.5,-103.58"/>
+<polygon fill="black" stroke="black" points="231.29,-106.87 241.84,-107.85 234.2,-100.51 231.29,-106.87"/>
+</g>
+<!-- Promise -->
+<g id="node5" class="node">
+<title>Promise</title>
+<path fill="none" stroke="black" d="M305,-90C305,-90 260,-90 260,-90 254,-90 248,-84 248,-78 248,-78 248,-66 248,-66 248,-60 254,-54 260,-54 260,-54 305,-54 305,-54 311,-54 317,-60 317,-66 317,-66 317,-78 317,-78 317,-84 311,-90 305,-90"/>
+<text text-anchor="middle" x="282.5" y="-68.3" font-family="Times,serif" font-size="14.00">Promise</text>
+</g>
+<!-- Receipt&#45;&gt;Promise -->
+<g id="edge5" class="edge">
+<title>Receipt&#45;&gt;Promise</title>
+<path fill="none" stroke="black" d="M197.31,-72C209.78,-72 224.1,-72 237.34,-72"/>
+<polygon fill="black" stroke="black" points="237.68,-75.5 247.68,-72 237.68,-68.5 237.68,-75.5"/>
 </g>
 <!-- Pipeline -->
-<g id="node5" class="node">
+<g id="node6" class="node">
 <title>Pipeline</title>
 <path fill="none" stroke="black" d="M433,-63C433,-63 380,-63 380,-63 374,-63 368,-57 368,-51 368,-51 368,-39 368,-39 368,-33 374,-27 380,-27 380,-27 433,-27 433,-27 439,-27 445,-33 445,-39 445,-39 445,-51 445,-51 445,-57 439,-63 433,-63"/>
 <text text-anchor="middle" x="406.5" y="-41.3" font-family="Times,serif" font-size="14.00">Pipeline</text>
 </g>
-<!-- Batch&#45;&gt;Pipeline -->
-<g id="edge4" class="edge">
-<title>Batch&#45;&gt;Pipeline</title>
-<path fill="none" stroke="black" d="M309.67,-66.21C323.7,-63.1 341.43,-59.18 357.81,-55.55"/>
-<polygon fill="black" stroke="black" points="358.79,-58.92 367.8,-53.34 357.28,-52.09 358.79,-58.92"/>
-</g>
-<!-- Promise -->
-<g id="node7" class="node">
-<title>Promise</title>
-<path fill="none" stroke="black" d="M305,-36C305,-36 260,-36 260,-36 254,-36 248,-30 248,-24 248,-24 248,-12 248,-12 248,-6 254,0 260,0 260,0 305,0 305,0 311,0 317,-6 317,-12 317,-12 317,-24 317,-24 317,-30 311,-36 305,-36"/>
-<text text-anchor="middle" x="282.5" y="-14.3" font-family="Times,serif" font-size="14.00">Promise</text>
-</g>
-<!-- Receipt&#45;&gt;Promise -->
-<g id="edge6" class="edge">
-<title>Receipt&#45;&gt;Promise</title>
-<path fill="none" stroke="black" d="M197.31,-20.85C209.78,-20.43 224.1,-19.95 237.34,-19.5"/>
-<polygon fill="black" stroke="black" points="237.81,-22.98 247.68,-19.15 237.57,-15.99 237.81,-22.98"/>
-</g>
 <!-- Promise&#45;&gt;Pipeline -->
-<g id="edge7" class="edge">
+<g id="edge6" class="edge">
 <title>Promise&#45;&gt;Pipeline</title>
-<path fill="none" stroke="black" d="M317.16,-25.45C329.64,-28.21 344.04,-31.4 357.54,-34.39"/>
-<polygon fill="black" stroke="black" points="357.13,-37.88 367.65,-36.62 358.64,-31.05 357.13,-37.88"/>
+<path fill="none" stroke="black" d="M317.16,-64.55C329.64,-61.79 344.04,-58.6 357.54,-55.61"/>
+<polygon fill="black" stroke="black" points="358.64,-58.95 367.65,-53.38 357.13,-52.12 358.64,-58.95"/>
+</g>
+<!-- Batch&#45;&gt;Pipeline -->
+<g id="edge8" class="edge">
+<title>Batch&#45;&gt;Pipeline</title>
+<path fill="none" stroke="black" d="M309.67,-23.79C323.7,-26.9 341.43,-30.82 357.81,-34.45"/>
+<polygon fill="black" stroke="black" points="357.28,-37.91 367.8,-36.66 358.79,-31.08 357.28,-37.91"/>
 </g>
 </g>
 </svg>
