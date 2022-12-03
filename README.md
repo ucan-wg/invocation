@@ -221,7 +221,7 @@ If present, the OPTIONAL `meta` map MAY contain freeform fields. This provides a
 
 Data inside the `meta` field SHOULD NOT be used for [memoization]() and [receipts]().
 
-### 3.1.2 JSON Examples
+### 3.1.2 DAG-JSON Examples
 
 ``` json
 {
@@ -301,8 +301,47 @@ The `prf` field MUST contain links to any UCANs that provide the authority to ru
 
 The `sig` field MUST contain a signture of the CID in the `inv` field. The MUST NOT include the `prf` field.
 
+### 3.2.2 DAG-JSON Examples
+
+``` json
+{
+  "inv": {"/": "bafkreidu4n2252jl3zjhbhcpnxtau5zcy5f6lipgqcik6b3o2jkkjt5ali"},
+  "prf": [
+    {"/": "bafkreie2cyfsaqv5jjy2gadr7mmupmearkvcg7llybfdd7b6fvzzmhazuy"},
+    {"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}
+  ],
+  "sig": {"/": {"bytes:": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
+}
+```
 
 
+# 4 Pointer
+
+Invocation Pointers identify a specific task inside a specific invocation. Since tasks may look identical across calls, they MUST be scoped to a specific [`SignedInvocation`](#32-ipld-schema).
+
+## 5.1 Fields
+
+## 5.2 IPLD Schema
+
+``` ipldsch
+type InvocationPointer struct {
+  inv        InvocationPointer
+  taskLabel String
+} representation tuple
+
+type InvocationPointer union {
+  | Local "/"
+  | &SignedInvocation
+}
+```
+
+## 5.3 JSON Examples
+
+``` json
+["/", "some-label"]
+[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, "some-label"]
+[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, {"/": {"bytes": "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"}}]
+```
 
 
 
@@ -558,32 +597,6 @@ type Success struct {
 ```
 
 # 5 Pointers
-
-Invocation pointers identify a specific task inside a specific invocation. Since tasks may look identical across calls, they MUST be scoped to a specific [`SignedInvocation`](#32-ipld-schema).
-
-## 5.1 Fields
-
-## 5.2 IPLD Schema
-
-``` ipldsch
-type TaskPointer struct {
-  inv       InvocationPointer
-  taskLabel String
-} representation tuple
-
-type InvocationPointer union {
-  | Local "/"
-  | &SignedInvocation
-}
-```
-
-## 5.3 JSON Examples
-
-``` json
-["/", "some-label"]
-[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, "some-label"]
-[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, {"/": {"bytes": "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"}}]
-```
 
 # 6 Promise Pipelining
 
