@@ -156,6 +156,30 @@ The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field
 
 ![](./diagrams/concepts.svg)
 
+### 2.2.1 Invocation
+
+An invocation is like function application: a request to perform some action on a resource with specific inputs.
+
+### 2.2.2 Pointer
+
+A pointer identifies a particular instance of an invocation.
+
+### 2.2.3 Receipt
+
+A receipt describes the output of an invocation, referenced by its pointer.
+
+### 2.2.4 Promise
+
+A promise is a reference to the receipt of an action that has yet to return a receipt.
+
+### 2.2.5 Batch
+
+A batch is a way of requesting more than one action at once.
+
+### 2.2.6 Pipeline
+
+A pipeline is a batch that includes promises. This allows for the automatic chaining of actions based on their outputs.
+
 # 3 Envelope
 
 The invocation envelope is a thin wrapper around a UCAN that conveys that all of the contained tasks SHOULD be performed.
