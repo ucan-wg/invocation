@@ -129,7 +129,9 @@ This format help disambiguate type information in generic DAG-JSON tooling. Howe
 
 All payloads described below MUST be signed with a [Varsig](https://github.com/ChainAgnostic/varsig/).
 
-# 2 Roles
+# 2 High-Level Concepts
+
+## 2.1 Roles
 
 Invocation adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
 
@@ -138,17 +140,21 @@ Invocation adds two new roles to UCAN: invoker and executor. The existing UCAN d
 | `iss`      | Delegator: transfer authority (active) | Invoker: request task (active)  |
 | `aud`      | Delegate: gain authority (passive)     | Executor: perform task (active) |
 
-## 2.1 Invoker
+### 2.1.1 Invoker
 
 The invoker signals to the executor that a task associated with a UCAN SHOULD be performed.
 
 The invoker MUST be the UCAN delegator. Their DID MUST be authenticated in the `iss` field of the contained UCAN.
 
-## 2.2 Executor
+### 2.1.2 Executor
 
 The executor is directed to perform some task described in the UCAN by the invoker.
 
 The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field of the contained UCAN.
+
+## 2.2 Components 
+
+![](./diagrams/concepts.svg)
 
 # 3 Envelope
 
