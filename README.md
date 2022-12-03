@@ -297,7 +297,7 @@ Receipts don't have their own version field. Receipts MUST use the same version 
 
 | Field  | Type            | Description                                                           | Required | Default |
 |--------|-----------------|-----------------------------------------------------------------------|----------|---------|
-| `inv`  | `&Invocation`   | CID of the Invocation that generated this response                    | Yes      |         |
+| `inv`  | `&SignedInvocation`   | CID of the Invocation that generated this response                    | Yes      |         |
 | `out`  | `{String: Any}` | The results of each call, the task's label. MAY contain sub-receipts. | Yes      |         |
 | `meta` | `Any`           | Non-normative extended fields                                         | No       | `null`  |
 
