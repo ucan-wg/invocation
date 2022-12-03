@@ -1,0 +1,11 @@
+digraph {
+    rankdir="LR"
+
+    node [
+      style=rounded
+      shape=box
+    ]
+
+    Invocation -> Pointer -> Receipt -> Promise -> Pipeline
+    Invocation -> Batch -> Pipeline
+}
