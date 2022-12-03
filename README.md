@@ -275,6 +275,8 @@ FIXME NOTE TO SELF: what if the meta field lived on the envelope, but then on na
 
 FIXME invoke an underlying ability from a specific ucan?
 
+FIXME note promises are "just" pointers to results
+
 ## 3.2 Invocation Envelope
 
 Note that there is are no signature or UCAN proof fields in the Invocation struct. To allow for better nesting inside of other formats, these fields are broken out into an envelope for when Invocations are used standalone:
@@ -315,24 +317,30 @@ The `sig` field MUST contain a signture of the CID in the `inv` field. The MUST 
 ```
 
 
-# 4 Pointer
+# 4 Invocation Pointer
 
-Invocation Pointers identify a specific task inside a specific invocation. Since tasks may look identical across calls, they MUST be scoped to a specific [`SignedInvocation`](#32-ipld-schema).
+Unlike the `&Invoation` CID, an Invocation Pointer identifies some unit of work by the `with`, `do`, and 
 
-## 5.1 Fields
+inside a specific invocation. Since equivalently configured 
 
-## 5.2 IPLD Schema
+Using a CIDv1 with DAG-CBOR and BLAKE3 is RECOMMENDED. FIXME look up the multicodec header
+
+
+
+FIXME add this later: they SHOULD be scoped to a specific [`InvocationContext`], such as a a specific [`SignedInvocation`](#32-ipld-schema).
 
 ``` ipldsch
-type InvocationPointer struct {
-  inv        InvocationPointer
-  taskLabel String
-} representation tuple
-
-type InvocationPointer union {
-  | Local "/"
-  | &SignedInvocation
+type ContainerPointer union {
+  | LocalLabel "/"
+  | &SignedInvocation "inv"
+  | &Pipeline "pipe"
 }
+
+type PipelinePointer struct {
+  pipeline &Pipeline
+}
+
+type LocalLabel String
 ```
 
 ## 5.3 JSON Examples
