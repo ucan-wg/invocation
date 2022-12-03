@@ -158,7 +158,7 @@ The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field
 
 ### 2.2.1 Invocation
 
-An invocation is like function application: a request to perform some action on a resource with specific inputs.
+An [invocation](#3-invocation) is like function application: a request to perform some action on a resource with specific inputs.
 
 ### 2.2.2 Pointer
 
@@ -179,6 +179,61 @@ A batch is a way of requesting more than one action at once.
 ### 2.2.6 Pipeline
 
 A pipeline is a batch that includes promises. This allows for the automatic chaining of actions based on their outputs.
+
+# 3 Invocation
+
+An invocation is the smallest unit of work that can be requested from a UCAN. It invokes one specific `(resource, ability, inputs)` triple. The inputs are freeform, and depend on the specific resource and ability being interacted with.
+
+Invocations
+
+## 3.1 IPLD Schema
+
+``` ipldsch
+type InvocationEnvelope struct {
+  inv Invocation
+  prf [&UCAN]
+  sig Varsig
+}
+
+type Invocation struct {
+  with   URI
+  do     Ability
+  inputs Any
+  meta   {String : Any} (implicit {})
+}
+```
+
+### 3.1.1 Resource
+
+The `with` field MUST contain the [URI](FIXME) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the `data`, `ipfs`, or `magnet` URI schemes.
+
+### 3.1.2 Ability
+
+The `do` field MUST contain a [UCAN ability](FIXME). This field can be thought of as the message or trait being sent to the resource.
+
+### 3.1.3 Inputs
+
+The `inputs` field MUST contain any arguments expected by the URI/Ability pair. This MAY be different between different URIs and Abilities, and is thus left to the executor to define the shape of this data.
+
+### 3.1.4 Metadata
+
+If present, the OPTIONAL `meta` map MAY contain freeform fields. This provides a place for extension of the invocation type.
+
+Data inside the `meta` field MUST NOT be used for memoization and receipts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # 3 Envelope
 
