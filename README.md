@@ -162,39 +162,37 @@ An [invocation](#3-invocation) is like function application: a request to perfor
 
 ### 2.2.2 Pointer
 
-A pointer identifies a particular instance of an invocation.
+A [pointer](FIXME) identifies a particular instance of an invocation.
 
 ### 2.2.3 Receipt
 
-A receipt describes the output of an invocation, referenced by its pointer.
+A [receipt](FIXME) describes the output of an invocation, referenced by its pointer.
 
 ### 2.2.4 Promise
 
-A promise is a reference to the receipt of an action that has yet to return a receipt.
+A [promise](FIXME) is a reference to the receipt of an action that has yet to return a receipt.
 
 ### 2.2.5 Batch
 
-A batch is a way of requesting more than one action at once.
+A [batch](FIXME) is a way of requesting more than one action at once.
 
 ### 2.2.6 Pipeline
 
-A pipeline is a batch that includes promises. This allows for the automatic chaining of actions based on their outputs.
+A [pipeline](FIXME) is a batch that includes promises. This allows for the automatic chaining of actions based on their outputs.
+
+### 2.2.7 Memoization
+
+A [distributed memoization table](FIXME) (DMT) is a way of sharing receipts in a consistent lookup table.
 
 # 3 Invocation
 
 An invocation is the smallest unit of work that can be requested from a UCAN. It invokes one specific `(resource, ability, inputs)` triple. The inputs are freeform, and depend on the specific resource and ability being interacted with.
 
-Invocations
-
-## 3.1 IPLD Schema
+Invocations ........... FIXME
+ 
+## 3.1 Single Invocation
 
 ``` ipldsch
-type InvocationEnvelope struct {
-  inv Invocation
-  prf [&UCAN]
-  sig Varsig
-}
-
 type Invocation struct {
   with   URI
   do     Ability
@@ -203,28 +201,77 @@ type Invocation struct {
 }
 ```
 
-### 3.1.1 Resource
+### 3.1.1 Fields
 
-The `with` field MUST contain the [URI](FIXME) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the `data`, `ipfs`, or `magnet` URI schemes.
+#### 3.1.1.1 Resource
 
-### 3.1.2 Ability
+The `with` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`](https://en.wikipedia.org/wiki/Data_URI_scheme), `ipfs`, or [`magnet`]() URI schemes.
 
-The `do` field MUST contain a [UCAN ability](FIXME). This field can be thought of as the message or trait being sent to the resource.
+#### 3.1.1.2 Ability
 
-### 3.1.3 Inputs
+The `do` field MUST contain a [UCAN Ability](https://github.com/ucan-wg/spec/#23-ability). This field can be thought of as the message or trait being sent to the resource.
+
+#### 3.1.1.3 Inputs
 
 The `inputs` field MUST contain any arguments expected by the URI/Ability pair. This MAY be different between different URIs and Abilities, and is thus left to the executor to define the shape of this data.
 
-### 3.1.4 Metadata
+#### 3.1.1.4 Metadata
 
 If present, the OPTIONAL `meta` map MAY contain freeform fields. This provides a place for extension of the invocation type.
 
-Data inside the `meta` field MUST NOT be used for memoization and receipts
+Data inside the `meta` field SHOULD NOT be used for [memoization]() and [receipts]().
 
+### 3.1.2 JSON Examples
 
+``` json
+{
+  "with": "https://example.com/blog/posts",
+  "do": "crud/create",
+  "inputs": {
+    "headers": {
+      "content-type": "application/json"
+    },
+    "payload": {
+      "title": "How UCAN Invocations Changed My Life",
+      "body": "This is the story of how one spec changed everything..."
+    }
+  }
+}
 
+{
+  "with": "mailto:akiko@example.com",
+  "do": "msg/send",
+  "inputs": {
+    "to": ["boris@example.com", "carol@example.com"],
+    "subject": "Coffee",
+    "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Invocations!"
+  }
+}
 
+{
+  "with": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+  "do": "wasm/run",
+  "inputs": {
+    "func": "add_one",
+    "args": [42]
+  }
+  "meta": {
+    "description": "This is the standard `add_one` function often used to demonstrate Wasm"
+  }
+}
+```
 
+## 3.2 Invocation Envelope
+
+Note that there is are no signature or UCAN proof fields in the Invocation struct. To allow for better nesting inside of other formats, stand these are handled below
+
+``` ipldsch
+type InvocationEnvelope struct {
+  inv Invocation
+  prf [&UCAN]
+  sig Varsig
+}
+```
 
 
 
