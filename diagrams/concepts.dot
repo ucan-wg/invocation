@@ -1,6 +1,4 @@
 digraph {
-    rankdir="LR"
-
     node [
       style=rounded
       shape=box
