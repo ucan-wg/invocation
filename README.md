@@ -233,8 +233,13 @@ Data inside the `meta` field SHOULD NOT be used for [memoization]() and [receipt
     },
     "payload": {
       "title": "How UCAN Invocations Changed My Life",
-      "body": "This is the story of how one spec changed everything..."
+      "body": "This is the story of how one spec changed everything...",
+      "topics": ["authz", "journal"],
+      "draft": true
     }
+  },
+  "meta": {
+    "notes/personal": "I felt like making an invocation today!"
   }
 }
 
@@ -250,28 +255,63 @@ Data inside the `meta` field SHOULD NOT be used for [memoization]() and [receipt
 
 {
   "with": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
-  "do": "wasm/run",
+  "do": "exec/run",
   "inputs": {
     "func": "add_one",
     "args": [42]
   }
   "meta": {
-    "description": "This is the standard `add_one` function often used to demonstrate Wasm"
+    "notes/description": "This is the standard `add_one` function often used to demonstrate Wasm",
+    "ipvm/config": {
+      "time": [5, "minutes"],
+      "gas": 3000
+    }
   }
 }
 ```
 
+FIXME NOTE TO SELF: what if the meta field lived on the envelope, but then on named tasks got its own field: `{tasks: {foo: {inv: {with, do, inuts}, meta: "abceef"}}}`. A bit annoying to be forced to do that extra wrapping all the time I guess.
+
+
+FIXME invoke an underlying ability from a specific ucan?
+
 ## 3.2 Invocation Envelope
 
-Note that there is are no signature or UCAN proof fields in the Invocation struct. To allow for better nesting inside of other formats, stand these are handled below
+Note that there is are no signature or UCAN proof fields in the Invocation struct. To allow for better nesting inside of other formats, these fields are broken out into an envelope for when Invocations are used standalone:
 
 ``` ipldsch
 type InvocationEnvelope struct {
-  inv Invocation
+  inv &Invocation
   prf [&UCAN]
   sig Varsig
 }
 ```
+
+### 3.2.1 Fields
+
+#### 3.2.1 Invocation
+
+A link to the [Invocation](#31-single-invocation) itself.
+
+#### 3.2.2 Proofs
+
+The `prf` field MUST contain links to any UCANs that provide the authority to run the actions. All of the outermost `aud` fields MUST be set to the [Executor](#212-executor)'s DID. All of the outermost `iss` field MUST be set to the [Invoker](#211-invoker)'s DID.
+
+#### 3.2.3 Signature
+
+The `sig` field MUST contain a signture of the CID in the `inv` field. The MUST NOT include the `prf` field.
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
