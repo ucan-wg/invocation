@@ -66,7 +66,7 @@ However, there is clearly a distinction between passing a function and invoking 
 
 Information about the scheduling, order, and pipelining of tasks is orthogonal to the flow of authority. An agent collaborating with the original executor does not need to know that their call is 3 invocations deep; they only need to know that they been asked to perform some task by the latest invoker.
 
-As we shall see in the [discussion of promise pipelining](#5-promise-pipelining), asking an agent to perform a sequence of tasks before you know the exact parameters requires delegating capabilities for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
+As we shall see in the [discussion of promise pipelining](#6-promise-pipelining), asking an agent to perform a sequence of tasks before you know the exact parameters requires delegating capabilities for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
 
 ```
   ────────────────────────────────────────────Time──────────────────────────────────────────────────────►
@@ -178,11 +178,11 @@ The `prf` field MUST contain CIDs pointing to the UCANs that provide the authori
 
 ### 3.1.3 Run Capabilities
 
-The `run` field MUST reference the tasks contained in the UCAN are to be run during the invocation. To run all tasks in the underlying UCAN, the `"*"` value MUST be used. If only specific tasks (or [pipelines](#5-promise-pipelining)) are intended to be run, then they MUST be prefixed with an arbitrary label and treated as a UCAN attenuation: all tasks MUST be backed by a matching capability of equal or greater authority.
+The `run` field MUST reference the tasks contained in the UCAN are to be run during the invocation. To run all tasks in the underlying UCAN, the `"*"` value MUST be used. If only specific tasks (or [pipelines](#6-promise-pipelining)) are intended to be run, then they MUST be prefixed with an arbitrary label and treated as a UCAN attenuation: all tasks MUST be backed by a matching capability of equal or greater authority.
 
 #### 3.1.3.1 Promises
 
-The only difference from general capabilities is that [promises](#5-promise-pipelining) MAY also be used as inputs to attenuated fields.
+The only difference from general capabilities is that [promises](#6-promise-pipelining) MAY also be used as inputs to attenuated fields.
 
 If a capability input has the key `"_"` and the value is a promise, the input MUST be discarded and only used for determining sequencing tasks.
 
@@ -245,7 +245,7 @@ type Task struct {
 
 ### 3.3.2 Promise Pipelines
 
-Promise pipelines are handled in more detail in [section 5](#5-promise-pipelining). In brief, they enable taking the output of a task that has not yet run as the input to another task. Here is a simple example:
+Promise pipelines are handled in more detail in [§6](#6-promise-pipelining). In brief, they enable taking the output of a task that has not yet run as the input to another task. Here is a simple example:
 
 ``` js
 {
@@ -295,11 +295,11 @@ Receipts don't have their own version field. Receipts MUST use the same version 
 
 ## 4.1 Fields
 
-| Field  | Type            | Description                                                           | Required | Default |
-|--------|-----------------|-----------------------------------------------------------------------|----------|---------|
-| `inv`  | `&SignedInvocation`   | CID of the Invocation that generated this response                    | Yes      |         |
-| `out`  | `{String: Any}` | The results of each call, the task's label. MAY contain sub-receipts. | Yes      |         |
-| `meta` | `Any`           | Non-normative extended fields                                         | No       | `null`  |
+| Field  | Type                 | Description                                                           | Required | Default |
+|--------|----------------------|-----------------------------------------------------------------------|----------|---------|
+| `inv`  | `&SignedInvocation`  | CID of the Invocation that generated this response                    | Yes      |         |
+| `out`  | `{String : Receipt}` | The results of each call, the task's label. MAY contain sub-receipts. | Yes      |         |
+| `meta` | `{String : Any}`     | Non-normative extended fields                                         | No       | `null`  |
 
 ### 4.1.1 Invocation
 
@@ -385,7 +385,35 @@ type Success struct {
  }
 ```
 
-# 5 Promise Pipelining
+# 5 Pointers
+
+Invocation pointers identify a specific task inside a specific invocation. Since tasks may look identical across calls, they MUST be scoped to a specific [`SignedInvocation`](#32-ipld-schema).
+
+## 5.1 Fields
+
+## 5.2 IPLD Schema
+
+``` ipldsch
+type TaskPointer struct {
+  inv       InvocationPointer
+  taskLabel String
+} representation tuple
+
+type InvocationPointer union {
+  | Local "/"
+  | &SignedInvocation
+}
+```
+
+## 5.3 JSON Examples
+
+``` json
+["/", "some-label"]
+[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, "some-label"]
+[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, {"/": {"bytes": "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"}}]
+```
+
+# 6 Promise Pipelining
 
 > Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
 >
@@ -401,40 +429,28 @@ Values MUST only be pipelined if they resolve to the `"ok"` branch of the `Resul
 
 A promise MAY be placed in any Task field. Substituting into the `with` and `do` fields is NOT RECOMMENDED in fully trustless contexts, as it makes it difficult to understand what is involved in the invocation in advance.
 
-## 5.1 Promises
+## 6.1 Promises
  
-## 5.1.1 Fields
+## 6.1.1 Fields
 
-| Field       | Type         | Description                                                                      | Required |
-|-------------|--------------|----------------------------------------------------------------------------------|----------|
-| `promised`  | `CID or "/"` | The Invocation being referenced                                                  | Yes      |
-| `taskLabel` | `String`     | The task's label. If the tasks were implicit (`"run": "*"`), the the CID is used | Yes      |
+| Field          | Type                | Description                     | Required |
+|----------------|---------------------|---------------------------------|----------|
+| `ucan/promise` | `InvocationPointer` | The Invocation being referenced | Yes      |
 
 The above table MUST be serialized as a tuple. In JSON, this SHOULD be represented as an array containing the values (but not keys) sequenced in the order they appear in the table.
 
-## 5.1.2 IPLD Schema
+## 6.1.2 IPLD Schema
 
 ``` ipldsch
 type Promise struct {
-  promised    Target 
-  taskLabel String -- The label inside the invocation
-} representation tuple
-
-type Target union {
-  | Local "/"
-  | &Invocation
+  promised TaskPointer (rename "ucan/")
 }
 ```
 
-## 5.1.3 JSON Examples
+## 6.1.3 JSON Examples
 
-``` json
-["/", "some-label"]
-[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, "some-label"]
-[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, {"/": {"bytes": "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"}}]
-```
 
-## 5.2 Pipelining
+## 6.2 Pipelining
 
 Pipelining uses promises as inputs to determine the required dataflow graph. The following examples both express the following dataflow graph:
 
@@ -464,7 +480,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
              └────────────────────────────┘
 ```
 
-#### 5.2.1 Batched 
+#### 6.2.1 Batched 
 
  ``` json
 {
@@ -529,7 +545,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 }
 ```
 
-### 5.2.2 Serial Pipeline
+### 6.2.2 Serial Pipeline
 
 ```
                 ┌────────────────────────────┐
@@ -657,9 +673,9 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 }
 ```
 
-# 6 Appendix
+# 7 Appendix
 
-## 6.1 Support Types
+## 7.1 Support Types
 
 ``` ipldsch
 type CID String
@@ -684,7 +700,7 @@ type NumVer struct {
 }
 ```
 
-# 7 Prior Art
+# 8 Prior Art
 
 [ucanto RPC](https://github.com/web3-storage/ucanto) from DAG House is a production system that uses UCAN as the basis for an RPC layer.
 
@@ -696,7 +712,7 @@ The [Object Capability Network (OCapN)](https://github.com/ocapn/ocapn) protocol
 
 [Cap 'n Proto RPC](https://capnproto.org/) is an influential RPC framework [based on concepts from CapTP](https://capnproto.org/rpc.html#specification).
 
-# 8 Acknowledgements
+# 9 Acknowledgements
 
 Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering work](http://erights.org/talks/thesis/markm-thesis.pdf) on [capability systems](http://erights.org/).
 
