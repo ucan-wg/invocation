@@ -158,7 +158,7 @@ The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field
 
 ### 2.2.1 Closure
 
-A [closure](#3-closure) is like function application: a request to perform some action on a resource with specific inputs.
+A [closure](#3-closure) is like a deferred function application: a request to perform some action on a resource with specific inputs.
 
 ### 2.2.2 Receipt
 
@@ -257,6 +257,29 @@ type Success struct {
 An invocation is the smallest unit of work that can be requested from a UCAN. It invokes one specific `(resource, ability, inputs)` triple. The inputs are freeform, and depend on the specific resource and ability being interacted with.
 
 Closures ........... FIXME
+
+Using the JavaScript analogy from the introduction, this is similar to wrapping a call in a nullary function.
+
+``` json
+{
+  "with": "mailto://alice@example.com",
+  "do": "msg/send",
+  "inputs": {
+    "to": ["bob@example.com", "carol@example.com"],
+    "subject": "hello",
+    "body": "world"
+  }
+}
+```
+
+``` js
+() => msg.send("mailto:alice@example.com", {
+  to: ["bob@example.com", "carol@example.com"],
+  subject: "hello",
+  body: "world"
+})
+```
+
  
 ## 3.1 Fields
 
@@ -321,7 +344,7 @@ Running WebAssembly
 ``` json
 {
   "with": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
-  "do": "exec/run",
+  "do": "executable/run",
   "inputs": {
     "func": "add_one",
     "args": [42]
@@ -331,7 +354,9 @@ Running WebAssembly
 
 # 4 Task
 
+A Task is an 
 
+FIXME wrappr vs subtyping?
 
 ``` ipldsch
 type Task struct {
@@ -342,7 +367,7 @@ type Task struct {
 
 # 5 Batch
 
-In many situations, sending multiple requests in a batch is more efficient.
+In many situations, sending multiple requests in a batch is more efficient. A Batch is a collection of Closures, either as an array or a named map.
 
 ``` ipldsch
 type Batch union {
@@ -351,12 +376,44 @@ type Batch union {
 }
 ```
 
-# 5 Invocation
+## 5.1 Fields
+
+Each Task in a Batch contains a reference to [Closure](FIXME) itself, plus optional metadata.
+
+
+``` json
+{
+  "batch": {
+    "left": {
+      
+    },
+    "middle": {
+    
+    },
+    "right": {
+    
+    }
+  }
+}
+```
+
+# 6 Invocation
+
+Note that there is are no signature or UCAN proof fields in the Closure struct. To allow for better nesting inside of other formats, these fields are broken out into an envelope for when Closures are used standalone:
+
+An Invocation authorizes one or more Closures to be run. There are a few invariants that MUST hold between the `run`, `prf` and `sig` fields:
+
+* All of the `run` Closures MUST be provably authorized by the UCANs in the `prf` field
+* All of the `prf` UCANs MUST list the Executor in their `aud` field
+* All of the `prf` UCANs MUST list the Invoker in their `iss`
+* The `sig` field MUST be produced by the Invoker
+
+## 6.1 IPLD Schema
 
 ``` ipldsch
 type ClosureInvocation struct {
-  run  Batch
   uiv  SemVer
+  run  Batch
   prf  [&UCAN]
   nnc  String
   meta {String : Any} (implicit {})
@@ -364,7 +421,57 @@ type ClosureInvocation struct {
 }
 ```
 
-# 6 Pointer
+## 6.2 Fields
+
+### 6.2.1 UCAN Closure Version
+
+The `uiv` field MUST contain the Semver-frmatted version of the UCAN Closure Specification that this struct conforms to.
+
+### 6.2.2 Closure
+
+The `run` field MUST contain a link to the [Closure](#31-single-invocation) itself.
+
+### 6.2.3 Proofs
+
+The `prf` field MUST contain links to any UCANs that provide the authority to run the actions. All of the outermost `aud` fields MUST be set to the [Executor](#212-executor)'s DID. All of the outermost `iss` field MUST be set to the [Invoker](#211-invoker)'s DID.
+
+### 6.2.4 Nonce
+
+The `nnc` field MUST include a random nonce field expressed in ASCII. This field ensures that multiple invocations are unique.
+
+### 6.2.5 Metadata
+
+If present, the OPTIONAL `meta` map MAY contain freeform fields. This provides a place for extension of the invocation type.
+
+Data inside the `meta` field SHOULD NOT be used for [memoization]() and [receipts]().
+
+### 6.2.6 Signature
+
+The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig) of the `inv`, `prf`, and `nnc` fields.
+
+## 6.3 DAG-JSON Examples
+
+``` json
+{
+  "uiv": "0.1.0"
+  "run": {"/": "bafkreidu4n2252jl3zjhbhcpnxtau5zcy5f6lipgqcik6b3o2jkkjt5ali"},
+  "prf": [
+    {"/": "bafkreie2cyfsaqv5jjy2gadr7mmupmearkvcg7llybfdd7b6fvzzmhazuy"},
+    {"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}
+  ],
+  "nnc": "6c*97-3=",
+  "meta": {
+    "notes/personal": "I felt like making an invocation today!",
+    "ipvm/config": {
+      "time": [5, "minutes"],
+      "gas": 3000
+    }
+  }
+  "sig": {"/": {"bytes:": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
+}
+```
+
+# 7 Invocation Pointer
 
 ``` ipldsch
 type InvPtr union {
@@ -384,9 +491,7 @@ type ClosurePointer struct {
 [{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, {"/": {"bytes": "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"}}]
 ```
 
-# 7 Output
-
-## 7.1 Result
+# 8 Result
 
 ``` ipldsch
 type Result union {
@@ -405,7 +510,7 @@ type Success struct {
 }
 ```
 
-## 7.2 Receipt
+# 9 Receipt
 
 ``` ipldsch
 type Receipt struct {
@@ -416,110 +521,20 @@ type Receipt struct {
 } 
 ```
 
-# 8 Promise
-
-``` ipldsch
-type Promise struct {
-  envelope InvPtr
-  label    String
-  status   Status (implicit "ok")
-} 
-
-type Status enum {
-  | Ok  ("ok")
-  | Err ("err")
-}
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Note that there is are no signature or UCAN proof fields in the Closure struct. To allow for better nesting inside of other formats, these fields are broken out into an envelope for when Closures are used standalone:
-
-
-### 3.2.1 Fields
-
-#### 3.2.1.1 Closure
-
-The `run` field MUST contain a link to the [Closure](#31-single-invocation) itself.
-
-#### 3.2.1.2 UCAN Closure Version
-
-The `uiv` field MUST contain the Semver-frmatted version of the UCAN Closure Specification that this struct conforms to.
-
-#### 3.2.1.2 Proofs
-
-The `prf` field MUST contain links to any UCANs that provide the authority to run the actions. All of the outermost `aud` fields MUST be set to the [Executor](#212-executor)'s DID. All of the outermost `iss` field MUST be set to the [Invoker](#211-invoker)'s DID.
-
-#### 3.2.1.3 Nonce
-
-The `nnc` field MUST include a random nonce field expressed in ASCII. This field ensures that multiple invocations are unique.
-
-#### 3.2.1.4 Metadata
-
-If present, the OPTIONAL `meta` map MAY contain freeform fields. This provides a place for extension of the invocation type.
-
-Data inside the `meta` field SHOULD NOT be used for [memoization]() and [receipts]().
-
-#### 3.2.1.5 Signature
-
-The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig) of the `inv`, `prf`, and `nnc` fields.
-
-### 3.2.2 DAG-JSON Examples
-
-``` json
-{
-  "run": {"/": "bafkreidu4n2252jl3zjhbhcpnxtau5zcy5f6lipgqcik6b3o2jkkjt5ali"},
-  "prf": [
-    {"/": "bafkreie2cyfsaqv5jjy2gadr7mmupmearkvcg7llybfdd7b6fvzzmhazuy"},
-    {"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}
-  ],
-  "nnc": "6c*97-3=",
-  "meta": {
-    "notes/personal": "I felt like making an invocation today!",
-    "ipvm/config": {
-      "time": [5, "minutes"],
-      "gas": 3000
-    }
-  }
-  "sig": {"/": {"bytes:": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
-}
-```
-
-# 4 Receipt
-
 An invocation receipt is an attestation of the output of an invocation. A receipt MUST be signed by the Executor (the `aud` of the associated UCANs).
 
 **NB: a Receipt this does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
 Receipts don't have their own version field. Receipts MUST use the same version as the invocation that they contain.
 
-## 4.1 Fields
+## 9.1 Fields
 
 
-### 4.1.1 Closure
+### 9.1.1 Closure
 
 The `inv` field MUST include a link to the Closure that the Receipt is for.
 
-### 4.1.2 Output
+### 9.1.2 Output
 
 The `out` field MUST contain the output of steps of the call graph, indexed by the task name inside the invocation. If the invocation is the implicit `"*"`, then the base64 hash of the concatenation of the URI, Ability and extensional fields MUST be used.
 
@@ -527,15 +542,15 @@ The `out` field MAY omit any tasks that have not yet completed, or results which
 
 A `Result` MAY include recursive `Receipt` CIDs in on the `Success` branch. As a Task may require subdelegation, the OPTIONAL `rec` field MAY be used to include recursive `Receipt`s.
 
-### 4.1.3 Metadata Fields
+### 9.1.3 Metadata Fields
 
 The metadata field MAY be omitted or used to contain additional data about the receipt. This field MAY be used for tags, commentary, trace information, and so on.
 
-### 4.1.4 Signature
+### 9.1.4 Signature
 
 The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig) of the `inv`, `out`, and `meta` fields. The signature MUST be generated by the Executor, which means the public key in the `aud` field of the UCANs backing the Closure.
 
-## 4.2 DAG-JSON Examples
+## 9.2 DAG-JSON Examples
 
 ``` json
 {
@@ -561,50 +576,24 @@ The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig)
 }
 ```
 
-# 5 Batch
+# 10 Promise
 
+``` ipldsch
+type Promise struct {
+  envelope InvPtr
+  label    String
+  status   Status (implicit "ok")
+} 
 
-
-
-
-
+type Status enum {
+  | Ok  ("ok")
+  | Err ("err")
+}
+```
 
 If there are dependencies or ordering required, then you need a promise pipeline
 
 
-## 5.1 Task
-
-Each Task in a Batch contains a reference to [Closure](FIXME) itself, plus optional metadata.
-
-### 5.1.1 Fields
-
-```
-
-#### 5.1.1.1 Closure
-
-The `run` field MUST contain the 
-
-Note that this does not contain a signature for the Closure, as this will be handled in the Batch container.
-
-## 5.2 Set
-
-## 5.3 Named
-
-``` json
-{
-  "batch": {
-    "left": {
-      
-    },
-    "middle": {
-    
-    },
-    "right": {
-    
-    }
-  }
-}
-```
 
 
 
@@ -619,29 +608,6 @@ Note that this does not contain a signature for the Closure, as this will be han
 
 
 
-
-
-
-
-
-
-# 3 Invocation
-
-The invocation envelope is a thin wrapper around a UCAN that conveys that all of the contained tasks SHOULD be performed.
-
-All of the roles from the referenced UCANs MUST persist to the invocation per the [roles table](#2-roles).
-
-The invocation wrapper MUST be signed by the same principal that issued the UCAN.
-
-## 3.1 Fields
-
-| Field | Type                     | Description                                            | Required | Default |
-|-------|--------------------------|--------------------------------------------------------|----------|---------|
-| `v`   | `SemVer`                 | SemVer of the UCAN invocation this schema (v0.1.0)     | Yes      |         |
-| `prf` | `[&UCAN]`                | UCANs that supply the authority to run this invocation | Yes      |         |
-| `run` | `"*" or {String : Task}` | Which UCAN capabilities to run                         | Yes      |         |
-| `nnc` | `String`                 | A unique nonce, to distinguish each invocation         | Yes      |         |
-| `ext` | `Any`                    | Non-normative extended fields                          | No       | `null`  |
     
 ### 3.1.1 Version
 
