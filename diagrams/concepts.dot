@@ -5,7 +5,6 @@ digraph {
     ]
 
     Receipt -> Memoization
-    Invocation -> Receipt -> Promise -> Pipeline
-    Invocation -> Batch -> Pipeline
- //   Batch -> BatchReceipt
+    Invocation -> Envelope -> Receipt -> Promise -> Pipeline
+    Envelope -> Batch -> Pipeline
 }

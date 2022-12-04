@@ -258,7 +258,7 @@ An invocation is the smallest unit of work that can be requested from a UCAN. It
 
 Invocations ........... FIXME
  
-## 3.1 Single Invocation
+## 3.1 Fields
 
 ``` ipldsch
 type Invocation struct {
@@ -268,21 +268,21 @@ type Invocation struct {
 }
 ```
 
-### 3.1.1 Fields
-
-#### 3.1.1.1 Resource
+### 3.1.1 Resource
 
 The `with` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`](https://en.wikipedia.org/wiki/Data_URI_scheme), `ipfs`, or [`magnet`]() URI schemes.
 
-#### 3.1.1.2 Ability
+### 3.1.2 Ability
 
 The `do` field MUST contain a [UCAN Ability](https://github.com/ucan-wg/spec/#23-ability). This field can be thought of as the message or trait being sent to the resource.
 
-#### 3.1.1.3 Inputs
+### 3.1.3 Inputs
 
 The `inputs` field MUST contain any arguments expected by the URI/Ability pair. This MAY be different between different URIs and Abilities, and is thus left to the executor to define the shape of this data.
 
-### 3.1.2 DAG-JSON Examples
+### 3.2 DAG-JSON Examples
+
+Interactig with an HTTP API
 
 ``` json
 {
@@ -300,7 +300,11 @@ The `inputs` field MUST contain any arguments expected by the URI/Ability pair. 
     }
   }
 }
+```
 
+Sending Email
+
+``` json
 {
   "with": "mailto:akiko@example.com",
   "do": "msg/send",
@@ -310,7 +314,11 @@ The `inputs` field MUST contain any arguments expected by the URI/Ability pair. 
     "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Invocations!"
   }
 }
+```
 
+Running WebAssembly
+
+``` json
 {
   "with": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
   "do": "exec/run",
@@ -321,14 +329,9 @@ The `inputs` field MUST contain any arguments expected by the URI/Ability pair. 
 }
 ```
 
-FIXME NOTE TO SELF: what if the meta field lived on the envelope, but then on named tasks got its own field: `{tasks: {foo: {inv: {with, do, inuts}, meta: "abceef"}}}`. A bit annoying to be forced to do that extra wrapping all the time I guess.
-
-
-FIXME invoke an underlying ability from a specific ucan?
-
-FIXME note promises are "just" pointers to results
-
 # 4 Batch
+
+It is 
 
 ## 4.1 Entry
 
@@ -1092,3 +1095,4 @@ Thanks to [Rod Vagg](https://github.com/rvagg/) for the clarifications on IPLD S
 
 FIXME
 
+FIXME invoke an underlying ability from a specific ucan?
