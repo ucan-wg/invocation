@@ -395,7 +395,7 @@ Executing all of the capabilities in a UCAN directly:
 
 # 4 Task
 
-A Task is subtype of a Clousure, adding an additional metadata field. A Task can be trivially converted to a Closure by removing the `meta` field. Note that the `meta` field MUST NOT be included for [memoization](FIXME).
+A Task is subtype of a Clousure, adding an OPTIONAL metadata field. If not present, the `meta` field defaults to an empty map. A Task can be trivially converted to a Closure by removing the `meta` field.
 
 ``` ipldsch
 type Task struct {
@@ -548,16 +548,7 @@ List:
 
 # 6 Invocation
 
-As noted in the 
-
-Note that there is are no signature or UCAN proof fields in the Task struct. To allow for better nesting inside of other formats, these fields are broken out into an envelope for when Tasks are used standalone:
-
-An Invocation authorizes one or more Tasks to be run. There are a few invariants that MUST hold between the `run`, `prf` and `sig` fields:
-
-* All of the `run` Tasks MUST be provably authorized by the UCANs in the `prf` field
-* All of the `prf` UCANs MUST list the Executor in their `aud` field
-* All of the `prf` UCANs MUST list the Invoker in their `iss`
-* The `sig` field MUST be produced by the Invoker
+As [noted in the introduction](FIXME), there is a difference between a reference to a function and calling that function. [Closures](FIXME) and [Tasks](FIXME) are not executable until they have been provided provable authority from the [Invoker]() (in the form of a UCAN), and signed with the Invoker's private key.
 
 ## 6.1 IPLD Schema
 
@@ -573,6 +564,13 @@ type TaskInvocation struct {
 ```
 
 ## 6.2 Fields
+
+An Invocation authorizes one or more Tasks to be run. There are a few invariants that MUST hold between the `run`, `prf` and `sig` fields:
+
+* All of the `run` Tasks MUST be provably authorized by the UCANs in the `prf` field
+* All of the `prf` UCANs MUST list the Executor in their `aud` field
+* All of the `prf` UCANs MUST list the Invoker in their `iss`
+* The `sig` field MUST be produced by the Invoker
 
 ### 6.2.1 UCAN Task Version
 
@@ -605,7 +603,36 @@ The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig)
 ``` json
 {
   "uiv": "0.1.0"
-  "run": {"/": "bafkreidu4n2252jl3zjhbhcpnxtau5zcy5f6lipgqcik6b3o2jkkjt5ali"},
+  "run": {
+    "left": {
+      "with": "https://example.com/blog/posts",
+      "do": "crud/create",
+      "inputs": {
+        "headers": {
+          "content-type": "application/json"
+        },
+        "payload": {
+          "title": "How UCAN Tasks Changed My Life",
+          "body": "This is the story of how one spec changed everything...",
+          "topics": ["authz", "journal"],
+          "draft": true
+        }
+      }
+    },
+    "right": {
+      "with": "mailto:akiko@example.com",
+      "do": "msg/send",
+      "inputs": {
+        "to": ["boris@example.com", "carol@example.com"],
+        "subject": "Coffee",
+        "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!"
+      },
+      "meta": {
+        "dev/tags": ["friends", "coffee"],
+        "dev/priority": "high"
+      }
+    }
+  },
   "prf": [
     {"/": "bafkreie2cyfsaqv5jjy2gadr7mmupmearkvcg7llybfdd7b6fvzzmhazuy"},
     {"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}
@@ -617,7 +644,7 @@ The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig)
       "time": [5, "minutes"],
       "gas": 3000
     }
-  }
+  },
   "sig": {"/": {"bytes:": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
 }
 ```
