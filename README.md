@@ -180,7 +180,7 @@ A [pipeline](FIXME) is a batch that includes promises. This allows for the autom
 
 A [distributed memoization table](FIXME) (DMT) is a way of sharing receipts in a consistent lookup table.
 
-# 3 IPLD Schema
+## 2.3 IPLD Schema
 
 ``` ipldsch
 type Invocation struct {
@@ -189,19 +189,18 @@ type Invocation struct {
   inputs Any
 }
 
-type Work union {
-  | Single &Invocation
-  | Batch  [Entry]
-  | Named  {String : Entry}
-}
-
 type Entry struct {
   inv  &Invocation
   meta {String : Any} (implicit {})
 }
 
+type Batch union {
+  | Set   [Entry]
+  | Named {String : Entry}
+}
+
 type InvocationEnvelope struct {
-  run  Work
+  run  Batch
   uiv  SemVer
   prf  [&UCAN]
   nnc  String
@@ -209,9 +208,14 @@ type InvocationEnvelope struct {
   sig  Varsig
 }
 
-type Pointer struct {
-  inve &InvocationEnvelope
-  name nullable String
+type InvocationPointer struct {
+  envl  EnvelopePointer
+  label optional String
+} representation tuple
+
+type EnvelopePointer union {
+  | "/" -- "Local": Relative to the current invocation
+  | &InvocationEnvelope
 }
 
 type Status enum {
@@ -220,9 +224,10 @@ type Status enum {
 }
 
 type Promise struct {
-  ptr Pointer
-  sts Status (implicit "ok")
-}
+  envelope EnvelopePointer
+  label    String
+  status   Status (implicit "ok")
+} 
 
 type Receipt struct {
   ran  Pointer
@@ -246,7 +251,6 @@ type Success struct {
   rec optional &SignedReceipt
 }
 ```
-
 
 # 3 Invocation
 
@@ -324,28 +328,129 @@ FIXME invoke an underlying ability from a specific ucan?
 
 FIXME note promises are "just" pointers to results
 
-## 3.2 Invocation Envelope
+# 4 Batch
 
-FIXME move near very bottom!
+## 4.1 Entry
 
-Note that there is are no signature or UCAN proof fields in the Invocation struct. To allow for better nesting inside of other formats, these fields are broken out into an envelope for when Invocations are used standalone:
+``` ipldsch
+type Entry struct {
+  inv  &Invocation
+  meta {String : Any} (implicit {})
+}
+```
+
+## 4.2 Batch
+
+``` ipldsch
+type Batch union {
+  | Set   [Entry]
+  | Named {String : Entry}
+}
+```
+
+# 5 Envelope
 
 ``` ipldsch
 type InvocationEnvelope struct {
-  run  run
+  run  Batch
   uiv  SemVer
   prf  [&UCAN]
   nnc  String
   meta {String : Any} (implicit {})
   sig  Varsig
 }
+```
 
-type Run union {
-  | &Invocation
-  | [Entry]
-  | {String : Entry}
+# 6 Pointer
+
+``` ipldsch
+type EnvelopePointer union {
+  | "/" -- "Local": Relative to the current invocation
+  | &InvocationEnvelope
+}
+
+type InvocationPointer struct {
+  envl  EnvelopePointer
+  label optional String
+} representation tuple
+```
+
+``` json
+["/", "some-label"]
+[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, "some-label"]
+[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, {"/": {"bytes": "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"}}]
+```
+
+# 7 Output
+
+## 7.1 Result
+
+``` ipldsch
+type Result union {
+  | Success
+  | Failure
+}
+
+type Failure struct {
+  err   nullable String
+  trace Any
+}
+
+type Success struct {
+  val Any
+  rec optional &SignedReceipt
 }
 ```
+
+## 7.2 Receipt
+
+``` ipldsch
+type Receipt struct {
+  ran  Pointer
+  out  {String : Result}
+  meta {String : Any}
+  sig  Varsig
+} 
+```
+
+# 8 Promise
+
+``` ipldsch
+type Promise struct {
+  envelope EnvelopePointer
+  label    String
+  status   Status (implicit "ok")
+} 
+
+type Status enum {
+  | Ok  ("ok")
+  | Err ("err")
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Note that there is are no signature or UCAN proof fields in the Invocation struct. To allow for better nesting inside of other formats, these fields are broken out into an envelope for when Invocations are used standalone:
+
 
 ### 3.2.1 Fields
 
@@ -987,10 +1092,3 @@ Thanks to [Rod Vagg](https://github.com/rvagg/) for the clarifications on IPLD S
 
 FIXME
 
-## 5.3 JSON Examples
-
-``` json
-["/", "some-label"]
-[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, "some-label"]
-[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, {"/": {"bytes": "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"}}]
-```
