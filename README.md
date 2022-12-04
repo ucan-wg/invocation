@@ -1,4 +1,4 @@
-# UCAN Invocation Specification v0.1.0
+# UCAN Closure Specification v0.1.0
 
 ## Editors
 
@@ -18,7 +18,7 @@
 
 # 0 Abstract
 
-UCAN Invocation defines a format for expressing the intention to run delegated capabilities from a UCAN, and how to promise pipeline invocations.
+UCAN Closure defines a format for expressing the intention to run delegated capabilities from a UCAN, and how to promise pipeline invocations.
 
 ## Language
 
@@ -54,7 +54,7 @@ message // Nothing happens
 message() // A message interups the user
 ```
 
-Delegating a capability is like the statement `message`. Invocation is akin to `message()`. It's true that sometimes we know to run things from their surrounding context without the parentheses:
+Delegating a capability is like the statement `message`. Closure is akin to `message()`. It's true that sometimes we know to run things from their surrounding context without the parentheses:
 
 ```js
 [1,2,3].map(message) // Message runs 3 times 
@@ -113,7 +113,7 @@ As we shall see in the [discussion of promise pipelining](#6-promise-pipelining)
 
 ## 1.3 A Note On Serialization
 
-The JSON examples below are given in [DAG-JSON](https://ipld.io/docs/codecs/known/dag-json/), but UCAN Invocation is actually defined as IPLD. This makes UCAN Invocation agnostic to encoding. DAG-JSON follows particular conventions around wrapping CIDs and binary data in tags like so:
+The JSON examples below are given in [DAG-JSON](https://ipld.io/docs/codecs/known/dag-json/), but UCAN Closure is actually defined as IPLD. This makes UCAN Closure agnostic to encoding. DAG-JSON follows particular conventions around wrapping CIDs and binary data in tags like so:
 
 ``` json
 // CID
@@ -133,9 +133,9 @@ All payloads described below MUST be signed with a [Varsig](https://github.com/C
 
 ## 2.1 Roles
 
-Invocation adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
+Closure adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
 
-| UCAN Field | Delegation                             | Invocation                      |
+| UCAN Field | Delegation                             | Closure                      |
 |------------|----------------------------------------|---------------------------------|
 | `iss`      | Delegator: transfer authority (active) | Invoker: request task (active)  |
 | `aud`      | Delegate: gain authority (passive)     | Executor: perform task (active) |
@@ -156,9 +156,9 @@ The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field
 
 ![](./diagrams/concepts.svg)
 
-### 2.2.1 Invocation
+### 2.2.1 Closure
 
-An [invocation](#3-invocation) is like function application: a request to perform some action on a resource with specific inputs.
+A [closure](#3-closure) is like function application: a request to perform some action on a resource with specific inputs.
 
 ### 2.2.2 Receipt
 
@@ -183,23 +183,23 @@ A [distributed memoization table](FIXME) (DMT) is a way of sharing receipts in a
 ## 2.3 IPLD Schema
 
 ``` ipldsch
-type Invocation struct {
+type Closure struct {
   with   URI
   do     Ability
   inputs Any
 }
 
-type Entry struct {
-  inv  &Invocation
+type Task struct {
+  inv  &Closure
   meta {String : Any} (implicit {})
 }
 
 type Batch union {
-  | Set   [Entry]
-  | Named {String : Entry}
+  | Set   [Task]
+  | Named {String : Task}
 }
 
-type InvocationEnvelope struct {
+type Invocation struct {
   run  Batch
   uiv  SemVer
   prf  [&UCAN]
@@ -208,14 +208,14 @@ type InvocationEnvelope struct {
   sig  Varsig
 }
 
-type InvocationPointer struct {
-  envl  EnvelopePointer
-  label optional String
+type TaskPtr struct {
+  inv InvPtr
+  lbl optional String
 } representation tuple
 
-type EnvelopePointer union {
+type InvPtr union {
   | "/" -- "Local": Relative to the current invocation
-  | &InvocationEnvelope
+  | &Invocation
 }
 
 type Status enum {
@@ -224,9 +224,9 @@ type Status enum {
 }
 
 type Promise struct {
-  envelope EnvelopePointer
-  label    String
-  status   Status (implicit "ok")
+  ipr InvPtr
+  lbl String
+  sts Status (implicit "ok")
 } 
 
 type Receipt struct {
@@ -252,16 +252,16 @@ type Success struct {
 }
 ```
 
-# 3 Invocation
+# 3 Closure
 
 An invocation is the smallest unit of work that can be requested from a UCAN. It invokes one specific `(resource, ability, inputs)` triple. The inputs are freeform, and depend on the specific resource and ability being interacted with.
 
-Invocations ........... FIXME
+Closures ........... FIXME
  
 ## 3.1 Fields
 
 ``` ipldsch
-type Invocation struct {
+type Closure struct {
   with   URI
   do     Ability
   inputs Any
@@ -293,7 +293,7 @@ Interactig with an HTTP API
       "content-type": "application/json"
     },
     "payload": {
-      "title": "How UCAN Invocations Changed My Life",
+      "title": "How UCAN Closures Changed My Life",
       "body": "This is the story of how one spec changed everything...",
       "topics": ["authz", "journal"],
       "draft": true
@@ -311,7 +311,7 @@ Sending Email
   "inputs": {
     "to": ["boris@example.com", "carol@example.com"],
     "subject": "Coffee",
-    "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Invocations!"
+    "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Closures!"
   }
 }
 ```
@@ -329,13 +329,13 @@ Running WebAssembly
 }
 ```
 
-# 4 Entry
+# 4 Task
 
 
 
 ``` ipldsch
-type Entry struct {
-  inv  &Invocation
+type Task struct {
+  inv  &Closure
   meta {String : Any} (implicit {})
 }
 ```
@@ -346,15 +346,15 @@ In many situations, sending multiple requests in a batch is more efficient.
 
 ``` ipldsch
 type Batch union {
-  | Set   [Entry]
-  | Named {String : Entry}
+  | Set   [Task]
+  | Named {String : Task}
 }
 ```
 
-# 5 Envelope
+# 5 Invocation
 
 ``` ipldsch
-type InvocationEnvelope struct {
+type ClosureInvocation struct {
   run  Batch
   uiv  SemVer
   prf  [&UCAN]
@@ -367,13 +367,13 @@ type InvocationEnvelope struct {
 # 6 Pointer
 
 ``` ipldsch
-type EnvelopePointer union {
+type InvPtr union {
   | "/" -- "Local": Relative to the current invocation
-  | &InvocationEnvelope
+  | &ClosureInvocation
 }
 
-type InvocationPointer struct {
-  envl  EnvelopePointer
+type ClosurePointer struct {
+  envl  InvPtr
   label optional String
 } representation tuple
 ```
@@ -420,7 +420,7 @@ type Receipt struct {
 
 ``` ipldsch
 type Promise struct {
-  envelope EnvelopePointer
+  envelope InvPtr
   label    String
   status   Status (implicit "ok")
 } 
@@ -452,18 +452,18 @@ type Status enum {
 
 
 
-Note that there is are no signature or UCAN proof fields in the Invocation struct. To allow for better nesting inside of other formats, these fields are broken out into an envelope for when Invocations are used standalone:
+Note that there is are no signature or UCAN proof fields in the Closure struct. To allow for better nesting inside of other formats, these fields are broken out into an envelope for when Closures are used standalone:
 
 
 ### 3.2.1 Fields
 
-#### 3.2.1.1 Invocation
+#### 3.2.1.1 Closure
 
-The `run` field MUST contain a link to the [Invocation](#31-single-invocation) itself.
+The `run` field MUST contain a link to the [Closure](#31-single-invocation) itself.
 
-#### 3.2.1.2 UCAN Invocation Version
+#### 3.2.1.2 UCAN Closure Version
 
-The `uiv` field MUST contain the Semver-frmatted version of the UCAN Invocation Specification that this struct conforms to.
+The `uiv` field MUST contain the Semver-frmatted version of the UCAN Closure Specification that this struct conforms to.
 
 #### 3.2.1.2 Proofs
 
@@ -515,15 +515,15 @@ Receipts don't have their own version field. Receipts MUST use the same version 
 ## 4.1 Fields
 
 
-### 4.1.1 Invocation
+### 4.1.1 Closure
 
-The `inv` field MUST include a link to the Invocation that the Receipt is for.
+The `inv` field MUST include a link to the Closure that the Receipt is for.
 
 ### 4.1.2 Output
 
 The `out` field MUST contain the output of steps of the call graph, indexed by the task name inside the invocation. If the invocation is the implicit `"*"`, then the base64 hash of the concatenation of the URI, Ability and extensional fields MUST be used.
 
-The `out` field MAY omit any tasks that have not yet completed, or results which are not public. An `Invocation` may be associated to zero or more `Receipts`.
+The `out` field MAY omit any tasks that have not yet completed, or results which are not public. An `Closure` may be associated to zero or more `Receipts`.
 
 A `Result` MAY include recursive `Receipt` CIDs in on the `Success` branch. As a Task may require subdelegation, the OPTIONAL `rec` field MAY be used to include recursive `Receipt`s.
 
@@ -533,7 +533,7 @@ The metadata field MAY be omitted or used to contain additional data about the r
 
 ### 4.1.4 Signature
 
-The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig) of the `inv`, `out`, and `meta` fields. The signature MUST be generated by the Executor, which means the public key in the `aud` field of the UCANs backing the Invocation.
+The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig) of the `inv`, `out`, and `meta` fields. The signature MUST be generated by the Executor, which means the public key in the `aud` field of the UCANs backing the Closure.
 
 ## 4.2 DAG-JSON Examples
 
@@ -572,19 +572,19 @@ The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig)
 If there are dependencies or ordering required, then you need a promise pipeline
 
 
-## 5.1 Entry
+## 5.1 Task
 
-Each Entry in a Batch contains a reference to [Invocation](FIXME) itself, plus optional metadata.
+Each Task in a Batch contains a reference to [Closure](FIXME) itself, plus optional metadata.
 
 ### 5.1.1 Fields
 
 ```
 
-#### 5.1.1.1 Invocation
+#### 5.1.1.1 Closure
 
 The `run` field MUST contain the 
 
-Note that this does not contain a signature for the Invocation, as this will be handled in the Batch container.
+Note that this does not contain a signature for the Closure, as this will be handled in the Batch container.
 
 ## 5.2 Set
 
@@ -625,7 +625,7 @@ Note that this does not contain a signature for the Invocation, as this will be 
 
 
 
-# 3 Envelope
+# 3 Invocation
 
 The invocation envelope is a thin wrapper around a UCAN that conveys that all of the contained tasks SHOULD be performed.
 
@@ -672,12 +672,12 @@ The OPTIONAL `ext` field MAY contain arbitrary data. If not present, the `ext` f
 ## 3.2 IPLD Schema
 
 ``` ipldsch
-type SignedInvocation struct {
-  inv Invocation (rename "ucan/invoke") 
+type SignedClosure struct {
+  inv Closure (rename "ucan/invoke") 
   sig Varsig
 }
 
-type Invocation struct {
+type Closure struct {
   v   SemVer  -- Version
   prf [&UCAN] -- Authority to run this invocation
   run Scope   -- Which tasks to invoke
@@ -785,7 +785,7 @@ A promise MAY be placed in any Task field. Substituting into the `with` and `do`
 
 | Field          | Type                | Description                     | Required |
 |----------------|---------------------|---------------------------------|----------|
-| `ucan/promise` | `InvocationPointer` | The Invocation being referenced | Yes      |
+| `ucan/promise` | `ClosurePointer` | The Closure being referenced | Yes      |
 
 The above table MUST be serialized as a tuple. In JSON, this SHOULD be represented as an array containing the values (but not keys) sequenced in the order they appear in the table.
 
