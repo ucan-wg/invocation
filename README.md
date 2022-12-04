@@ -183,14 +183,16 @@ A [distributed memoization table](FIXME) (DMT) is a way of sharing receipts in a
 ## 2.3 IPLD Schema
 
 ``` ipldsch
-type Task struct {
+type Closure struct {
   with   URI
   do     Ability
   inputs Any
 }
 
 type Task struct {
-  inv  &Task
+  with   URI
+  do     Ability
+  inputs Any
   meta {String : Any} (implicit {})
 }
 
@@ -252,13 +254,11 @@ type Success struct {
 }
 ```
 
-# 3 Task
+# 3 Closure
 
-An invocation is the smallest unit of work that can be requested from a UCAN. It invokes one specific `(resource, ability, inputs)` triple. The inputs are freeform, and depend on the specific resource and ability being interacted with.
+A Closure is the smallest unit of work that can be requested from a UCAN. It invokes one specific `(resource, ability, inputs)` triple. The inputs are freeform, and depend on the specific resource and ability being interacted with.
 
-Tasks ........... FIXME
-
-Using the JavaScript analogy from the introduction, this is similar to wrapping a call in a nullary function.
+Using the JavaScript analogy from the introduction, a Closure is similar to wrapping a call in an anonymous function:
 
 ``` json
 {
@@ -273,8 +273,40 @@ Using the JavaScript analogy from the introduction, this is similar to wrapping 
 ```
 
 ``` js
+// Pseudocode
 () => msg.send("mailto:alice@example.com", {
   to: ["bob@example.com", "carol@example.com"],
+  subject: "hello",
+  body: "world"
+})
+```
+
+Later, when we explore [Promises](FIXME), this also includes capturing the promise:
+
+``` json
+{
+  "mailingList": {
+    "with": "https://example.com/mailinglist",
+    "do": "crud/read"
+  },
+  "sendEmail": {
+    "with": "mailto://alice@example.com",
+    "do": "msg/send",
+    "inputs": {
+      "to": {"ucan/promise": ["/", "get-mailing-list"]}
+      "subject": "hello",
+      "body": "world"
+    }
+  }
+}
+```
+
+``` js
+// Pseudocode
+const mailingList = crud.read("https://exmaple.com/mailinglist", {})
+
+const sendEmail = () => msg.send("mailto:alice@example.com", {
+  to: mailingList, // <-
   subject: "hello",
   body: "world"
 })
@@ -284,7 +316,7 @@ Using the JavaScript analogy from the introduction, this is similar to wrapping 
 ## 3.1 Fields
 
 ``` ipldsch
-type Task struct {
+type Closure struct {
   with   URI
   do     Ability
   inputs Any
@@ -293,7 +325,7 @@ type Task struct {
 
 ### 3.1.1 Resource
 
-The `with` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`](https://en.wikipedia.org/wiki/Data_URI_scheme), `ipfs`, or [`magnet`]() URI schemes.
+The `with` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`](https://en.wikipedia.org/wiki/Data_URI_scheme), [`ipfs`](https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls), or [`magnet`](https://en.wikipedia.org/wiki/Magnet_URI_scheme) URI schemes.
 
 ### 3.1.2 Ability
 
@@ -305,7 +337,7 @@ The `inputs` field MUST contain any arguments expected by the URI/Ability pair. 
 
 ### 3.2 DAG-JSON Examples
 
-Interactig with an HTTP API
+Interacting with an HTTP API:
 
 ``` json
 {
@@ -325,7 +357,7 @@ Interactig with an HTTP API
 }
 ```
 
-Sending Email
+Sending Email:
 
 ``` json
 {
@@ -339,7 +371,7 @@ Sending Email
 }
 ```
 
-Running WebAssembly
+Running WebAssembly from binary:
 
 ``` json
 {
@@ -352,27 +384,88 @@ Running WebAssembly
 }
 ```
 
+Executing all of the capabilities in a UCAN directly:
+
+``` json
+{
+  "with": "ipfs://bafkreiemaanh3kxqchhcdx3yckeb3xvmboztptlgtmnu5jp63bvymxtlva",
+  "do": "ucan/run",
+  "inputs": null
+```
+
 # 4 Task
 
-A Task is an 
-
-FIXME wrappr vs subtyping?
+A Task is subtype of a Clousure, adding an additional metadata field. A Task can be trivially converted to a Closure by removing the `meta` field. Note that the `meta` field MUST NOT be included for [memoization](FIXME).
 
 ``` ipldsch
 type Task struct {
-  inv  &Task
+  with   URI
+  do     Ability
+  inputs Any
   meta {String : Any} (implicit {})
+}
+```
+
+## 4.1 Fields
+
+### 4.1.1 Closure Fields
+
+The `with`, `do`, and `inputs` field from [Closure](FIXME) remain unchanged.
+
+### 4.1.2 Metadata
+
+The OPTIONAL `meta` field MAY be used to include human-readable descriptions, tags, execution hints, resource limits, and so on. If present, the `meta` field  MUST contain a map with string keys. The contents of the map are left undefined to encourage extensible use.
+
+## 4.2 DAG-JSON Examples
+
+Sending Email:
+
+``` json
+{
+  "with": "mailto:akiko@example.com",
+  "do": "msg/send",
+  "inputs": {
+    "to": ["boris@example.com", "carol@example.com"],
+    "subject": "Coffee",
+    "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!"
+  },
+  "meta": {
+    "dev/tags": ["friends", "coffee"],
+    "dev/priority": "high"
+  }
+}
+```
+
+Running WebAssembly from binary:
+
+``` json
+{
+  "with": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+  "do": "executable/run",
+  "inputs": {
+    "func": "add_one",
+    "args": [42]
+  },
+  "meta": {
+    "dev/notes": "The standard Wasm demo"
+    "ipvm/verification": "attestation",
+    "ipvm/resources": {
+      "gas": 5000
+    }
+  }
 }
 ```
 
 # 5 Batch
 
-In many situations, sending multiple requests in a batch is more efficient. A Batch is a collection of Tasks, either as an array or a named map.
+A Batch is a collection of Tasks, either as an array (`List`) or a map (`Named`). In many situations, sending multiple requests in a batch is more efficient than one-at-a-time.
+
+A `List` is sugar for a `Named` map, where the keys are the array index number as strings.
 
 ``` ipldsch
 type Batch union {
-  | Set   [Task]
   | Named {String : Task}
+  | List  [Task]
 }
 ```
 
@@ -380,24 +473,82 @@ type Batch union {
 
 Each Task in a Batch contains a reference to [Task](FIXME) itself, plus optional metadata.
 
+## 5.2 DAG-JSON Examples
+
+Named map:
 
 ``` json
 {
-  "batch": {
-    "left": {
-      
+  "left": {
+    "with": "https://example.com/blog/posts",
+    "do": "crud/create",
+    "inputs": {
+      "headers": {
+        "content-type": "application/json"
+      },
+      "payload": {
+        "title": "How UCAN Tasks Changed My Life",
+        "body": "This is the story of how one spec changed everything...",
+        "topics": ["authz", "journal"],
+        "draft": true
+      }
+    }
+  },
+  "right": {
+    "with": "mailto:akiko@example.com",
+    "do": "msg/send",
+    "inputs": {
+      "to": ["boris@example.com", "carol@example.com"],
+      "subject": "Coffee",
+      "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!"
     },
-    "middle": {
-    
-    },
-    "right": {
-    
+    "meta": {
+      "dev/tags": ["friends", "coffee"],
+      "dev/priority": "high"
     }
   }
 }
 ```
 
+List:
+
+``` json
+
+[
+  {
+    "with": "https://example.com/blog/posts",
+    "do": "crud/create",
+    "inputs": {
+      "headers": {
+        "content-type": "application/json"
+      },
+      "payload": {
+        "title": "How UCAN Tasks Changed My Life",
+        "body": "This is the story of how one spec changed everything...",
+        "topics": ["authz", "journal"],
+        "draft": true
+      }
+    }
+  },
+  {
+    "with": "mailto:akiko@example.com",
+    "do": "msg/send",
+    "inputs": {
+      "to": ["boris@example.com", "carol@example.com"],
+      "subject": "Coffee",
+      "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!"
+    },
+    "meta": {
+      "dev/tags": ["friends", "coffee"],
+      "dev/priority": "high"
+    }
+  }
+]
+```
+
 # 6 Invocation
+
+As noted in the 
 
 Note that there is are no signature or UCAN proof fields in the Task struct. To allow for better nesting inside of other formats, these fields are broken out into an envelope for when Tasks are used standalone:
 
