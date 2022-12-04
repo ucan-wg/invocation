@@ -329,11 +329,9 @@ Running WebAssembly
 }
 ```
 
-# 4 Batch
+# 4 Entry
 
-It is 
 
-## 4.1 Entry
 
 ``` ipldsch
 type Entry struct {
@@ -342,7 +340,9 @@ type Entry struct {
 }
 ```
 
-## 4.2 Batch
+# 5 Batch
+
+In many situations, sending multiple requests in a batch is more efficient.
 
 ``` ipldsch
 type Batch union {
