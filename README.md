@@ -448,7 +448,7 @@ Running WebAssembly from binary:
     "args": [42]
   },
   "meta": {
-    "dev/notes": "The standard Wasm demo"
+    "dev/notes": "The standard Wasm demo",
     "ipvm/verification": "attestation",
     "ipvm/resources": {
       "gas": 5000
@@ -603,7 +603,8 @@ The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig)
 
 ``` json
 {
-  "uiv": "0.1.0"
+  "uiv": "0.1.0",
+  "nnc": "6c*97-3=",
   "run": {
     "left": {
       "with": "https://example.com/blog/posts",
@@ -638,7 +639,6 @@ The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig)
     {"/": "bafkreie2cyfsaqv5jjy2gadr7mmupmearkvcg7llybfdd7b6fvzzmhazuy"},
     {"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}
   ],
-  "nnc": "6c*97-3=",
   "meta": {
     "notes/personal": "I felt like making an invocation today!",
     "ipvm/config": {
@@ -652,22 +652,262 @@ The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig)
 
 # 7 Invocation Pointer
 
+Invocation pointers ....
+
 ``` ipldsch
-type InvPtr union {
-  | "/" -- "Local": Relative to the current invocation
+type InvocationPointer union {
+  | "/" -- Relative to the current invocation
   | &TaskInvocation
 }
 
-type TaskPointer struct {
+type InvokedTaskPointer struct {
   envl  InvPtr
-  label optional String
+  label String
 } representation tuple
 ```
 
+## 7.2 DAG-JSON Examples
+
+### 7.2.1 Relative
+
+#### 7.2.1.1 Named
+
+This relative pointer:
+
 ``` json
 ["/", "some-label"]
-[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, "some-label"]
-[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, {"/": {"bytes": "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"}}]
+```
+
+Will select the marked fields in these Named invocations:
+
+``` json
+{
+  "uiv": "0.1.0",
+  "nnc": "6c*97-3=",
+  "run": {
+    "some-label": { // <- Selects this
+      "with": "https://example.com/blog/posts",
+      "do": "crud/create",
+      "inputs": {
+        "headers": {
+          "content-type": "application/json"
+        },
+        "payload": {
+          "title": "How UCAN Tasks Changed My Life",
+          "body": "This is the story of how one spec changed everything...",
+          "topics": ["authz", "journal"],
+          "draft": true
+        }
+      }
+    },
+    "some-other-label": {
+      "with": "mailto:akiko@example.com",
+      "do": "msg/send",
+      "inputs": {
+        "to": ["boris@example.com", "carol@example.com"],
+        "subject": "Coffee",
+        "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!"
+      },
+      "meta": {
+        "dev/tags": ["friends", "coffee"],
+        "dev/priority": "high",
+        "dev/notes": {
+          "select-task": ["/", "some-label"] // <- Pointer here
+        }
+      }
+    }
+  },
+  "prf": [{"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}],
+  "sig": {"/": {"bytes:": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
+}
+```
+
+``` json
+{
+  "uiv": "0.1.0",
+  "nnc": "myNonce529",
+  "run": {
+    "some-label": { // <- Selects this
+      "with": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+      "do": "executable/run",
+      "inputs": {
+        "func": "add_one",
+        "args": [42]
+      }
+    }
+  },
+  "meta": {
+    "dev/notes": {
+      "select-task": ["/", "some-label"] // <- Pointer here
+    }
+  }
+  "prf": [{"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}],
+  "sig": {"/": {"bytes:": "LcZglimIwQ58T0rnkErYshq2S8MMF9G/zRqYXv/PmXs="}}
+}
+```
+
+### 7.2.1.1 List
+
+This local pointer:
+
+``` json
+["/", "1"]
+```
+
+Will select the marked fields in this List invocation:
+
+``` json
+{
+  "uiv": "0.1.0",
+  "nnc": "6c*97-3=",
+  "run": [
+    {
+      "with": "mailto:akiko@example.com",
+      "do": "msg/send",
+      "inputs": {
+        "to": ["boris@example.com", "carol@example.com"],
+        "subject": "Coffee",
+        "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!"
+      },
+      "meta": {
+        "dev/tags": ["friends", "coffee"],
+        "dev/priority": "high",
+        "dev/notes": {
+          "select-task": ["/", "0"] // <- Pointer here
+        }
+      }
+    },
+    // Selects this
+    // vvvvvvvvvvvv
+    { 
+      "with": "https://example.com/blog/posts",
+      "do": "crud/create",
+      "inputs": {
+        "headers": {
+          "content-type": "application/json"
+        },
+        "payload": {
+          "title": "How UCAN Tasks Changed My Life",
+          "body": "This is the story of how one spec changed everything...",
+          "topics": ["authz", "journal"],
+          "draft": true
+        }
+      }
+    }
+  ],
+  "prf": [{"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}],
+  "sig": {"/": {"bytes:": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
+}
+```
+
+### 7.2.2 Absolute
+
+#### 7.2.2.1 Named
+
+This absolute pointer:
+
+``` json
+[{"/": "bafkreiff4alf4rdi5mqg4fpxiejgotcnf2zksqanp5ctwzinmqyf7o3i2e"}, "some-label"]
+```
+
+Will select the marked field in this Named invocation:
+
+``` json
+// CID = bafkreiff4alf4rdi5mqg4fpxiejgotcnf2zksqanp5ctwzinmqyf7o3i2e
+{
+  "uiv": "0.1.0",
+  "nnc": "6c*97-3=",
+  "run": {
+    "some-label": { // <- Selects this
+      "with": "https://example.com/blog/posts",
+      "do": "crud/create",
+      "inputs": {
+        "headers": {
+          "content-type": "application/json"
+        },
+        "payload": {
+          "title": "How UCAN Tasks Changed My Life",
+          "body": "This is the story of how one spec changed everything...",
+          "topics": ["authz", "journal"],
+          "draft": true
+        }
+      }
+    },
+    "some-other-label": {
+      "with": "mailto:akiko@example.com",
+      "do": "msg/send",
+      "inputs": {
+        "to": ["boris@example.com", "carol@example.com"],
+        "subject": "Coffee",
+        "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!"
+      },
+      "meta": {
+        "dev/tags": ["friends", "coffee"],
+        "dev/priority": "high",
+        "dev/notes": {
+          "select-task": ["/", "some-label"] // <- Pointer here
+        }
+      }
+    }
+  },
+  "prf": [{"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}],
+  "sig": {"/": {"bytes:": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
+}
+```
+
+#### 7.2.2.1 List
+
+This absolute pointer:
+
+``` json
+[{"/": "bafkreiew2p74l7bq3hnllbduzagdcezlab54ko4lpw72mfcvilh4ov2hkq"}, "1"]
+```
+
+Will select the marked field in this List invocation:
+
+``` json
+// CID = bafkreiew2p74l7bq3hnllbduzagdcezlab54ko4lpw72mfcvilh4ov2hkq
+{
+  "uiv": "0.1.0",
+  "nnc": "6c*97-3=",
+  "run": [
+    {
+      "with": "mailto:akiko@example.com",
+      "do": "msg/send",
+      "inputs": {
+        "to": ["boris@example.com", "carol@example.com"],
+        "subject": "Coffee",
+        "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!"
+      },
+      "meta": {
+        "dev/tags": ["friends", "coffee"],
+        "dev/priority": "high",
+        "dev/notes": {
+          "select-task": ["/", "0"] // <- Pointer here
+        }
+      }
+    },
+    // Selects this
+    // vvvvvvvvvvvv
+    { 
+      "with": "https://example.com/blog/posts",
+      "do": "crud/create",
+      "inputs": {
+        "headers": {
+          "content-type": "application/json"
+        },
+        "payload": {
+          "title": "How UCAN Tasks Changed My Life",
+          "body": "This is the story of how one spec changed everything...",
+          "topics": ["authz", "journal"],
+          "draft": true
+        }
+      }
+    }
+  ],
+  "prf": [{"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}],
+  "sig": {"/": {"bytes:": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
+}
 ```
 
 # 8 Result
