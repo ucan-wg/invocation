@@ -8,11 +8,11 @@
  viewBox="0.00 0.00 194.00 332.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 328)">
 <polygon fill="white" stroke="transparent" points="-4,4 -4,-328 190,-328 190,4 -4,4"/>
-<!-- Closure -->
+<!-- Task -->
 <g id="node1" class="node">
-<title>Closure</title>
-<path fill="none" stroke="black" d="M123,-324C123,-324 78,-324 78,-324 72,-324 66,-318 66,-312 66,-312 66,-300 66,-300 66,-294 72,-288 78,-288 78,-288 123,-288 123,-288 129,-288 135,-294 135,-300 135,-300 135,-312 135,-312 135,-318 129,-324 123,-324"/>
-<text text-anchor="middle" x="100.5" y="-302.3" font-family="Times,serif" font-size="14.00">Closure</text>
+<title>Task</title>
+<path fill="none" stroke="black" d="M115.5,-324C115.5,-324 85.5,-324 85.5,-324 79.5,-324 73.5,-318 73.5,-312 73.5,-312 73.5,-300 73.5,-300 73.5,-294 79.5,-288 85.5,-288 85.5,-288 115.5,-288 115.5,-288 121.5,-288 127.5,-294 127.5,-300 127.5,-300 127.5,-312 127.5,-312 127.5,-318 121.5,-324 115.5,-324"/>
+<text text-anchor="middle" x="100.5" y="-302.3" font-family="Times,serif" font-size="14.00">Task</text>
 </g>
 <!-- Metadata -->
 <g id="node2" class="node">
@@ -20,9 +20,9 @@
 <path fill="none" stroke="black" d="M85,-252C85,-252 32,-252 32,-252 26,-252 20,-246 20,-240 20,-240 20,-228 20,-228 20,-222 26,-216 32,-216 32,-216 85,-216 85,-216 91,-216 97,-222 97,-228 97,-228 97,-240 97,-240 97,-246 91,-252 85,-252"/>
 <text text-anchor="middle" x="58.5" y="-230.3" font-family="Times,serif" font-size="14.00">Metadata</text>
 </g>
-<!-- Closure&#45;&gt;Metadata -->
+<!-- Task&#45;&gt;Metadata -->
 <g id="edge1" class="edge">
-<title>Closure&#45;&gt;Metadata</title>
+<title>Task&#45;&gt;Metadata</title>
 <path fill="none" stroke="black" d="M90.12,-287.7C85.24,-279.56 79.31,-269.69 73.92,-260.7"/>
 <polygon fill="black" stroke="black" points="76.91,-258.88 68.76,-252.1 70.91,-262.48 76.91,-258.88"/>
 </g>
@@ -32,9 +32,9 @@
 <path fill="none" stroke="black" d="M157.5,-252C157.5,-252 127.5,-252 127.5,-252 121.5,-252 115.5,-246 115.5,-240 115.5,-240 115.5,-228 115.5,-228 115.5,-222 121.5,-216 127.5,-216 127.5,-216 157.5,-216 157.5,-216 163.5,-216 169.5,-222 169.5,-228 169.5,-228 169.5,-240 169.5,-240 169.5,-246 163.5,-252 157.5,-252"/>
 <text text-anchor="middle" x="142.5" y="-230.3" font-family="Times,serif" font-size="14.00">Batch</text>
 </g>
-<!-- Closure&#45;&gt;Batch -->
+<!-- Task&#45;&gt;Batch -->
 <g id="edge3" class="edge">
-<title>Closure&#45;&gt;Batch</title>
+<title>Task&#45;&gt;Batch</title>
 <path fill="none" stroke="black" d="M110.88,-287.7C115.76,-279.56 121.69,-269.69 127.08,-260.7"/>
 <polygon fill="black" stroke="black" points="130.09,-262.48 132.24,-252.1 124.09,-258.88 130.09,-262.48"/>
 </g>
