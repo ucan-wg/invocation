@@ -4,8 +4,7 @@ digraph {
       shape = box
     ]
 
-    Invocation -> Metadata -> Envelope
-                  Batch    -> Envelope -> Receipt -> Memoization
-                  Receipt  -> Promise
-    Invocation -> Batch
+    Closure -> Metadata -> Invocation
+    Closure -> Batch    -> Invocation -> Receipt -> Memoization
+                                         Receipt -> Promise
 }
