@@ -1,11 +1,11 @@
 digraph {
     node [
-      style=rounded
-      shape=box
+      style = rounded
+      shape = box
     ]
 
-    Invocation -> Pointer -> Memoization
     Receipt -> Memoization
     Invocation -> Receipt -> Promise -> Pipeline
     Invocation -> Batch -> Pipeline
+ //   Batch -> BatchReceipt
 }

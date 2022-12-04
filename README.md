@@ -160,29 +160,93 @@ The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field
 
 An [invocation](#3-invocation) is like function application: a request to perform some action on a resource with specific inputs.
 
-### 2.2.2 Pointer
-
-A [pointer](FIXME) identifies a particular instance of an invocation.
-
-### 2.2.3 Receipt
+### 2.2.2 Receipt
 
 A [receipt](FIXME) describes the output of an invocation, referenced by its pointer.
 
-### 2.2.4 Promise
+### 2.2.3 Promise
 
 A [promise](FIXME) is a reference to the receipt of an action that has yet to return a receipt.
 
-### 2.2.5 Batch
+### 2.2.4 Batch
 
 A [batch](FIXME) is a way of requesting more than one action at once.
 
-### 2.2.6 Pipeline
+### 2.2.5 Pipeline
 
 A [pipeline](FIXME) is a batch that includes promises. This allows for the automatic chaining of actions based on their outputs.
 
-### 2.2.7 Memoization
+### 2.2.6 Memoization
 
 A [distributed memoization table](FIXME) (DMT) is a way of sharing receipts in a consistent lookup table.
+
+# 3 IPLD Schema
+
+``` ipldsch
+type Invocation struct {
+  with   URI
+  do     Ability
+  inputs Any
+}
+
+type Work union {
+  | Single &Invocation
+  | Batch  [Entry]
+  | Named  {String : Entry}
+}
+
+type Entry struct {
+  inv  &Invocation
+  meta {String : Any} (implicit {})
+}
+
+type InvocationEnvelope struct {
+  run  Work
+  uiv  SemVer
+  prf  [&UCAN]
+  nnc  String
+  meta {String : Any} (implicit {})
+  sig  Varsig
+}
+
+type Pointer struct {
+  inve &InvocationEnvelope
+  name nullable String
+}
+
+type Status enum {
+  | Ok  ("ok")
+  | Err ("err")
+}
+
+type Promise struct {
+  ptr Pointer
+  sts Status (implicit "ok")
+}
+
+type Receipt struct {
+  ran  Pointer
+  out  {String : Result}
+  meta {String : Any}
+  sig  Varsig
+} 
+
+type Result union {
+  | Success
+  | Failure
+}
+
+type Failure struct {
+  err   nullable String
+  trace Any
+}
+
+type Success struct {
+  val Any
+  rec optional &SignedReceipt
+}
+```
+
 
 # 3 Invocation
 
@@ -197,7 +261,6 @@ type Invocation struct {
   with   URI
   do     Ability
   inputs Any
-  meta   {String : Any} (implicit {})
 }
 ```
 
@@ -215,12 +278,6 @@ The `do` field MUST contain a [UCAN Ability](https://github.com/ucan-wg/spec/#23
 
 The `inputs` field MUST contain any arguments expected by the URI/Ability pair. This MAY be different between different URIs and Abilities, and is thus left to the executor to define the shape of this data.
 
-#### 3.1.1.4 Metadata
-
-If present, the OPTIONAL `meta` map MAY contain freeform fields. This provides a place for extension of the invocation type.
-
-Data inside the `meta` field SHOULD NOT be used for [memoization]() and [receipts]().
-
 ### 3.1.2 DAG-JSON Examples
 
 ``` json
@@ -237,9 +294,6 @@ Data inside the `meta` field SHOULD NOT be used for [memoization]() and [receipt
       "topics": ["authz", "journal"],
       "draft": true
     }
-  },
-  "meta": {
-    "notes/personal": "I felt like making an invocation today!"
   }
 }
 
@@ -260,13 +314,6 @@ Data inside the `meta` field SHOULD NOT be used for [memoization]() and [receipt
     "func": "add_one",
     "args": [42]
   }
-  "meta": {
-    "notes/description": "This is the standard `add_one` function often used to demonstrate Wasm",
-    "ipvm/config": {
-      "time": [5, "minutes"],
-      "gas": 3000
-    }
-  }
 }
 ```
 
@@ -279,77 +326,178 @@ FIXME note promises are "just" pointers to results
 
 ## 3.2 Invocation Envelope
 
+FIXME move near very bottom!
+
 Note that there is are no signature or UCAN proof fields in the Invocation struct. To allow for better nesting inside of other formats, these fields are broken out into an envelope for when Invocations are used standalone:
 
 ``` ipldsch
 type InvocationEnvelope struct {
-  inv &Invocation
-  prf [&UCAN]
-  sig Varsig
+  run  run
+  uiv  SemVer
+  prf  [&UCAN]
+  nnc  String
+  meta {String : Any} (implicit {})
+  sig  Varsig
+}
+
+type Run union {
+  | &Invocation
+  | [Entry]
+  | {String : Entry}
 }
 ```
 
 ### 3.2.1 Fields
 
-#### 3.2.1 Invocation
+#### 3.2.1.1 Invocation
 
-A link to the [Invocation](#31-single-invocation) itself.
+The `run` field MUST contain a link to the [Invocation](#31-single-invocation) itself.
 
-#### 3.2.2 Proofs
+#### 3.2.1.2 UCAN Invocation Version
+
+The `uiv` field MUST contain the Semver-frmatted version of the UCAN Invocation Specification that this struct conforms to.
+
+#### 3.2.1.2 Proofs
 
 The `prf` field MUST contain links to any UCANs that provide the authority to run the actions. All of the outermost `aud` fields MUST be set to the [Executor](#212-executor)'s DID. All of the outermost `iss` field MUST be set to the [Invoker](#211-invoker)'s DID.
 
-#### 3.2.3 Signature
+#### 3.2.1.3 Nonce
 
-The `sig` field MUST contain a signture of the CID in the `inv` field. The MUST NOT include the `prf` field.
+The `nnc` field MUST include a random nonce field expressed in ASCII. This field ensures that multiple invocations are unique.
+
+#### 3.2.1.4 Metadata
+
+If present, the OPTIONAL `meta` map MAY contain freeform fields. This provides a place for extension of the invocation type.
+
+Data inside the `meta` field SHOULD NOT be used for [memoization]() and [receipts]().
+
+#### 3.2.1.5 Signature
+
+The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig) of the `inv`, `prf`, and `nnc` fields.
 
 ### 3.2.2 DAG-JSON Examples
 
 ``` json
 {
-  "inv": {"/": "bafkreidu4n2252jl3zjhbhcpnxtau5zcy5f6lipgqcik6b3o2jkkjt5ali"},
+  "run": {"/": "bafkreidu4n2252jl3zjhbhcpnxtau5zcy5f6lipgqcik6b3o2jkkjt5ali"},
   "prf": [
     {"/": "bafkreie2cyfsaqv5jjy2gadr7mmupmearkvcg7llybfdd7b6fvzzmhazuy"},
     {"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}
   ],
+  "nnc": "6c*97-3=",
+  "meta": {
+    "notes/personal": "I felt like making an invocation today!",
+    "ipvm/config": {
+      "time": [5, "minutes"],
+      "gas": 3000
+    }
+  }
   "sig": {"/": {"bytes:": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
 }
 ```
 
+# 4 Receipt
 
-# 4 Invocation Pointer
+An invocation receipt is an attestation of the output of an invocation. A receipt MUST be signed by the Executor (the `aud` of the associated UCANs).
 
-Unlike the `&Invoation` CID, an Invocation Pointer identifies some unit of work by the `with`, `do`, and 
+**NB: a Receipt this does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
-inside a specific invocation. Since equivalently configured 
+Receipts don't have their own version field. Receipts MUST use the same version as the invocation that they contain.
 
-Using a CIDv1 with DAG-CBOR and BLAKE3 is RECOMMENDED. FIXME look up the multicodec header
+## 4.1 Fields
 
 
+### 4.1.1 Invocation
 
-FIXME add this later: they SHOULD be scoped to a specific [`InvocationContext`], such as a a specific [`SignedInvocation`](#32-ipld-schema).
+The `inv` field MUST include a link to the Invocation that the Receipt is for.
 
-``` ipldsch
-type ContainerPointer union {
-  | LocalLabel "/"
-  | &SignedInvocation "inv"
-  | &Pipeline "pipe"
-}
+### 4.1.2 Output
 
-type PipelinePointer struct {
-  pipeline &Pipeline
-}
+The `out` field MUST contain the output of steps of the call graph, indexed by the task name inside the invocation. If the invocation is the implicit `"*"`, then the base64 hash of the concatenation of the URI, Ability and extensional fields MUST be used.
 
-type LocalLabel String
-```
+The `out` field MAY omit any tasks that have not yet completed, or results which are not public. An `Invocation` may be associated to zero or more `Receipts`.
 
-## 5.3 JSON Examples
+A `Result` MAY include recursive `Receipt` CIDs in on the `Success` branch. As a Task may require subdelegation, the OPTIONAL `rec` field MAY be used to include recursive `Receipt`s.
+
+### 4.1.3 Metadata Fields
+
+The metadata field MAY be omitted or used to contain additional data about the receipt. This field MAY be used for tags, commentary, trace information, and so on.
+
+### 4.1.4 Signature
+
+The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig) of the `inv`, `out`, and `meta` fields. The signature MUST be generated by the Executor, which means the public key in the `aud` field of the UCANs backing the Invocation.
+
+## 4.2 DAG-JSON Examples
 
 ``` json
-["/", "some-label"]
-[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, "some-label"]
-[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, {"/": {"bytes": "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"}}]
+{
+  "inv": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
+  "out": {
+    "status": "ok",
+    "value": [
+      {
+        "from": "alice@example.com",
+        "text": "Hello world!"
+      }, 
+      {
+        "from": "bob@example.com",
+        "text": "What's up?"
+      }
+    ]
+  },
+  "meta": {
+    "time": [400, "hours"],
+    "retries": 2
+  },
+  "sig": {"/": {"bytes": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt_VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"}}
+}
 ```
+
+# 5 Batch
+
+
+
+
+
+
+
+If there are dependencies or ordering required, then you need a promise pipeline
+
+
+## 5.1 Entry
+
+Each Entry in a Batch contains a reference to [Invocation](FIXME) itself, plus optional metadata.
+
+### 5.1.1 Fields
+
+```
+
+#### 5.1.1.1 Invocation
+
+The `run` field MUST contain the 
+
+Note that this does not contain a signature for the Invocation, as this will be handled in the Batch container.
+
+## 5.2 Set
+
+## 5.3 Named
+
+``` json
+{
+  "batch": {
+    "left": {
+      
+    },
+    "middle": {
+    
+    },
+    "right": {
+    
+    }
+  }
+}
+```
+
 
 
 
@@ -504,105 +652,6 @@ Promise pipelines are handled in more detail in [§6](#6-promise-pipelining). In
 }
 ```
 
-# 4 Receipt
-
-An invocation receipt is an attestation of the output of an invocation. A receipt MUST be signed by the executor (the `aud` of the associated UCAN).
-
-**NB: a Receipt this does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
-
-Receipts don't have their own version field. Receipts MUST use the same version as the invocation that they contain.
-
-## 4.1 Fields
-
-| Field  | Type                 | Description                                                           | Required | Default |
-|--------|----------------------|-----------------------------------------------------------------------|----------|---------|
-| `inv`  | `&SignedInvocation`  | CID of the Invocation that generated this response                    | Yes      |         |
-| `out`  | `{String : Receipt}` | The results of each call, the task's label. MAY contain sub-receipts. | Yes      |         |
-| `meta` | `{String : Any}`     | Non-normative extended fields                                         | No       | `null`  |
-
-### 4.1.1 Invocation
-
-The `inv` field MUST include a link to the Invocation that the Receipt is for.
-
-### 4.1.2 Output
-
-The `out` field MUST contain the output of steps of the call graph, indexed by the task name inside the invocation. If the invocation is the implicit `"*"`, then the base64 hash of the concatenation of the URI, Ability and extensional fields MUST be used.
-
-The `out` field MAY omit any tasks that have not yet completed, or results which are not public. An `Invocation` may be associated to zero or more `Receipts`.
-
-A `Result` MAY include recursive `Receipt` CIDs in on the `Success` branch. As a Task may require subdelegation, the OPTIONAL `rec` field MAY be used to include recursive `Receipt`s.
-
-### 4.1.3 Metadata Fields
-
-The metadata field MAY be omitted or used to contain additional data about the receipt. This field MAY be used for tags, commentary, trace information, and so on.
-
-## 4.2 IPLD Schema
-
-``` ipldsch
-type SignedReceipt struct {
-  rec Receipt (rename "ucan/receipt")
-  sig Varsig
-}
-
-type Receipt struct {
-  inv  &SignedInvocation
-  out  {String : Result}
-  meta optional Any
-} 
-
-type Result union {
-  | Success
-  | Failure
-}
-
-type Failure struct {
-  err   nullable String
-  trace Any
-}
-
-type Success struct {
-  val Any
-  rec optional &SignedReceipt
-}
-```
-
-## 4.3 JSON Example
-
-``` json
-{
-  "ucan/receipt": {
-    "v": "0.1.0",
-    "inv": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
-    "out": {
-      "ok": {
-        "bafkreiakkqwuffzsxrzseo7fweeicqlnqanhvyffjieh3etsbnnkjxbphi": [
-          {
-            "from": "alice@example.com",
-            "text": "Hello world!"
-          }, 
-          {
-            "from": "bob@example.com",
-            "text": "What's up?"
-          }
-        ],
-        "bafkreienxymjwglxlb3rkdyeyjt54ddoe4x4qi7a7hyfce3z56zspmy6pm": {
-          "http": { 
-            "status": 200,
-            "body": "hello world"
-          },
-          "ms": 476
-        },
-        "delegated-task": {"/": "bafkreieiupg4smeb5ammpsydbiea4yvwzwne5ly4hiripy4cjocqiat3ce"}
-      }
-      "meta": {
-        "notes": "very receipt. such wow.",
-        "tags": ["dag-house", "fission"]
-      }
-    }
-  },
-  "sig": {"/": {"bytes": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt_VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"}}
- }
-```
 
 # 5 Pointers
 
@@ -922,3 +971,26 @@ Thanks to [Philipp Krüger](https://github.com/matheus23/) for the enthusiastic 
 Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many conversations about capability systems and the programming models that they enable.
 
 Thanks to [Rod Vagg](https://github.com/rvagg/) for the clarifications on IPLD Schema implicits and the general IPLD worldview.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FIXME
+
+## 5.3 JSON Examples
+
+``` json
+["/", "some-label"]
+[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, "some-label"]
+[{"/": "bafkreiddwsbb7fasjb6k6jodakprtl4lhw6h3g4k7tew7vwwvd63veviie"}, {"/": {"bytes": "bafkreidlqsd6nh6hdgwhr4machsvusobpvn4qfrxfgl5vowoggzk2xpldq"}}]
+```
