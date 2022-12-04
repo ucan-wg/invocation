@@ -391,6 +391,7 @@ Executing all of the capabilities in a UCAN directly:
   "with": "ipfs://bafkreiemaanh3kxqchhcdx3yckeb3xvmboztptlgtmnu5jp63bvymxtlva",
   "do": "ucan/run",
   "inputs": null
+}
 ```
 
 # 4 Task
