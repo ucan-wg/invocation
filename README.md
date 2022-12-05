@@ -244,13 +244,14 @@ type Result union {
 }
 
 type Failure struct {
-  err   nullable String
-  trace Any
+  msg String
+  trc Any
+  prf optional &Receipt
 }
 
 type Success struct {
   val Any
-  rec optional &SignedReceipt
+  prf optional &Receipt
 }
 ```
 
@@ -311,7 +312,6 @@ const sendEmail = () => msg.send("mailto:alice@example.com", {
   body: "world"
 })
 ```
-
  
 ## 3.1 Fields
 
@@ -476,7 +476,7 @@ Each Task in a Batch contains a reference to [Task](FIXME) itself, plus optional
 
 ## 5.2 DAG-JSON Examples
 
-Named map:
+### 5.2.1 Named
 
 ``` json
 {
@@ -511,7 +511,7 @@ Named map:
 }
 ```
 
-List:
+### 5.2.2 List
 
 ``` json
 
@@ -549,7 +549,7 @@ List:
 
 # 6 Invocation
 
-As [noted in the introduction](FIXME), there is a difference between a reference to a function and calling that function. [Closures](FIXME) and [Tasks](FIXME) are not executable until they have been provided provable authority from the [Invoker]() (in the form of a UCAN), and signed with the Invoker's private key.
+As [noted in the introduction](FIXME), there is a difference between a reference to a function and calling that function. [Closures](FIXME) and [Tasks](FIXME) are not executable until they have been provided provable authority from the [Invoker](FIXME) (in the form of UCANs), and signed with the Invoker's private key.
 
 ## 6.1 IPLD Schema
 
@@ -912,42 +912,63 @@ Will select the marked field in this List invocation:
 
 # 8 Result
 
+A Result records the output of a Task, as well as its success or failure state.
+
+## 8.1 Variants
+
 ``` ipldsch
 type Result union {
-  | Success
-  | Failure
-}
+  | Any ("ok")  -- Success
+  | Any ("err") -- Failure
+} representation keyed
+```
 
-type Failure struct {
-  err   nullable String
-  trace Any
-}
+### 8.1.1 Success
 
-type Success struct {
-  val Any
-  rec optional &SignedReceipt
+The `val` field MUST contain the value returned from a successful Task. The exact shape of the returned data is left undefined to allow for flexibility in various Task types.
+
+``` json
+{"ok": 42}
+```
+
+### 8.1.2 Failure
+
+The `err` branch MAY contain detail about why execution failed. It is left undefined in this specification to allow for Task types to standardize the data that makes sense in their conetxts.
+
+If no information is available, this field SHOULD be set to `Null`.
+
+``` json
+{
+  "err": {
+    "dev/reason": "unauthorized",
+    "http/status": 401
+  }
 }
 ```
 
 # 9 Receipt
 
+An Invocation Receipt is an attestation of the Result of an Invocation. A Receipt MUST be signed by the Executor (the `aud` of the associated UCANs).
+
+**NB: a Receipt this does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
+
+Receipts MUST use the same version as the invocation that they contain.
+
+## 9.1 Fields
+
 ``` ipldsch
 type Receipt struct {
   ran  Pointer
   out  {String : Result}
+  rec  {String : &Receipt} -- FIXME describe below
   meta {String : Any}
   sig  Varsig
 } 
 ```
-
-An invocation receipt is an attestation of the output of an invocation. A receipt MUST be signed by the Executor (the `aud` of the associated UCANs).
-
-**NB: a Receipt this does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
-
-Receipts don't have their own version field. Receipts MUST use the same version as the invocation that they contain.
-
-## 9.1 Fields
-
+// FIXME #### 8.1.2.2 Proof
+//
+/ / In the case that the Invocation was delegated to another Executor, a `prf` containing a [`Receipt`](FIXME) MAY be supplied as proof of the `Result`.
+//
 
 ### 9.1.1 Task
 
@@ -978,11 +999,11 @@ The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig)
     "status": "ok",
     "value": [
       {
-        "from": "alice@example.com",
+        "from": "bob@example.com",
         "text": "Hello world!"
       }, 
       {
-        "from": "bob@example.com",
+        "from": "carol@example.com",
         "text": "What's up?"
       }
     ]
@@ -997,195 +1018,91 @@ The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig)
 
 # 10 Promise
 
+> Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
+>
+> — [Mark Miller](https://github.com/erights), [Robust Composition](http://www.erights.org/talks/thesis/markm-thesis.pdf)
+
+There MAY not be enough information to described an Invocation at creation time. However, all of the information required to construct the next request in a sequence MAY be available in the same Batch, or in a previous (but not yet complete) Invocation. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of earlier invocations into the input of a later one. This liberates the invoker from waiting for each step.
+
+A Promise is a placeholder value MAY be used as a variable placeholder for a concrete value in a [Closure](FIXME), waiting on a previous step to complete.
+
+One way of seeing the names in a [`Batch`]() is as variables for the return of each Closure. These can now be referenced by other Closures.
+
+For example, consider the following batch
+
+``` json
+{
+  "run": {
+    "create-draft": {
+      "with": "https://example.com/blog/posts",
+      "do": "crud/create",
+      "inputs": {
+        "payload": {
+          "title": "How UCAN Tasks Changed My Life",
+          "body": "This is the story of how one spec changed everything..."
+        }
+      }
+    },
+    "get-editors": {
+      "with": "https://example.com/users/editors",
+      "do": "crud/read"
+    },
+    "notify": {
+      "with": "mailto:akiko@example.com",
+      "do": "msg/send",
+      "inputs": {
+        "to": {"ptr": ["/", "right"], "sts": "ok"}
+        "subject": "Coffee",
+        "body": {"ptr": ["/", "left"], "sts": "ok"}
+      }
+    }
+  }
+}
+```
+
+By analogy, this can be interpreted rougly as follows:
+
+``` js
+const createDraft = crud.create("https://example.com/blog/posts", {
+  payload: {
+    title: "How UCAN Tasks Changed My Life",
+    body: "This is the story of how one spec changed everything..."
+  }
+})
+
+const getEditors = crud.read("https://example.com/users/editors")
+
+const notify = msg.send("mailto:akiko@example.com", {
+  "to": await createDraft,
+  "subject": "Coffee",
+  "body": await getEditors
+})
+```
+
+While a Promise MAY be substituted for any field in a Closure, substituting the `do` field is NOT RECOMMENDED. The `do` field is critical in understanding what kind of action will be performed, and most schedulers will use the 
+
+After resolution, the Closure MUST be validated against the UCANs known to the Executor. A Promise resolved to a Closure that is not backed by a valid UCAN MUST NOT be executed, and SHOULD return an unauthorized error to the user.
+
+Promises MAY be used inside of a single Invocation's Closures, or across multiple Invocations, and MAY even be across multiple Invokers. As long as the pointer can be resolved, any imvoked Task MAY be promised. This is sometimes referred to as ["promise pipelining"](http://erights.org/elib/distrib/pipeline.html).
+
+Promises MUST resolve to a [Receipt](FIXME). A Promise MUST resolve to a [Result](). If a particular branch's value is required to be unwrapped, the [Result]() tag (`ok` or `err`) MAY be supplied.
+
+## 10.1 Fields
+
 ``` ipldsch
 type Promise struct {
-  envelope InvPtr
-  label    String
-  status   Status (implicit "ok")
+  ptr InvPtr
+  sts optional Status 
 } 
 
 type Status enum {
-  | Ok  ("ok")
-  | Err ("err")
+  | Ok     ("ok")
+  | Err    ("err")
 }
 ```
 
 If there are dependencies or ordering required, then you need a promise pipeline
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-### 3.1.1 Version
-
-The `v` field MUST contain the version of the invocation object  schema.
-
-### 3.1.2 Proofs
-
-The `prf` field MUST contain CIDs pointing to the UCANs that provide the authority to run these tasks. The elements of this array MUST be sorted in ascending numeric order. Restricting the outmost UCANs to only the authority required for the current invocation is RECOMMENDED.
-
-### 3.1.3 Run Capabilities
-
-The `run` field MUST reference the tasks contained in the UCAN are to be run during the invocation. To run all tasks in the underlying UCAN, the `"*"` value MUST be used. If only specific tasks (or [pipelines](#6-promise-pipelining)) are intended to be run, then they MUST be prefixed with an arbitrary label and treated as a UCAN attenuation: all tasks MUST be backed by a matching capability of equal or greater authority.
-
-#### 3.1.3.1 Promises
-
-The only difference from general capabilities is that [promises](#6-promise-pipelining) MAY also be used as inputs to attenuated fields.
-
-If a capability input has the key `"_"` and the value is a promise, the input MUST be discarded and only used for determining sequencing tasks.
-
-### 3.1.4 Nonce
-
-The `nnc` field MUST contain a unique nonce. This field exists to enable making the CID of each invocation unique. While this field MAY be an empty string, it is NOT RECOMMENDED.
-
-### 3.1.5 Extended Fields
-
-The OPTIONAL `ext` field MAY contain arbitrary data. If not present, the `ext` field MUST be interpreted as `null`, including for [signature](#315-signature).
-
-## 3.2 IPLD Schema
-
-``` ipldsch
-type SignedTask struct {
-  inv Task (rename "ucan/invoke") 
-  sig Varsig
-}
-
-type Task struct {
-  v   SemVer  -- Version
-  prf [&UCAN] -- Authority to run this invocation
-  run Scope   -- Which tasks to invoke
-  nnc String  -- Nonce
-  ext nullable Any (implicit null) -- Extended fields
-}
-
-type Scope union {
-  | All "*"
-  | {String : Task}
-}
-
-type Task struct {
-  with   URI 
-  do     Ability
-  inputs Any
-  meta   {String : Any}
-} 
-```
-
-## 3.3 JSON Examples
-
-### 3.3.1 Run All
-
- ``` js
-{
-  "ucan/invoke": {
-    "v": "0.1.0",
-    "prf": [
-      {"/": "bafkreie2cyfsaqv5jjy2gadr7mmupmearkvcg7llybfdd7b6fvzzmhazuy"},
-      {"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}
-    ],
-    "run": "*"
-    "nnc": "abcdef",
-    "ext": null
-  },
-  "sig": {"/": { "bytes:": "bdNVZn_uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT-SRK6v_SX8bjt-VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA" }}
-}
-```
-
-### 3.3.2 Promise Pipelines
-
-Promise pipelines are handled in more detail in [§6](#6-promise-pipelining). In brief, they enable taking the output of a task that has not yet run as the input to another task. Here is a simple example:
-
-``` js
-{
-  "ucan/invoke": {
-    "v": "0.1.0",
-    "nnc": "02468",
-    "ext": null,
-    "prf": [
-      {"/": "bafkreie2cyfsaqv5jjy2gadr7mmupmearkvcg7llybfdd7b6fvzzmhazuy"},
-      {"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}
-    ],
-    "run": {
-      "notify-bob": {
-        "with": "mailto://alice@example.com",
-        "do": "msg/send",
-        "inputs": [
-          {
-            "to": "bob@example.com",
-            "subject": "DNSLink for example.com",
-            "body": "Hello Bob!"
-          }
-        ]
-      },
-      "log-as-done": {
-        "with": "https://example.com/report"
-        "do": "crud/update"
-        "inputs": {
-          "from": "mailto://alice@exmaple.com",
-          "to": ["bob@exmaple.com"],
-          "event": "email-notification",
-          "value": {"ucan/promise": ["/", "notify-bob"]} // Pipelined promise
-        }
-      }
-    }
-  },
-  "sig": {"/": {"bytes:": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
-}
-```
-
-
-# 5 Pointers
-
-# 6 Promise Pipelining
-
-> Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
->
-> — [Mark Miller](https://github.com/erights), [Robust Composition](http://www.erights.org/talks/thesis/markm-thesis.pdf)
-
-At UCAN creation time, the UCAN MAY not yet have all of the information required to construct the next request in a sequence. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of earlier invocations into the input of a later one. This liberates the invoker from waiting for each step.
-
-The authority to execute later task often cannot be fully attenuated in advance, since the executor controls the reported output of the prior step in a pipeline. When choosing to use pipelining, the invoker MUST delegate capabilities for any of the possible outputs. If tight control is required to limit authority, pipelining SHOULD NOT be used.
-
-Promises MUST resolve to a [`Result`](#42-ipld-schema). If a promise resolves to the `Success` branch, the value in the `val` MUST be extracted and substituted for the promise. Behavior is left undefined if the promise returns on the `Failure` branch.
-
-Values MUST only be pipelined if they resolve to the `"ok"` branch of the `Result`. In the success case, the value inside the `"ok"` field MUST be extracted and replace the promise.
-
-A promise MAY be placed in any Task field. Substituting into the `with` and `do` fields is NOT RECOMMENDED in fully trustless contexts, as it makes it difficult to understand what is involved in the invocation in advance.
-
-## 6.1 Promises
- 
-## 6.1.1 Fields
-
-| Field          | Type          | Description               | Required |
-|----------------|---------------|---------------------------|----------|
-| `ucan/promise` | `TaskPointer` | The Task being referenced | Yes      |
-
-The above table MUST be serialized as a tuple. In JSON, this SHOULD be represented as an array containing the values (but not keys) sequenced in the order they appear in the table.
-
-## 6.1.2 IPLD Schema
-
-``` ipldsch
-type Promise struct {
-  promised TaskPointer (rename "ucan/")
-}
-```
-
-## 6.1.3 JSON Examples
-
-
-## 6.2 Pipelining
 
 Pipelining uses promises as inputs to determine the required dataflow graph. The following examples both express the following dataflow graph:
 
@@ -1280,7 +1197,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 }
 ```
 
-### 6.2.2 Serial Pipeline
+## 10.2 Serial Pipeline
 
 ```
                 ┌────────────────────────────┐
@@ -1408,9 +1325,9 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 }
 ```
 
-# 7 Appendix
+# 11 Appendix
 
-## 7.1 Support Types
+## 11.1 Support Types
 
 ``` ipldsch
 type CID String
@@ -1435,7 +1352,7 @@ type NumVer struct {
 }
 ```
 
-# 8 Prior Art
+# 12 Prior Art
 
 [ucanto RPC](https://github.com/web3-storage/ucanto) from DAG House is a production system that uses UCAN as the basis for an RPC layer.
 
@@ -1447,9 +1364,9 @@ The [Object Capability Network (OCapN)](https://github.com/ocapn/ocapn) protocol
 
 [Cap 'n Proto RPC](https://capnproto.org/) is an influential RPC framework [based on concepts from CapTP](https://capnproto.org/rpc.html#specification).
 
-# 9 Acknowledgements
+# 13 Acknowledgements
 
-Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering work](http://erights.org/talks/thesis/markm-thesis.pdf) on [capability systems](http://erights.org/).
+ Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering work](http://erights.org/talks/thesis/markm-thesis.pdf) on [capability systems](http://erights.org/).
 
 Many thanks to [Luke Marsen](https://github.com/lukemarsden) and [Simon Worthington](https://github.com/simonwo) for their feedback on invocation model from their work on [Bacalhau](https://www.bacalhau.org/) and [IPVM](https://github.com/ipvm-wg).
 
@@ -1464,20 +1381,3 @@ Thanks to [Philipp Krüger](https://github.com/matheus23/) for the enthusiastic 
 Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many conversations about capability systems and the programming models that they enable.
 
 Thanks to [Rod Vagg](https://github.com/rvagg/) for the clarifications on IPLD Schema implicits and the general IPLD worldview.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-FIXME
-
-FIXME invoke an underlying ability from a specific ucan?

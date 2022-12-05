@@ -1,11 +1,19 @@
 digraph {
+    rankdir = "LR"
+    splines = "line"
+
     node [
       style = rounded
       shape = box
     ]
 
-    Closure -> Task  -> Invocation
-    Closure -> Batch -> Invocation -> Receipt -> Memoization
-                                      Receipt -> Promise -> Pipeline
-                                                 Batch   -> Pipeline
+    Closure -> Task [label = "+Meta"]
+               Task -> Batch [label = "Many"]
+               Task -> Batch
+               Task -> Batch
+                       Batch -> Invocation [label = "+Auth"]
+                                Invocation -> Result [label = "Output"]
+                                              Result -> Promise [label = "Consume"]
+                                              Result -> Receipt [label = "+Attest"]
+                                                        Receipt -> Memoization [label = "Short-circuit"]
 }
