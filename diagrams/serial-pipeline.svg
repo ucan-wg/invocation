@@ -10,7 +10,7 @@
 <polygon fill="white" stroke="transparent" points="-4,4 -4,-310 365.5,-310 365.5,4 -4,4"/>
 <g id="clust2" class="cluster">
 <title>cluster</title>
-<polygon fill="none" stroke="black" points="8,-8 8,-151 324,-151 324,-8 8,-8"/>
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="8,-8 8,-151 324,-151 324,-8 8,-8"/>
 </g>
 <!-- top -->
 <g id="node1" class="node">
