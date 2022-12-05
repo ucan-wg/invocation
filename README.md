@@ -1199,14 +1199,16 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
       "with": "https://example.com/report",
       "do": "crud/update",
       "inputs": {
-        "from": "mailto://alice@exmaple.com",
-        "to": ["bob@exmaple.com", "carol@example.com"],
-        "event": "email-notification",
-      },
-      "_": [
-        {"ucan/ok": ["/", "notify-bob"]},
-        {"ucan/ok": [{"/": "bafkreidcqdxosqave5u5pml3pyikiglozyscgqikvb6foppobtk3hwkjn4"}, "notify-carol"]}
-      ]
+        "payload": {
+          "from": "mailto://alice@exmaple.com",
+          "to": ["bob@exmaple.com", "carol@example.com"],
+          "event": "email-notification"
+        },
+        "_": [
+          {"ucan/ok": ["/", "notify-bob"]},
+          {"ucan/ok": [{"/": "bafkreidcqdxosqave5u5pml3pyikiglozyscgqikvb6foppobtk3hwkjn4"}, "notify-carol"]}
+        ]
+      }
     }
   },
   "sig": {"/": {"bytes": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
