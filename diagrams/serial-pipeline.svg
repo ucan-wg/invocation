@@ -15,8 +15,8 @@
 <!-- top -->
 <g id="node1" class="node">
 <title>top</title>
-<polygon fill="none" stroke="black" points="221,-306 9,-306 9,-268 221,-268 221,-306"/>
-<text text-anchor="middle" x="115" y="-290.8" font-family="Times,serif" font-size="14.00">dns://example.com?TYPE=TXT</text>
+<polygon fill="none" stroke="black" points="213.5,-306 16.5,-306 16.5,-268 213.5,-268 213.5,-306"/>
+<text text-anchor="middle" x="115" y="-290.8" font-family="Times,serif" font-size="14.00">dns:example.com?TYPE=TXT</text>
 <text text-anchor="middle" x="115" y="-275.8" font-family="Times,serif" font-size="14.00">crud/update</text>
 </g>
 <!-- left -->
@@ -44,8 +44,8 @@
 <!-- top&#45;&gt;right -->
 <g id="edge2" class="edge">
 <title>top&#45;&gt;right</title>
-<path fill="none" stroke="black" d="M192.75,-267.69C192.75,-267.69 192.75,-242.08 192.75,-242.08"/>
-<polygon fill="black" stroke="black" points="196.25,-242.08 192.75,-232.08 189.25,-242.08 196.25,-242.08"/>
+<path fill="none" stroke="black" d="M189,-267.69C189,-267.69 189,-242.08 189,-242.08"/>
+<polygon fill="black" stroke="black" points="192.5,-242.08 189,-232.08 185.5,-242.08 192.5,-242.08"/>
 </g>
 <!-- hidden -->
 <!-- top&#45;&gt;hidden -->
