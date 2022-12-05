@@ -1,0 +1,28 @@
+digraph {
+    splines = ortho
+    node [shape = box]
+
+    top -> left
+    top -> right
+    right -> bottom:nne
+    left -> bottom
+
+    top -> hidden -> left [style = invis]
+    hidden -> right [style = invis]
+    hidden [style = invis]
+    {rank = same; hidden right}
+
+    top    [label = "dns://example.com?TYPE=TXT\ncrud/update"]
+    right  [label = "mailto:alice@example.com\nmsg/send\nbob@example.com"]
+
+    subgraph cluster {
+        left   [label = "mailto:alice@example.com\nmsg/send\nbob@example.com"]
+        bottom [label = "https://example.com/events\ncrud/create"]
+
+        hidden2 [style = invis]
+        left:s -> hidden2:n [style = invis]
+        hidden2:e -> bottom:w [style = invis]
+
+        {rank = same; hidden2 bottom}
+    }
+}

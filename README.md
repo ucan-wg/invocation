@@ -18,7 +18,7 @@
 
 # 0 Abstract
 
-UCAN Task defines a format for expressing the intention to run delegated capabilities from a UCAN, and how to promise pipeline invocations.
+UCAN Invocation defines a format for expressing the intention to run delegated capabilities from a UCAN, the attested receipts from an execution, and how to extend computation via promise pipelining.
 
 ## Language
 
@@ -176,10 +176,6 @@ A [batch](FIXME) is a way of requesting more than one action at once.
 
 A [pipeline](FIXME) is a batch that includes promises. This allows for the automatic chaining of actions based on their outputs.
 
-### 2.2.6 Memoization
-
-A [distributed memoization table](FIXME) (DMT) is a way of sharing receipts in a consistent lookup table.
-
 ## 2.3 IPLD Schema
 
 ``` ipldsch
@@ -304,10 +300,10 @@ Later, when we explore [Promises](FIXME), this also includes capturing the promi
 
 ``` js
 // Pseudocode
-const mailingList = crud.read("https://exmaple.com/mailinglist", {})
-
-const sendEmail = () => msg.send("mailto:alice@example.com", {
-  to: mailingList, // <-
+const mailingList = crud.read("https://exmaple.com/mailinglist", {}) // --+
+                                                                     //   |
+const sendEmail = () => msg.send("mailto:alice@example.com", {       //   |
+  to: mailingList, // <---------------------------------------------------+
   subject: "hello",
   body: "world"
 })
@@ -1103,36 +1099,13 @@ type Status enum {
 
 If there are dependencies or ordering required, then you need a promise pipeline
 
+## 10.2 Pipelines
 
 Pipelining uses promises as inputs to determine the required dataflow graph. The following examples both express the following dataflow graph:
 
-```
-              ┌────────────────────────────┐
-              │                            │
-              │ dns://example.com?TYPE=TXT │
-              │        crud/update         │
-              │                            │
-              └───────┬──────────┬─────────┘
-                      │          │
-                      │          │
-┌─────────────────────▼───┐  ┌───▼────────────────────────┐
-│                         │  │                            │
-│ mailto:alice@exaple.com │  │ mailto://alice@example.com │
-│         msg/send        │  │          msg/send          │
-│     bob@example.com     │  │      carol@exmaple.com     │
-│                         │  │                            │
-└─────────────────────┬───┘  └───┬────────────────────────┘
-                      │          │
-                      │          │
-             ┌────────▼──────────▼────────┐
-             │                            │
-             │ https://example.com/events │
-             │         crud/create        │
-             │                            │
-             └────────────────────────────┘
-```
+![](./diagrams/batch-pipeline.svg)
 
-#### 6.2.1 Batched 
+#### 10.2.1 Batched 
 
  ``` json
 {
@@ -1199,44 +1172,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 
 ## 10.2 Serial Pipeline
 
-```
-                ┌────────────────────────────┐
-                │                            │
-                │ dns://example.com?TYPE=TXT │
-                │        crud/update         │
-                │                            │
-                └───────┬──────────┬─────────┘
-                        │          │
-                        │          │
-                        │          │
-                        │      ┌───▼────────────────────────┐
-                        │      │                            │
-                        │      │ mailto://alice@example.com │
-                        │      │          msg/send          │
-                        │      │      carol@exmaple.com     │
-                        │      │                            │
-                        │      └───┬────────────────────────┘
-                        │          │
-┌───────────────────────┼──────────┼──────────┐
-│                       │          │          │
-│ ┌─────────────────────▼───┐      │          │
-│ │                         │      │          │
-│ │ mailto:alice@exaple.com │      │          │
-│ │         msg/send        │      │          │
-│ │     bob@example.com     │      │          │
-│ │                         │      │          │
-│ └─────────────────────┬───┘      │          │
-│                       │          │          │
-│                       │          │          │
-│              ┌────────▼──────────▼────────┐ │
-│              │                            │ │
-│              │ https://example.com/events │ │
-│              │         crud/create        │ │
-│              │                            │ │
-│              └────────────────────────────┘ │
-│                                             │
-└─────────────────────────────────────────────┘
-```
+![](./diagrams/serial-pipeline.svg)
 
  ``` json
 {
