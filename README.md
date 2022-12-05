@@ -1032,9 +1032,9 @@ For example, consider the following batch
       "with": "mailto:akiko@example.com",
       "do": "msg/send",
       "inputs": {
-        "to": {"ptr": ["/", "right"], "sts": "ok"}
+        "to": {"ucan/ok": ["/", "right"]},
         "subject": "Coffee",
-        "body": {"ptr": ["/", "left"], "sts": "ok"}
+        "body": {"ucan/ok": ["/", "left"]}
       }
     }
   }
