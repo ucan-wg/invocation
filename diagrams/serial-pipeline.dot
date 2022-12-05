@@ -13,10 +13,12 @@ digraph {
     hidden [style = invis]
     {rank = same; hidden right}
 
-    top    [label = "dns://example.com?TYPE=TXT\ncrud/update"]
-    right  [label = "mailto:alice@example.com\nmsg/send\ncarol@example.com"]
+    top   [label = "dns://example.com?TYPE=TXT\ncrud/update"]
+    right [label = "mailto:alice@example.com\nmsg/send\ncarol@example.com"]
 
     subgraph cluster {
+        style = dashed
+
         left   [label = "mailto:alice@example.com\nmsg/send\nbob@example.com"]
         bottom [label = "https://example.com/events\ncrud/create"]
 
