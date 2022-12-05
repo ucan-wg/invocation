@@ -14,7 +14,7 @@ digraph {
     {rank = same; hidden right}
 
     top    [label = "dns://example.com?TYPE=TXT\ncrud/update"]
-    right  [label = "mailto:alice@example.com\nmsg/send\nbob@example.com"]
+    right  [label = "mailto:alice@example.com\nmsg/send\ncarol@example.com"]
 
     subgraph cluster {
         left   [label = "mailto:alice@example.com\nmsg/send\nbob@example.com"]
