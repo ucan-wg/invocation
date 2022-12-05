@@ -1113,7 +1113,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
   ],
   "run": {
     "update-dns" : {
-      "with": "dns://example.com?TYPE=TXT",
+      "with": "dns:example.com?TYPE=TXT",
       "do": "crud/update",
       "inputs": { "value": "hello world"}
     },
@@ -1166,7 +1166,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
   "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
   "run": {
     "update-dns": {
-      "with": "dns://example.com?TYPE=TXT",
+      "with": "dns:example.com?TYPE=TXT",
       "do": "crud/update",
       "inputs": {"value": "hello world"}
     }

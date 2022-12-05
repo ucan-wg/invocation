@@ -6,7 +6,7 @@ digraph {
     top -> left  -> bottom
     top -> right -> bottom
 
-    top    [label = "dns://example.com?TYPE=TXT\ncrud/update"]
+    top    [label = "dns:example.com?TYPE=TXT\ncrud/update"]
     right  [label = "mailto:alice@example.com\nmsg/send\ncarol@example.com"]
 
     left   [label = "mailto:alice@example.com\nmsg/send\nbob@example.com"]
