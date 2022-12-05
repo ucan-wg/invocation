@@ -193,62 +193,47 @@ type Task struct {
 }
 
 type Batch union {
-  | Set   [Task]
   | Named {String : Task}
+  | List  [Task]
 }
 
 type Invocation struct {
-  run  Batch
   uiv  SemVer
+  run  Batch
   prf  [&UCAN]
   nnc  String
   meta {String : Any} (implicit {})
   sig  Varsig
 }
 
-type TaskPtr struct {
-  inv InvPtr
-  lbl optional String
+type InvocationPointer union {
+  | "/" -- Relative to the current invocation
+  | &TaskInvocation
+}
+
+type InvokedTaskPointer struct {
+  envl  InvPtr
+  label String
 } representation tuple
-
-type InvPtr union {
-  | "/" -- "Local": Relative to the current invocation
-  | &Invocation
-}
-
-type Status enum {
-  | Ok  ("ok")
-  | Err ("err")
-}
-
-type Promise struct {
-  ipr InvPtr
-  lbl String
-  sts Status (implicit "ok")
-} 
 
 type Receipt struct {
   ran  Pointer
   out  {String : Result}
+  rec  {String : &Receipt}
   meta {String : Any}
   sig  Varsig
 } 
 
 type Result union {
-  | Success
-  | Failure
-}
+  | Any ("ok")  -- Success
+  | Any ("err") -- Failure
+} representation keyed
 
-type Failure struct {
-  msg String
-  trc Any
-  prf optional &Receipt
-}
-
-type Success struct {
-  val Any
-  prf optional &Receipt
-}
+type Promise union {
+  | InvokedTaskPointer "ucan/ok"
+  | InvokedTaskPointer "ucan/err"
+  | InvokedTaskPointer "ucan/ptr"
+} representation keyed
 ```
 
 # 3 Closure
@@ -550,7 +535,7 @@ As [noted in the introduction](FIXME), there is a difference between a reference
 ## 6.1 IPLD Schema
 
 ``` ipldsch
-type TaskInvocation struct {
+type Invocation struct {
   uiv  SemVer
   run  Batch
   prf  [&UCAN]
