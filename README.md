@@ -1217,34 +1217,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 }
 ```
 
-# 11 Appendix
-
-## 11.1 Support Types
-
-``` ipldsch
-type CID String
-type URI String
-type Ability String
-type Path String
-type Varsig Bytes
-
-type SemVer struct {
-  num NumVer
-  tag optional String
-} representation stringjoin {
-  join "+"
-}
-
-type NumVer struct {
-  ma Integer
-  mi Integer
-  pa Integer
-} representation stringjoin {
-  join "."
-}
-```
-
-# 12 Prior Art
+# 11 Prior Art
 
 [ucanto RPC](https://github.com/web3-storage/ucanto) from DAG House is a production system that uses UCAN as the basis for an RPC layer.
 
@@ -1256,7 +1229,7 @@ The [Object Capability Network (OCapN)](https://github.com/ocapn/ocapn) protocol
 
 [Cap 'n Proto RPC](https://capnproto.org/) is an influential RPC framework [based on concepts from CapTP](https://capnproto.org/rpc.html#specification).
 
-# 13 Acknowledgements
+# 12 Acknowledgements
 
  Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering work](http://erights.org/talks/thesis/markm-thesis.pdf) on [capability systems](http://erights.org/).
 
