@@ -35,7 +35,7 @@
 <polygon fill="none" stroke="black" points="412,-127 215,-127 215,-74 412,-74 412,-127"/>
 <text text-anchor="middle" x="313.5" y="-111.8" font-family="Times,serif" font-size="14.00">mailto:alice@example.com</text>
 <text text-anchor="middle" x="313.5" y="-96.8" font-family="Times,serif" font-size="14.00">msg/send</text>
-<text text-anchor="middle" x="313.5" y="-81.8" font-family="Times,serif" font-size="14.00">bob@example.com</text>
+<text text-anchor="middle" x="313.5" y="-81.8" font-family="Times,serif" font-size="14.00">carol@example.com</text>
 </g>
 <!-- top&#45;&gt;right -->
 <g id="edge3" class="edge">
