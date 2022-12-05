@@ -1191,13 +1191,11 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
     "notify-bob": {
       "with": "mailto://alice@example.com",
       "do": "msg/send",
-      "inputs": [
-        {
-          "to": "bob@example.com",
-          "subject": "DNSLink for example.com",
-          "body": {"ok": [{"/": "bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu"}, "update-dns"]}
-        }
-      ]
+      "inputs": {
+        "to": "bob@example.com",
+        "subject": "DNSLink for example.com",
+        "body": {"ok": [{"/": "bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu"}, "update-dns"]}
+      }
     },
     "log-as-done": {
       "with": "https://example.com/report",
