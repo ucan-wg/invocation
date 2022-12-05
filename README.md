@@ -1186,7 +1186,6 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 {
   "uiv": "0.1.0",
   "nnc": "02468",
-  "ext": null,
   "run": {
     "notify-bob": {
       "with": "mailto://alice@example.com",
