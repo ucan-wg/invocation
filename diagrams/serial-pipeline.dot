@@ -1,6 +1,5 @@
 digraph {
     splines  = ortho
-    fontname = "Courier"
 
     node [shape = box]
 

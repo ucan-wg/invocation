@@ -300,10 +300,10 @@ Later, when we explore [Promises](FIXME), this also includes capturing the promi
 
 ``` js
 // Pseudocode
-const mailingList = crud.read("https://exmaple.com/mailinglist", {}) // --+
-                                                                     //   |
-const sendEmail = () => msg.send("mailto:alice@example.com", {       //   |
-  to: mailingList, // <---------------------------------------------------+
+const mailingList = crud.read("https://exmaple.com/mailinglist", {}) // ---┐
+                                                                     //    │
+const sendEmail = () => msg.send("mailto:alice@example.com", {       //    │
+  to: mailingList, // <----------------------------------------------------┘
   subject: "hello",
   body: "world"
 })
@@ -1086,15 +1086,11 @@ Promises MUST resolve to a [Receipt](FIXME). A Promise MUST resolve to a [Result
 ## 10.1 Fields
 
 ``` ipldsch
-type Promise struct {
-  ptr InvPtr
-  sts optional Status 
-} 
-
-type Status enum {
-  | Ok     ("ok")
-  | Err    ("err")
-}
+type Promise union {
+  | InvokedTaskPointer "ucan/ok"
+  | InvokedTaskPointer "ucan/err"
+  | InvokedTaskPointer "ucan/ptr"
+} representation keyed
 ```
 
 If there are dependencies or ordering required, then you need a promise pipeline
@@ -1103,65 +1099,54 @@ If there are dependencies or ordering required, then you need a promise pipeline
 
 Pipelining uses promises as inputs to determine the required dataflow graph. The following examples both express the following dataflow graph:
 
-![](./diagrams/batch-pipeline.svg)
+### 10.2.1 Batched 
 
-#### 10.2.1 Batched 
+![](./diagrams/batch-pipeline.svg)
 
  ``` json
 {
-  "ucan/invoke": {
-    "v": "0.1.0",
-    "nnc": "abcdef",
-    "prf": [
-      {"/": "bafkreie2cyfsaqv5jjy2gadr7mmupmearkvcg7llybfdd7b6fvzzmhazuy"},
-      {"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}
-    ],
-    "run": {
-      "update-dns" : {
-        "with": "dns://example.com?TYPE=TXT",
-        "do": "crud/update",
-        "inputs": { 
-          "value": "hello world",
-          "content-type": "text/plain; charset=utf-8"
-        }
-      },
-      "notify-bob": {
-        "with": "mailto://alice@example.com",
-        "do": "msg/send",
-        "inputs": [
-          {
-            "to": "bob@example.com",
-            "subject": "DNSLink for example.com",
-            "body": {"ucan/promise": ["/", "update-dns"]}
-          }
-        ]
-      },
-      "notify-carol": {
-        "with": "mailto://alice@example.com",
-        "do": "msg/send",
-        "inputs": [
-          {
-            "to": "carol@example.com",
-            "subject": "DNSLink for example.com",
-            "body": {"ucan/promise": ["/", "update-dns"]}
-          }
-        ]
-      },
-      "log-as-done": {
-        "with": "https://example.com/report",
-        "do": "crud/update",
-        "inputs": [
-          {
-            "from": "mailto://alice@exmaple.com",
-            "to": ["bob@exmaple.com", "carol@example.com"],
-            "event": "email-notification",
-          },
-          {
-            "_": {"ucan/promise": ["/", "notify-bob"]}
-          },
-          {
-            "_": {"ucan/promise": ["/", "notify-carol"]}
-          }
+  "uiv": "0.1.0",
+  "nnc": "abcdef",
+  "prf": [
+    {"/": "bafkreie2cyfsaqv5jjy2gadr7mmupmearkvcg7llybfdd7b6fvzzmhazuy"},
+    {"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}
+  ],
+  "run": {
+    "update-dns" : {
+      "with": "dns://example.com?TYPE=TXT",
+      "do": "crud/update",
+      "inputs": { "value": "hello world"}
+    },
+    "notify-bob": {
+      "with": "mailto://alice@example.com",
+      "do": "msg/send",
+      "inputs": {
+        "to": "bob@example.com",
+        "subject": "DNSLink for example.com",
+        "body": {"ucan/ok": ["/", "update-dns"]}
+      }
+    },
+    "notify-carol": {
+      "with": "mailto://alice@example.com",
+      "do": "msg/send",
+      "inputs":{
+        "to": "carol@example.com",
+        "subject": "Hey Carol, DNSLink was updated!",
+        "body": {"ucan/ok": ["/", "update-dns"]}
+      }
+    },
+    "log-as-done": {
+      "with": "https://example.com/report",
+      "do": "crud/update",
+      "inputs": {
+        "payload": {
+          "from": "mailto://alice@exmaple.com",
+          "to": ["bob@exmaple.com", "carol@example.com"],
+          "event": "email-notification",
+        },
+        "_": [
+          {"ucan/ok": ["/", "notify-bob"]},
+          {"ucan/ok": ["/", "notify-carol"]}
         ]
       }
     }
@@ -1170,51 +1155,39 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 }
 ```
 
-## 10.2 Serial Pipeline
+### 10.2 Serial Pipeline
 
 ![](./diagrams/serial-pipeline.svg)
 
  ``` json
 {
-  "ucan/invoke": {
-    "v": "0.1.0",
-    "nnc": "abcdef",
-    "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
-    "run": {
-      "update-dns": {
-        "with": "dns://example.com?TYPE=TXT",
-        "do": "crud/update",
-        "inputs": [
-          { 
-            "value": "hello world",
-            "content-type": "text/plain; charset=utf-8"
-          }
-        ]
-      }
+  "uiv": "0.1.0",
+  "nnc": "abcdef",
+  "prf": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
+  "run": {
+    "update-dns": {
+      "with": "dns://example.com?TYPE=TXT",
+      "do": "crud/update",
+      "inputs": {"value": "hello world"}
     }
   },
   "sig": {"/": {"bytes": kQHtTruysx4S8SrvSjTwr6ttTLzc7dd7atANUYT-SRK6v_SX8bjHegWoDak2x6vTAZ6CcVKBt6JGpgnjABpsoL"}}
 }
  
 {
-  "ucan/invoke": {
-    "v": "0.1.0",
-    "nnc": "12345",
-    "prf": [
-      {"/": "bafkreie2cyfsaqv5jjy2gadr7mmupmearkvcg7llybfdd7b6fvzzmhazuy"},
-      {"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}
-    ],
-    "run": {
-      "notify-carol": {
-        "with": "mailto://alice@example.com",
-        "do": "msg/send",
-        "inputs": [
-          {
-            "to": "carol@example.com",
-            "subject": "DNSLink for example.com",
-            "body": {"ucan/promise": ["bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu", "update-dns"]}
-          }
-        ]
+  "uiv": "0.1.0",
+  "nnc": "12345",
+  "prf": [
+    {"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}
+  ],
+  "run": {
+    "notify-carol": {
+      "with": "mailto://alice@example.com",
+      "do": "msg/send",
+      "inputs": {
+        "to": "carol@example.com",
+        "subject": "Hey Carol, DNSLink was updated!",
+        "body": {"ucan/ok": [{"/": "bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu"}, "update-dns"]}
       }
     }
   },
@@ -1222,39 +1195,33 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 }
 
 {
-  "ucan/invoke": {
-    "v": "0.1.0",
-    "nnc": "02468",
-    "ext": null,
-    "run": {
-      "notify-bob": {
-        "with": "mailto://alice@example.com",
-        "do": "msg/send",
-        "inputs": [
-          {
-            "to": "bob@example.com",
-            "subject": "DNSLink for example.com",
-            "body": {"ucan/promise": [{"/": "bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu"}, "update-dns"]}
-          }
-        ]
+  "uiv": "0.1.0",
+  "nnc": "02468",
+  "ext": null,
+  "run": {
+    "notify-bob": {
+      "with": "mailto://alice@example.com",
+      "do": "msg/send",
+      "inputs": [
+        {
+          "to": "bob@example.com",
+          "subject": "DNSLink for example.com",
+          "body": {"ok": [{"/": "bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu"}, "update-dns"]}
+        }
+      ]
+    },
+    "log-as-done": {
+      "with": "https://example.com/report",
+      "do": "crud/update",
+      "inputs": {
+        "from": "mailto://alice@exmaple.com",
+        "to": ["bob@exmaple.com", "carol@example.com"],
+        "event": "email-notification",
       },
-      "log-as-done": {
-        "with": "https://example.com/report",
-        "do": "crud/update",
-        "inputs": [
-          {
-            "from": "mailto://alice@exmaple.com",
-            "to": ["bob@exmaple.com", "carol@example.com"],
-            "event": "email-notification",
-          },
-          {
-            "_": {"ucan/promise": ["/", "notify-bob"]}
-          },
-          {
-            "_": {"ucan/promise": [{"/": "bafkreidcqdxosqave5u5pml3pyikiglozyscgqikvb6foppobtk3hwkjn4"}, "notify-carol"]}
-          }
-        ]
-      }
+      "_": [
+        {"ucan/ok": ["/", "notify-bob"]},
+        {"ucan/ok": [{"/": "bafkreidcqdxosqave5u5pml3pyikiglozyscgqikvb6foppobtk3hwkjn4"}, "notify-carol"]}
+      ]
     }
   },
   "sig": {"/": {"bytes": "5vNn4--uTeGk_vayyPuNTYJ71Yr2nWkc6AkTv1QPWSgetpsu8SHegWoDakPVTdxkWb6nhVKAz6JdpgnjABppC7"}}
