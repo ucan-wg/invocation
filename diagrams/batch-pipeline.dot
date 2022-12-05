@@ -1,5 +1,7 @@
 digraph {
-    splines = ortho
+    splines  = ortho
+    fontname = "Courier"
+
     node [shape = box]
 
     top -> left  -> bottom
