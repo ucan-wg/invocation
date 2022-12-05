@@ -1164,9 +1164,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 {
   "uiv": "0.1.0",
   "nnc": "12345",
-  "prf": [
-    {"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}
-  ],
+  "prf": [{"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}],
   "run": {
     "notify-carol": {
       "with": "mailto://alice@example.com",
@@ -1186,6 +1184,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
 {
   "uiv": "0.1.0",
   "nnc": "02468",
+  "prf": [{"/": "bafkreibbz5pksvfjyima4x4mduqpmvql2l4gh5afaj4ktmw6rwompxynx4"}],
   "run": {
     "notify-bob": {
       "with": "mailto://alice@example.com",
