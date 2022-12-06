@@ -568,7 +568,7 @@ An Invocation authorizes one or more Tasks to be run. There are a few invariants
 
 ### 6.2.1 UCAN Task Version
 
-The `uiv` field MUST contain the Semver-frmatted version of the UCAN Task Specification that this struct conforms to.
+The `uiv` field MUST contain the SemVer-formatted version of the UCAN Task Specification that this struct conforms to.
 
 ### 6.2.2 Task
 
@@ -930,7 +930,7 @@ The `val` field MUST contain the value returned from a successful Task. The exac
 
 ### 8.1.2 Failure
 
-The `err` branch MAY contain detail about why execution failed. It is left undefined in this specification to allow for Task types to standardize the data that makes sense in their conetxts.
+The `err` branch MAY contain detail about why execution failed. It is left undefined in this specification to allow for Task types to standardize the data that makes sense in their contexts.
 
 If no information is available, this field SHOULD be set to `Null`.
 
@@ -1055,7 +1055,7 @@ For example, consider the following batch:
 }
 ```
 
-By analogy, this can be interpreted rougly as follows:
+By analogy, this can be interpreted roughly as follows:
 
 ``` js
 const createDraft = crud.create("https://example.com/blog/posts", {
