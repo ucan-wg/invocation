@@ -287,7 +287,7 @@ Later, when we explore [Promises](# 10-promise), this also includes capturing th
     "with": "mailto://alice@example.com",
     "do": "msg/send",
     "inputs": {
-      "to": {"ucan/promise": ["/", "get-mailing-list"]}
+      "to": {"ucan/ok": ["/", "get-mailing-list"]}
       "subject": "hello",
       "body": "world"
     }
