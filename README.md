@@ -250,7 +250,7 @@ type Promise union {
 
 # 3 Closure
 
-A Closure is the smallest unit of work that can be requested from a UCAN. It describes one `(resource, ability, inputs)` triple. The `inputs` field is freeform, and depend on the specific resource and ability being interacted with, and not described in this specification.
+A Closure is the smallest unit of work that can be requested from a UCAN. It describes one `(resource, ability, inputs)` triple. The `inputs` field is free form, and depend on the specific resource and ability being interacted with, and not described in this specification.
 
 Using the JavaScript analogy from the introduction, a Closure is similar to wrapping a call in an anonymous function:
 
@@ -584,7 +584,7 @@ The `nnc` field MUST include a random nonce field expressed in ASCII. This field
 
 ### 6.2.5 Metadata
 
-If present, the OPTIONAL `meta` map MAY contain freeform fields. This provides a place for extension of the invocation type.
+If present, the OPTIONAL `meta` map MAY contain free form fields. This provides a place for extension of the invocation type.
 
 Data inside the `meta` field SHOULD NOT be used for [Receipts](#9-receipt).
 
@@ -1078,7 +1078,7 @@ While a Promise MAY be substituted for any field in a Closure, substituting the 
 
 After resolution, the Closure MUST be validated against the UCANs known to the Executor. A Promise resolved to a Closure that is not backed by a valid UCAN MUST NOT be executed, and SHOULD return an unauthorized error to the user.
 
-Promises MAY be used inside of a single Invocation's Closures, or across multiple Invocations, and MAY even be across multiple Invokers. As long as the pointer can be resolved, any imvoked Task MAY be promised. This is sometimes referred to as ["promise pipelining"](http://erights.org/elib/distrib/pipeline.html).
+Promises MAY be used inside of a single Invocation's Closures, or across multiple Invocations, and MAY even be across multiple Invokers. As long as the pointer can be resolved, any invoked Task MAY be promised. This is sometimes referred to as ["promise pipelining"](http://erights.org/elib/distrib/pipeline.html).
 
 A Promise MUST resolve to a [Result](#8-result). If a particular branch's value is required to be unwrapped, the Result tag (`ok` or `err`) MAY be supplied.
 
