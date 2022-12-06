@@ -939,7 +939,7 @@ Receipts MUST use the same version as the invocation that they contain.
 
 ``` ipldsch
 type Receipt struct {
-  ran  Pointer
+  ran  &InvokedTaskPointer
   out  {String : Result}
   rec  {String : &Receipt} -- FIXME describe below
   meta {String : Any}
