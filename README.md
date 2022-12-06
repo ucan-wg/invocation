@@ -922,7 +922,7 @@ type Result union {
 
 ### 8.1.1 Success
 
-The `val` field MUST contain the value returned from a successful Task. The exact shape of the returned data is left undefined to allow for flexibility in various Task types.
+The success branch MUST contain the value returned from a successful Task wrapped in the `"ok"` tag. The exact shape of the returned data is left undefined to allow for flexibility in various Task types.
 
 ``` json
 {"ok": 42}
@@ -930,7 +930,7 @@ The `val` field MUST contain the value returned from a successful Task. The exac
 
 ### 8.1.2 Failure
 
-The `err` branch MAY contain detail about why execution failed. It is left undefined in this specification to allow for Task types to standardize the data that makes sense in their contexts.
+The failure branch MAY contain detail about why execution failed wrapped in the `"err"` tag. It is left undefined in this specification to allow for Task types to standardize the data that makes sense in their contexts.
 
 If no information is available, this field SHOULD be set to `Null`.
 
@@ -990,9 +990,8 @@ The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig)
 ``` json
 {
   "inv": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
-  "out": {
-    "status": "ok",
-    "value": [
+  "out": { 
+    "ok": [
       {
         "from": "bob@example.com",
         "text": "Hello world!"
