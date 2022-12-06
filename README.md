@@ -389,7 +389,7 @@ Executing all of the capabilities in a UCAN directly:
 
 # 4 Task
 
-A Task is subtype of a [Closure](#3-closure), adding an OPTIONAL metadata field. If not present, the `meta` field defaults to an empty map. A Task can be trivially converted to a Closure by removing the `meta` field.
+A Task is [subtype](https://en.wikipedia.org/wiki/Subtyping) of a [Closure](#3-closure), adding an OPTIONAL metadata field. If not present, the `meta` field defaults to an empty map. A Task can be trivially converted to a Closure by removing the `meta` field.
 
 ``` ipldsch
 type Task struct {
