@@ -174,13 +174,13 @@ An [Invocation](#6-invocation) is the cryptographically signed container for a B
 
 ### 2.2.5 Pointers
 
-An [Invocation Pointer](#7-invocation-pointer) identifies a specific invocation. An Invoked Task Pointer points to a unique Task inside an Invocation.
+An [Invocation Pointer](#7-pointer) identifies a specific invocation. An Invoked Task Pointer points to a unique Task inside an Invocation.
 
 ### 2.2.6 Result
 
 A [Result](#8-result) is the output of a Closure.
 
-### 2.2.7 Result
+### 2.2.7 Receipt
 
 A [Receipt](#9-receipt) describes the output of an invocation, referenced by its Invocation Pointer.
 
@@ -389,7 +389,7 @@ Executing all of the capabilities in a UCAN directly:
 
 # 4 Task
 
-A Task is subtype of a Clousure, adding an OPTIONAL metadata field. If not present, the `meta` field defaults to an empty map. A Task can be trivially converted to a Closure by removing the `meta` field.
+A Task is subtype of a [Closure](#3-closure), adding an OPTIONAL metadata field. If not present, the `meta` field defaults to an empty map. A Task can be trivially converted to a Closure by removing the `meta` field.
 
 ``` ipldsch
 type Task struct {
@@ -404,7 +404,7 @@ type Task struct {
 
 ### 4.1.1 Closure Fields
 
-The `with`, `do`, and `inputs` field from [Closure](FIXME) remain unchanged.
+The `with`, `do`, and `inputs` field from [Closure](#3-closure) remain unchanged.
 
 ### 4.1.2 Metadata
 
@@ -452,7 +452,7 @@ Running WebAssembly from binary:
 
 # 5 Batch
 
-A Batch is a collection of Tasks, either as an array (`List`) or a map (`Named`). In many situations, sending multiple requests in a batch is more efficient than one-at-a-time.
+A Batch is a collection of Tasks, either as a `List` (array) or `Named` (map). In many situations, sending multiple requests in a Batch is more efficient than one-at-a-time.
 
 A `List` is sugar for a `Named` map, where the keys are the array index number as strings.
 
@@ -465,7 +465,7 @@ type Batch union {
 
 ## 5.1 Fields
 
-Each Task in a Batch contains a reference to [Task](FIXME) itself, plus optional metadata.
+Each Task in a Batch contains MAY be referenced by a string label.
 
 ## 5.2 DAG-JSON Examples
 
@@ -542,7 +542,7 @@ Each Task in a Batch contains a reference to [Task](FIXME) itself, plus optional
 
 # 6 Invocation
 
-As [noted in the introduction](FIXME), there is a difference between a reference to a function and calling that function. [Closures](FIXME) and [Tasks](FIXME) are not executable until they have been provided provable authority from the [Invoker](FIXME) (in the form of UCANs), and signed with the Invoker's private key.
+As [noted in the introduction](#112-lazy-vs-eager-evaluation), there is a difference between a reference to a function and calling that function. [Closures](#3-closure) and [Tasks](#4-task) are not executable until they have been provided provable authority from the [Invoker](#211-invoker) (in the form of UCANs), and signed with the Invoker's private key.
 
 ## 6.1 IPLD Schema
 
@@ -586,7 +586,7 @@ The `nnc` field MUST include a random nonce field expressed in ASCII. This field
 
 If present, the OPTIONAL `meta` map MAY contain freeform fields. This provides a place for extension of the invocation type.
 
-Data inside the `meta` field SHOULD NOT be used for [memoization]() and [receipts]().
+Data inside the `meta` field SHOULD NOT be used for [Receipts](#9-receipt).
 
 ### 6.2.6 Signature
 
@@ -643,16 +643,20 @@ The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig)
 }
 ```
 
-# 7 Invocation Pointer
+# 7 Pointer
 
-Invocation pointers ....
+An Invocation Pointer references a specific [Invocation](#6-invocation), either directly by CID (absolute), or from inside the Invocation itself (relative).
 
 ``` ipldsch
 type InvocationPointer union {
   | "/" -- Relative to the current invocation
   | &TaskInvocation
 }
+```
 
+An Invoked Task Pointer references a specific Task inside a Batch, by the name of the label. If the Batch is unlabelled (a `List`), then the index represented as a string MUST be used.
+
+``` ipldsch
 type InvokedTaskPointer struct {
   envl  InvPtr
   label String
@@ -905,7 +909,7 @@ Will select the marked field in this List invocation:
 
 # 8 Result
 
-A Result records the output of a Task, as well as its success or failure state.
+A Result records the output of a [Task](#4-task), as well as its success or failure state.
 
 ## 8.1 Variants
 
@@ -953,7 +957,7 @@ Receipts MUST use the same version as the invocation that they contain.
 type Receipt struct {
   ran  &InvokedTaskPointer
   out  {String : Result}
-  rec  {String : &Receipt} -- FIXME describe below
+  rec  {String : &Receipt}
   meta {String : Any}
   sig  Varsig
 } 
@@ -1015,11 +1019,11 @@ The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig)
 
 There MAY not be enough information to described an Invocation at creation time. However, all of the information required to construct the next request in a sequence MAY be available in the same Batch, or in a previous (but not yet complete) Invocation. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of earlier invocations into the input of a later one. This liberates the invoker from waiting for each step.
 
-A Promise is a placeholder value MAY be used as a variable placeholder for a concrete value in a [Closure](FIXME), waiting on a previous step to complete.
+A Promise is a placeholder value MAY be used as a variable placeholder for a concrete value in a [Closure](#3-closure), waiting on a previous step to complete.
 
-One way of seeing the names in a [`Batch`]() is as variables for the return of each Closure. These can now be referenced by other Closures.
+One way of seeing the names in a [`Batch`](#5-batch) is as variables for the return of each Closure. These can now be referenced by other Closures.
 
-For example, consider the following batch
+For example, consider the following batch:
 
 ``` json
 {
@@ -1076,7 +1080,7 @@ After resolution, the Closure MUST be validated against the UCANs known to the E
 
 Promises MAY be used inside of a single Invocation's Closures, or across multiple Invocations, and MAY even be across multiple Invokers. As long as the pointer can be resolved, any imvoked Task MAY be promised. This is sometimes referred to as ["promise pipelining"](http://erights.org/elib/distrib/pipeline.html).
 
-Promises MUST resolve to a [Receipt](FIXME). A Promise MUST resolve to a [Result](). If a particular branch's value is required to be unwrapped, the [Result]() tag (`ok` or `err`) MAY be supplied.
+A Promise MUST resolve to a [Result](#8-result). If a particular branch's value is required to be unwrapped, the Result tag (`ok` or `err`) MAY be supplied.
 
 ## 10.1 Fields
 
