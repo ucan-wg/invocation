@@ -224,7 +224,7 @@ type InvocationPointer union {
 }
 
 type InvokedTaskPointer struct {
-  envl  InvPtr
+  envl  InvocationPointer
   label String
 } representation tuple
 
@@ -244,7 +244,7 @@ type Result union {
 type Promise union {
   | InvokedTaskPointer "ucan/ok"
   | InvokedTaskPointer "ucan/err"
-  | InvokedTaskPointer "ucan/ptr"
+  | InvokedTaskPointer "ucan/promise"
 } representation keyed
 ```
 
@@ -658,7 +658,7 @@ An Invoked Task Pointer references a specific Task inside a Batch, by the name o
 
 ``` ipldsch
 type InvokedTaskPointer struct {
-  envl  InvPtr
+  envl  InvocationPointer
   label String
 } representation tuple
 ```
@@ -1088,7 +1088,7 @@ A Promise MUST resolve to a [Result](#8-result). If a particular branch's value 
 type Promise union {
   | InvokedTaskPointer "ucan/ok"
   | InvokedTaskPointer "ucan/err"
-  | InvokedTaskPointer "ucan/ptr"
+  | InvokedTaskPointer "ucan/promise"
 } representation keyed
 ```
 
