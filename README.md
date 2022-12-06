@@ -40,7 +40,7 @@ Some teams have had success with UCAN directly for RPC when the intention is cle
 
 Consider the following fictitious scenario:
 
-Akiko is going away for the weekend. Her good friend Boris is going to borrow her car while she's away. They meet at a nearby cafe, and Akiko hands Boris her car keys. Boris now has the capability to drive Alice's car whenever he wants to. Depending on their plans for the rest of the day, Akiko may find Boris quite rude if he immediately leaves the cafe to go for a drive. On the other hand, if Akiko asks Boris to run some last minute pre-vacation errands for that require a car, she may expect Boris to immediately drive off.
+Akiko is going away for the weekend. Her good friend Boris is going to borrow her car while she's away. They meet at a nearby cafe, and Akiko hands Boris her car keys. Boris now has the capability to drive Akiko's car whenever he wants to. Depending on their plans for the rest of the day, Akiko may find Boris quite rude if he immediately leaves the cafe to go for a drive. On the other hand, if Akiko asks Boris to run some last minute pre-vacation errands for that require a car, she may expect Boris to immediately drive off.
 
 ## 1.1.2 Lazy vs Eager Evaluation
 
@@ -127,7 +127,7 @@ This format help disambiguate type information in generic DAG-JSON tooling. Howe
 
 ## 1.4 Signatures
 
-All payloads described below MUST be signed with a [Varsig](https://github.com/ChainAgnostic/varsig/).
+All payloads described in this spec MUST be signed with a [Varsig](https://github.com/ChainAgnostic/varsig/).
 
 # 2 High-Level Concepts
 
@@ -156,25 +156,37 @@ The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field
 
 ![](./diagrams/concepts.svg)
 
-### 2.2.1 Task
+### 2.2.1 Closure
 
-A [task](#3-task) is like a deferred function application: a request to perform some action on a resource with specific inputs.
+A [Closure](#3-closure) is like a deferred function application: a request to perform some action on a resource with specific inputs.
 
-### 2.2.2 Receipt
+### 2.2.2 Task
 
-A [receipt](FIXME) describes the output of an invocation, referenced by its pointer.
+A [Task](#4-task) extends a Closure with additional metadata that is not used to describe the meaning of the computation or effect to be run.
 
-### 2.2.3 Promise
+### 2.2.3 Batch
 
-A [promise](FIXME) is a reference to the receipt of an action that has yet to return a receipt.
+A [Batch](#5-batch) is a way of requesting more than one action at once.
 
-### 2.2.4 Batch
+### 2.2.4 Invocation
 
-A [batch](FIXME) is a way of requesting more than one action at once.
+An [Invocation](#6-invocation) is the cryptographically signed container for a Batch. This is the step that "forces" the "deferred" Closure.
 
-### 2.2.5 Pipeline
+### 2.2.5 Pointers
 
-A [pipeline](FIXME) is a batch that includes promises. This allows for the automatic chaining of actions based on their outputs.
+An [Invocation Pointer](#7-invocation-pointer) identifies a specific invocation. An Invoked Task Pointer points to a unique Task inside an Invocation.
+
+### 2.2.6 Result
+
+A [Result](#8-result) is the output of a Closure.
+
+### 2.2.7 Result
+
+A [Receipt](#9-receipt) describes the output of an invocation, referenced by its Invocation Pointer.
+
+### 2.2.8 Promise
+
+A [promise](#10-promise) is a reference to the receipt of an action that has yet to return a receipt.
 
 ## 2.3 IPLD Schema
 
@@ -217,7 +229,7 @@ type InvokedTaskPointer struct {
 } representation tuple
 
 type Receipt struct {
-  ran  Pointer
+  ran  &InvocationPointer
   out  {String : Result}
   rec  {String : &Receipt}
   meta {String : Any}
@@ -1231,7 +1243,7 @@ Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering wor
 
 Many thanks to [Luke Marsen](https://github.com/lukemarsden) and [Simon Worthington](https://github.com/simonwo) for their feedback on invocation model from their work on [Bacalhau](https://www.bacalhau.org/) and [IPVM](https://github.com/ipvm-wg).
 
-Many thanks to [Zeeshan Lakhani](github.com/zeeshanlakhani) for his many suggestions, references, clarifications, and suggestions on how to restructure sections for clarity.
+Many thanks to [Zeeshan Lakhani](https://github.com/zeeshanlakhani) for his many suggestions, references, clarifications, and suggestions on how to restructure sections for clarity.
 
 Thanks to [Marc-Antoine Parent](https://github.com/maparent) for his discussions of the distinction between declarations and directives both in and out of a UCAN context.
 
