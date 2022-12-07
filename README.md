@@ -1,4 +1,4 @@
-# UCAN Task Specification v0.1.0
+# UCAN Invocation Specification v0.1.0
 
 ## Editors
 
