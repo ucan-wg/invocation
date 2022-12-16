@@ -220,11 +220,11 @@ type Invocation struct {
 
 type InvocationPointer union {
   | "/" -- Relative to the current invocation
-  | &TaskInvocation
+  | &Invocation
 }
 
 type InvokedTaskPointer struct {
-  envl  InvPtr
+  envl  InvocationPointer
   label String
 } representation tuple
 
@@ -650,7 +650,7 @@ An Invocation Pointer references a specific [Invocation](#6-invocation), either 
 ``` ipldsch
 type InvocationPointer union {
   | "/" -- Relative to the current invocation
-  | &TaskInvocation
+  | &Invocation
 }
 ```
 
@@ -658,7 +658,7 @@ An Invoked Task Pointer references a specific Task inside a Batch, by the name o
 
 ``` ipldsch
 type InvokedTaskPointer struct {
-  envl  InvPtr
+  envl  InvocationPointer
   label String
 } representation tuple
 ```
