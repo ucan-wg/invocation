@@ -989,7 +989,7 @@ The `sig` field MUST contain a [Varsig](https://github.com/ChainAgnostic/varsig)
 
 ``` json
 {
-  "inv": [{"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"}],
+  "ran": {"/": "bafkreifzjut3te2nhyekklss27nh3k72ysco7y32koao5eei66wof36n5e"},
   "out": { 
     "ok": [
       {
