@@ -242,9 +242,9 @@ type Result union {
 } representation keyed
 
 type Promise union {
-  | InvokedTaskPointer "ucan/ok"
-  | InvokedTaskPointer "ucan/err"
-  | InvokedTaskPointer "ucan/ptr"
+  | InvokedTaskPointer "promise/ok"
+  | InvokedTaskPointer "promise/err"
+  | InvokedTaskPointer "promise/*"
 } representation keyed
 ```
 
@@ -287,7 +287,7 @@ Later, when we explore [Promises](# 10-promise), this also includes capturing th
     "with": "mailto://alice@example.com",
     "do": "msg/send",
     "inputs": {
-      "to": {"ucan/promise": ["/", "get-mailing-list"]}
+      "to": {"promise/*": ["/", "get-mailing-list"]}
       "subject": "hello",
       "body": "world"
     }
@@ -1045,9 +1045,9 @@ For example, consider the following batch:
       "with": "mailto:akiko@example.com",
       "do": "msg/send",
       "inputs": {
-        "to": {"ucan/ok": ["/", "right"]},
+        "to": {"promise/ok": ["/", "right"]},
         "subject": "Coffee",
-        "body": {"ucan/ok": ["/", "left"]}
+        "body": {"promise/ok": ["/", "left"]}
       }
     }
   }
@@ -1085,9 +1085,9 @@ A Promise MUST resolve to a [Result](#8-result). If a particular branch's value 
 
 ``` ipldsch
 type Promise union {
-  | InvokedTaskPointer "ucan/ok"
-  | InvokedTaskPointer "ucan/err"
-  | InvokedTaskPointer "ucan/ptr"
+  | InvokedTaskPointer "promise/ok"
+  | InvokedTaskPointer "promise/err"
+  | InvokedTaskPointer "promise/*"
 } representation keyed
 ```
 
@@ -1121,7 +1121,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
       "inputs": {
         "to": "bob@example.com",
         "subject": "DNSLink for example.com",
-        "body": {"ucan/ok": ["/", "update-dns"]}
+        "body": {"promise/ok": ["/", "update-dns"]}
       }
     },
     "notify-carol": {
@@ -1130,7 +1130,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
       "inputs":{
         "to": "carol@example.com",
         "subject": "Hey Carol, DNSLink was updated!",
-        "body": {"ucan/ok": ["/", "update-dns"]}
+        "body": {"promise/ok": ["/", "update-dns"]}
       }
     },
     "log-as-done": {
@@ -1143,8 +1143,8 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
           "event": "email-notification",
         },
         "_": [
-          {"ucan/ok": ["/", "notify-bob"]},
-          {"ucan/ok": ["/", "notify-carol"]}
+          {"promise/ok": ["/", "notify-bob"]},
+          {"promise/ok": ["/", "notify-carol"]}
         ]
       }
     }
@@ -1185,7 +1185,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
       "inputs": {
         "to": "carol@example.com",
         "subject": "Hey Carol, DNSLink was updated!",
-        "body": {"ucan/ok": [{"/": "bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu"}, "update-dns"]}
+        "body": {"promise/ok": [{"/": "bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu"}, "update-dns"]}
       }
     }
   },
@@ -1205,7 +1205,7 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
       "inputs": {
         "to": "bob@example.com",
         "subject": "DNSLink for example.com",
-        "body": {"ucan/ok": [{"/": "bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu"}, "update-dns"]}
+        "body": {"promise/ok": [{"/": "bafkreieimb4hvcwizp74vu4xfk34oivbdojzqrbpg2y3vcboqy5hwblmeu"}, "update-dns"]}
       }
     },
     "log-as-done": {
@@ -1218,8 +1218,8 @@ Pipelining uses promises as inputs to determine the required dataflow graph. The
           "event": "email-notification"
         },
         "_": [
-          {"ucan/ok": ["/", "notify-bob"]},
-          {"ucan/ok": [{"/": "bafkreidcqdxosqave5u5pml3pyikiglozyscgqikvb6foppobtk3hwkjn4"}, "notify-carol"]}
+          {"promise/ok": ["/", "notify-bob"]},
+          {"promise/ok": [{"/": "bafkreidcqdxosqave5u5pml3pyikiglozyscgqikvb6foppobtk3hwkjn4"}, "notify-carol"]}
         ]
       }
     }
