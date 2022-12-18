@@ -1075,19 +1075,21 @@ const notify = msg.send("mailto:akiko@example.com", {
 
 While a Promise MAY be substituted for any field in a Closure, substituting the `do` field is NOT RECOMMENDED. The `do` field is critical in understanding what kind of action will be performed, and schedulers SHOULD use this fields to grant atomicity, parallelize tasks, and so on.
 
-After resolution, the Closure MUST be validated against the UCANs known to the Executor. A Promise resolved to a Closure that is not backed by a valid UCAN MUST NOT be executed, and SHOULD return an unauthorized error to the user.
+After resolution, the Task MUST be validated against the UCANs known to the Executor. A Promise resolved to a Task that is not backed by a valid UCAN MUST NOT be executed, and SHOULD return an unauthorized error to the user.
 
 Promises MAY be used inside of a single Invocation's Closures, or across multiple Invocations, and MAY even be across multiple Invokers. As long as the pointer can be resolved, any invoked Task MAY be promised. This is sometimes referred to as ["promise pipelining"](http://erights.org/elib/distrib/pipeline.html).
 
 A Promise MUST resolve to a [Result](#8-result). If a particular branch's value is required to be unwrapped, the Result tag (`ok` or `err`) MAY be supplied.
 
-## 10.1 Fields
+## 10.1 Enum & Fields
+
+The following describe a pointer to the eventual value in a Promise, on either branch (`promise/*`), or specifically the success (`promise/ok`) or failure (`promise/err`) branches.
 
 ``` ipldsch
 type Promise union {
+  | InvokedTaskPointer "promise/*"
   | InvokedTaskPointer "promise/ok"
   | InvokedTaskPointer "promise/err"
-  | InvokedTaskPointer "promise/*"
 } representation keyed
 ```
 
