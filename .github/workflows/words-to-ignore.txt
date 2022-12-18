@@ -10,6 +10,7 @@ CapTP
 DAG-CBOR
 DAG-JSON
 ERTP
+Enum
 Gozalishvili
 Hardt
 Holmgren
@@ -48,6 +49,7 @@ WebAssembly
 Worthington
 Zeeshan
 Zelenka
+atomicity
 auth
 backend
 base64url
@@ -65,6 +67,7 @@ invariants
 invoker
 multiformat
 outmost
+parallelize
 pipelined
 pipelining
 pre-vacation
