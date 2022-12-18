@@ -561,10 +561,10 @@ type Invocation struct {
 
 An Invocation authorizes one or more Tasks to be run. There are a few invariants that MUST hold between the `run`, `prf` and `sig` fields:
 
-* All of the `run` Tasks MUST be provably authorized by the UCANs in the `prf` field
-* All of the `prf` UCANs MUST list the Executor in their `aud` field
 * All of the `prf` UCANs MUST list the Invoker in their `iss`
 * The `sig` field MUST be produced by the Invoker
+* All of the `run` Tasks MUST be provably authorized by the UCANs in the `prf` field
+* The Executor(s) MUST be listed in the `aud` field of a UCAN that grants it the authority to perform some action on a resource, or be the root authority for it
 
 ### 6.2.1 UCAN Task Version
 
@@ -915,8 +915,8 @@ A Result records the output of a [Task](#4-task), as well as its success or fail
 
 ``` ipldsch
 type Result union {
-  | Any ("ok")  -- Success
-  | Any ("err") -- Failure
+  | Any ("ok") -- Success
+  | {String: Any} ("err") -- Failure
 } representation keyed
 ```
 
@@ -932,7 +932,7 @@ The success branch MUST contain the value returned from a successful Task wrappe
 
 The failure branch MAY contain detail about why execution failed wrapped in the `"err"` tag. It is left undefined in this specification to allow for Task types to standardize the data that makes sense in their contexts.
 
-If no information is available, this field SHOULD be set to `Null`.
+If no information is available, this field SHOULD be set to `{}`.
 
 ``` json
 {
@@ -1045,9 +1045,9 @@ For example, consider the following batch:
       "with": "mailto:akiko@example.com",
       "do": "msg/send",
       "inputs": {
-        "to": {"promise/ok": ["/", "right"]},
+        "to": {"promise/ok": ["/", "get-editors"]},
         "subject": "Coffee",
-        "body": {"promise/ok": ["/", "left"]}
+        "body": {"promise/ok": ["/", "create-draft"]}
       }
     }
   }
@@ -1073,7 +1073,7 @@ const notify = msg.send("mailto:akiko@example.com", {
 })
 ```
 
-While a Promise MAY be substituted for any field in a Closure, substituting the `do` field is NOT RECOMMENDED. The `do` field is critical in understanding what kind of action will be performed, and most schedulers will use the 
+While a Promise MAY be substituted for any field in a Closure, substituting the `do` field is NOT RECOMMENDED. The `do` field is critical in understanding what kind of action will be performed, and schedulers SHOULD use this fields to grant atomicity, parallelize tasks, and so on.
 
 After resolution, the Closure MUST be validated against the UCANs known to the Executor. A Promise resolved to a Closure that is not backed by a valid UCAN MUST NOT be executed, and SHOULD return an unauthorized error to the user.
 
