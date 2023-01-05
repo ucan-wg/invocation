@@ -275,7 +275,7 @@ Using the JavaScript analogy from the introduction, a Closure is similar to wrap
 })
 ```
 
-Later, when we explore [Promises](# 10-promise), this also includes capturing the promise:
+Later, when we explore [Promises](#10-promise), this also includes capturing the promise:
 
 ``` json
 {
