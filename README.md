@@ -620,7 +620,7 @@ The `prf` field MUST contain links to any UCANs that provide the authority to pe
 ### 3.3.2 Sending Email
 
 ```json
-`{
+{
   "v": "0.1.0",
   "with": "mailto:akiko@example.com",
   "do": "msg/send",
@@ -777,7 +777,7 @@ The `authorization` field MUST contain a link to the [Authorization] that author
 }
 ```
 
-### 5.3.1 Multilpe Invocations
+### 5.3.1 Multiple Invocations
 
 ```json
 {
@@ -941,7 +941,7 @@ If `fx` field is omitted, or if field is set to an empty list it denote an end o
 
 ### 7.2.4 Linked Receipts
 
-When [Invocation] consisets of multiple steps, each step MAY produce a receipt, each subsequent one SHOULD be chained with previous receipt using `origin` field.
+When [Invocation] consists of multiple steps, each step MAY produce a receipt, each subsequent one SHOULD be chained with previous receipt using `origin` field.
 
 ### 6.2.4 Metadata Fields
 
@@ -1185,9 +1185,9 @@ A `Promise` of the [Invocation] MUST be a link to that invocation wrapped in the
 
 ##### 8.1.2.2 Task Promise
 
-An `Promise` of the [Invocation] that shares [Authorization] with a [Task] referecing it MUST be a link to the invocation [Task] wrapped in the `"ucan/task"` tag.
+An `Promise` of the [Invocation] that shares [Authorization] with a [Task] referencing it MUST be a link to the invocation [Task] wrapped in the `"ucan/task"` tag.
 
-Note that [Task]s with the same [Authorization] will be unable to referece [Invocation] since [Authorization] CAN be created after all the [Task]s being authorized. The `"ucan/task"` tagged Promise MAY be used in such cases.
+Note that [Task]s with the same [Authorization] will be unable to reference [Invocation] since [Authorization] CAN be created after all the [Task]s being authorized. The `"ucan/task"` tagged Promise MAY be used in such cases.
 
 ## 8.2 Await
 
@@ -1209,15 +1209,15 @@ type Await<In> union {
 
 The successful output of the [Invocation] MAY be referenced by wrapping a [Promise] in the `"await/ok"` tag.
 
-[Executor] MUST fail [Invocation] that `Await`s succeful output of the failed [Invocation].
+[Executor] MUST fail [Invocation] that `Await`s successful output of the failed [Invocation].
 
-[Executor] MUST substitute [Task] field set to the [Await] of the succesful [Invocation] with an (unwrapped) `ok` value of the output.
+[Executor] MUST substitute [Task] field set to the [Await] of the successful [Invocation] with an (unwrapped) `ok` value of the output.
 
 ##### 8.2.2.1 Failure
 
-The failed output of the [Invocation] MAY be renfereced by wrapping a [Promise] in the `"await/error"` tag.
+The failed output of the [Invocation] MAY be referenced by wrapping a [Promise] in the `"await/error"` tag.
 
-[Executor] MUST fail [Invocation] that `Await`s failed output of the succesful [Invocation].
+[Executor] MUST fail [Invocation] that `Await`s failed output of the successful [Invocation].
 
 [Executor] MUST substitute [Task] field set to the [Await] of the failed [Invocation] with an (unwrapped) `error` value of the output.
 
