@@ -377,16 +377,13 @@ A [promise] is a reference to an eventual [Receipt] of an [Invocation].
 ## 2.3 IPLD Schema
 
 ```ipldsch
-type Task<In> struct {
+type Task<Args> struct {
   v       SemVer
-
   with    URI
   do      Ability
-
-  input   In (implicit {})
+  input   Args (implicit {})
   meta    {String : Any} (implicit {})
   nnc     string (implicit "")
-
   prf     [&UCAN] (implicit [])
 }
 
