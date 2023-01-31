@@ -1228,7 +1228,7 @@ The [Result] output of the [Invocation] MAY be reference by wrapping a [Promise]
 [Executor] MUST substitute [Task] field set to the [Await] of the [Invocation] with a `Result` value of the output.
 
 
-## 8.3 Dataflows
+## 8.3 Dataflow
 
 Pipelining uses [Await] as inputs to determine the required dataflow graph. The following examples both express the following dataflow graph:
 
@@ -1602,4 +1602,4 @@ Thanks to [Rod Vagg](https://github.com/rvagg/) for the clarifications on IPLD S
 [pipelines]: #8-Pipelines
 [promise]: #81-promise
 [await]: #82-await
-[dataflows]: #83-await
+[dataflow]: #83-dataflow
