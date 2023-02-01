@@ -407,8 +407,8 @@ type Receipt<In, Ok, Error> struct {
 
   # output of the invocation
   out     Result<Ok, Error>
-  # Effects to be performed
-  fx      [&Invocation<Any>] (implicit {})
+  # effects to be performed
+  fx      optional &Promise<Any>
 
   # Related receipts
   origin  optional &Receipt<In, Any, Any>
@@ -897,7 +897,7 @@ type Receipt<In, Ok, Error> struct {
   # output of the invocation
   out     Result<Ok, Error>
   # Effects to be performed
-  fx      [&Invocation<Any>] (implicit {})
+  fx      optional &Promise<Any>
 
   # Related receipts
   origin  optional &Receipt<In, Any, Any>
@@ -930,15 +930,17 @@ The `out` field MUST contain the output of the invocation in [Result] format.
 
 ### 7.2.3 Effects
 
-Some [Task]s may describe complex workflows with multiple, sometimes concurrent, steps. Such [Task]s MAY capture each state update using `out` of the chained [Receipt] and consequent (concurrent) steps using `fx` [Invocation]s.
+Some [Task]s may represent step in a complex workflow with multiple, sometimes concurrent, steps. Such [Task]s MAY capture state of the workflow in the `out` field of the [Receipt] and specify consequent step(s) using [Promise] in the `fx` field of the [Receipt].
 
-The OPTIONAL `fx` field, if present MUST contain set of concurrent [Invocation]s that need to be run by the [Executor] to complete execution of the ongoing [Invocation]. [Executor] MUST run contained [Invocation]s concurrently unless they are ordered using promise pipelining.
+The OPTIONAL `fx` field, if present MUST contain link to a [Promise]. [Executor] SHOULD perform the [Task] underlying a [Promise] in the `fx` field to progress a workflow execution.
 
-If `fx` field is omitted, or if field is set to an empty list it denote an end of the execution.
+If `fx` field is omitted, it denote an completion of the workflow execution.
 
 ### 7.2.4 Linked Receipts
 
-When [Invocation] consists of multiple steps, each step MAY produce a receipt, each subsequent one SHOULD be chained with previous receipt using `origin` field.
+Some [Invocation]s may represent step in a complex workflow with multiple steps. Each completed step in such a workflow would have corresponding [Receipt]. Each subsequent receipt SHOULD set `origin` field to a [Receipt] link of the preeceding step. This establishes a signed chain of receipts that leading to any one Receipt.  
+
+The `origin` field MUST be omitted for [Invocation]s that represent first or only step in the workflow.
 
 ### 6.2.4 Metadata Fields
 
@@ -1025,11 +1027,9 @@ The `s` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without 
   "out": {
     "ok": {}
   },
-  "fx": [
-    {
-      "/": "bafyreib6mgm5few6pnajc25h6r6trp2kbi6xrmhafnmby3hrflmgql2kna"
-    }
-  ],  
+  "fx": {
+    "/": "bafyreib6mgm5few6pnajc25h6r6trp2kbi6xrmhafnmby3hrflmgql2kna"
+  },  
   "s": {
     "/": {
       "bytes": "7aEDQMO5k6OtYgHSRVIR2sqn97TTfrhLrdTSusoYOAaCV2lg37xI22QMjMhW44eVgkIRcWcbLO4YdrJfcwG4t3jzegM"
