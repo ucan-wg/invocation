@@ -374,9 +374,9 @@ An [Effect] are the instruction to the [Executor] to run set of [Task]s concurre
 type Task struct {
   with    URI
   do      Ability
-  input   {String: any} (implicit "{}")
+  input   {String: any}
 
-  nnc     string (implicit "''")
+  nnc     string
 }
 
 type URI string
@@ -384,7 +384,7 @@ type Ability string
 
 type Authorization struct {
   # Authorization is denoted by the set of links been authorized
-  scope   [&Any] (implicit "[]")
+  scope   [&Any]
   # Scope signed by the invoker
   s       VarSig
 }
@@ -398,9 +398,9 @@ type Invocation struct {
   # Task authorization.
   auth    &Authorization
 
-  meta    {String : any} (implicit "{}")
+  meta    {String : any}
 
-  prf     [&UCAN] (implicit "[]")
+  prf     [&UCAN]
 }
 type SemVer string
 
@@ -412,18 +412,19 @@ type Receipt struct {
   out     Result
 
   # Effects to be performed
-  fx      Effect        (implicit "{}")
+  fx      Effect
 
   # All the other metadata
-  meta    {String: any} (implicit "{}")
+  meta    {String: any}
 
   # Principal that issued this receipt. If omitted issuer is
   # inferred from the invocation task audience.
   iss     optional Principal
 
   # When issuer is different from executor this MUST hold a UCAN
-  # delegation chain from executor to the issuer. Should be omitted executor is an issuer.
-  prf     [&UCAN]       (implicit "[]")
+  # delegation chain from executor to the issuer. Should be omitted when
+  # executor is an issuer.
+  prf     [&UCAN]
 
   # Signature from the "iss".
   s       Varsig
@@ -437,7 +438,7 @@ type Result union {
 # Represents a request to invoke enclosed set of tasks concurrently
 type Effect struct {
   # Primary set of tasks to be invoked
-  fork      [&Invocation]     (implicit "[]")
+  fork      [&Invocation]
   
   # Additional task to be invoked with added semantics
   # of representing a workflow execution continuation.
@@ -456,9 +457,9 @@ type Promise struct {
   # authorization 
   auth    optional &Authorization
 
-  meta    {String : any} (implicit "{}")
+  meta    {String : any}
 
-  prf     [&UCAN] (implicit "[]")
+  prf     [&UCAN]
 }
 
 # Promise is a way to reference result of the invocation
@@ -538,17 +539,16 @@ const sendEmail = msg.send("mailto://alice@example.com", {
 
 ```ipldsch
 type Task struct {
-  v       SemVer
   with    URI
   do      Ability
-  input   {String:any}    (implicit "{}")
-  meta    {String:any}    (implicit "{}")
-  nnc     string          (implicit "''")
-  prf     [&UCAN]         (implicit "[]")
+  input   {String: any}
+
+  nnc     string
 }
 
+
 type URI string
-type SemVer string
+type Ability string
 
 ```
 
@@ -717,9 +717,9 @@ type Invocation struct {
   # Task authorization.
   auth    &Authorization
 
-  meta    {String : any} (implicit "{}")
+  meta    {String : any}
 
-  prf     [&UCAN] (implicit "[]")
+  prf     [&UCAN]
 }
 type SemVer string
 ```
@@ -997,7 +997,7 @@ It is also possible for the thread to complete execution (omit `join` field) and
 # Represents a request to invoke enclosed set of tasks concurrently
 type Effect {
   # Primary set of tasks to be invoked
-  fork      [&Invocation] (implicit "[]")
+  fork      [&Invocation]
   
   # Additional task to be invoked with added semantics
   # of representing a workflow execution continuation.
@@ -1077,10 +1077,10 @@ type Receipt struct {
   # output of the invocation
   out     Result
   # Effects to be performed
-  fx      Effect (implicit "{}")
+  fx      Effect
 
   # All the other metadata
-  meta    {String: any} (implicit "{}")
+  meta    {String: any}
 
   # Principal that issued this receipt. If omitted issuer is
   # inferred from the invocation task audience.
@@ -1088,7 +1088,7 @@ type Receipt struct {
 
   # When issuer is different from executor this MUST hold a UCAN
   # delegation chain from executor to the issuer. Should be omitted executor is an issuer.
-  prf     [&UCAN] (implicit "[]")
+  prf     [&UCAN]
 
   # Signature from the `iss`.
   s       Varsig
@@ -1372,7 +1372,7 @@ A `Promise` has a same representation as [Invocation] with only difference being
 
 ### 9.2.1 Schema
 
-```ipldsh
+```ipldsch
 # Promise is an Invocation with optional 'auth' field which if omitted
 # is implicitly an 'auth' of the Invocation that contains Await.
 type Promise struct {
@@ -1385,9 +1385,9 @@ type Promise struct {
   # authorization 
   auth    optional &Authorization
 
-  meta    {String : any} (implicit "{}")
+  meta    {String : any}
 
-  prf     [&UCAN] (implicit "[]")
+  prf     [&UCAN]
 }
 
 ```
