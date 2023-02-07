@@ -985,7 +985,7 @@ All of the [Invocation]s of the `Effect` MUST be concurrent with one another, un
 
 Effect MAY instruct the [Executor] to run set of [Task] [Invocation]s in concurrent execution threads by providing them as list under `fork` field.
 
-Effect MAY instruct the [Executor] that the [Task] [Invocation] is a continuation of the currnent execution thread by providing it under `join` field.
+Effect MAY instruct the [Executor] that the [Task] [Invocation] is a continuation of the current execution thread by providing it under `join` field.
 
 Often [Invocation] in the `join` field will synthesize [Result]s of the concurrent execution threads (spawned by `fork`), and incorporate them into the current execution thread.
 
