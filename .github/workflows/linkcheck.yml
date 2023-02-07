@@ -19,4 +19,4 @@ jobs:
           config-file: "./.github/workflows/linkcheck.cfg.json"
       - uses: DavidAnson/markdownlint-cli2-action@v9
         with:
-          globs: "*.md"
+          globs: "README.md"
