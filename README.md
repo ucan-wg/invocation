@@ -52,7 +52,7 @@ Most languages use eager evaluation. Eager languages must contend directly with 
 ```js
 const message = () => alert("hello world")
 message // Nothing happens
-message() // A message interups the user
+message() // A message interrupts the user
 ```
 
 Delegating a capability is like the statement `message`. Task is akin to `message()`. It's true that sometimes we know to run things from their surrounding context without the parentheses:
@@ -73,7 +73,7 @@ Information about the scheduling, order, and pipelining of tasks is orthogonal t
 
 As we shall see in the [discussion of promise pipelining][pipelines], asking an agent to perform a sequence of tasks before you know the exact parameters requires delegating capabilities for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
 
-```
+```txt
   ────────────────────────────────────────────Time──────────────────────────────────────────────────────►
 
 ┌──────────────────────────────────────────Delegation─────────────────────────────────────────────────────┐
@@ -120,38 +120,20 @@ As we shall see in the [discussion of promise pipelining][pipelines], asking an 
 
 The JSON examples below are given in [DAG-JSON], but UCAN Task is actually defined as IPLD. This makes UCAN Task agnostic to encoding. DAG-JSON follows particular conventions around wrapping CIDs and binary data in tags like so:
 
+### CID
+
 ```json
-// CID
 {"/": "Qmf412jQZiuVUtdgnB36FXFX7xg5V6KEbSJ4dpQuhkLyfD"}
 
-// Bytes (e.g. a signature)
+### Bytes
+
+```json
 {"/": {"bytes": "s0m3Byte5"}}
 ```
 
 This format help disambiguate type information in generic [DAG-JSON] tooling. However, your presentation need not be in this specific format, as long as it can be converted to and from this cleanly. As it is used for the signature format, [DAG-CBOR] is RECOMMENDED.
 
-## 1.4 Note on Schema Syntax
-
-We use [IPLD Schema] syntax extended with generics. Standard IPLD Schema can be derived by ignoring parameters enclosed in angle brackets and interpreting parameters as `any`.
-
-Below schema is in the extended syntax
-
-```ipldsch
-type Box<T> struct {
-  value T
-}
-```
-
-It compiles down to a following standard syntax
-
-```ipldsch
-type Box struct {
-  value Box_T
-}
-type Box_T any
-```
-
-## 1.5 Signatures
+## 1.4 Signatures
 
 All payloads described in this spec MUST be signed with a [Varsig].
 
@@ -191,7 +173,6 @@ send.task: Task
 send.promise: Await
 read.promise: Await
 send.receipt: Receipt
-
 read: Invocation
 read.task: Task
 
@@ -214,7 +195,7 @@ state send.task {
   send.task.input: input
   send.task.nnc: nnc
   send.task.meta: meta
-  
+
 
   send.do: msg/send
   send.with: mailto꞉//alice@example.com
@@ -273,17 +254,19 @@ state update.task {
 }
 
 state send {
-  send.run: task
+  send.run: run
   send.auth: authorization
 }
 
 state read {
-  read.run: task
+  read.run: run
+  read.cause: cause
   read.auth: authorization
 }
 
 state update {
-  update.run: task
+  update.run: run
+  update.cause: cause
   update.auth: authorization
 }
 
@@ -295,6 +278,7 @@ state send.promise {
 state read.promise {
   state read.promise.await <<choice>>
 }
+
 
 state send.receipt {
  send.receipt.sig: sig
@@ -312,6 +296,10 @@ state send.receipt {
 
  send.result.ok: success
  send.result.error: { error }
+ --
+
+ send.fx.fork: fork
+ send.fx.join: join
 }
 
 
@@ -347,6 +335,12 @@ send.receipt.sig --> send.receipt.iss
 send.receipt.sig --> send.receipt.prf
 
 
+send.receipt.fx --> send.fx.fork
+send.receipt.fx --> send.fx.join
+send.fx.fork --> update.task
+send.fx.fork --> read.task
+read.cause --> send
+update.cause --> send
 send.receipt.ran --> send
 ```
 
@@ -360,7 +354,7 @@ An [Authorization] is a cryptographically signed proof permitting execution of r
 
 ### 2.2.3 Invocation
 
-An [Invocation] is an invoker authorized instruction to an executor to run the [Task].
+An [Invocation] is an invoker authorized instruction to the [Executor] to run the [Task].
 
 ### 2.2.4 Result
 
@@ -370,51 +364,58 @@ A [Result] is the output of a [Task].
 
 A [Receipt] is a cryptographically signed description of the [Invocation] output.
 
-### 2.2.6 Promise
+### 2.2.6 Effect
 
-A [promise] is a reference to an eventual [Receipt] of an [Invocation].
+An [Effect] are the instruction to the [Executor] to run set of [Task]s concurrently.
 
 ## 2.3 IPLD Schema
 
 ```ipldsch
-type Task<Args> struct {
-  v       SemVer
+type Task struct {
   with    URI
   do      Ability
-  input   Args (implicit {})
-  meta    {String : Any} (implicit {})
-  nnc     string (implicit "")
-  prf     [&UCAN] (implicit [])
+  input   {String: any} (implicit "{}")
+
+  nnc     string (implicit "''")
 }
 
-type SemVer string
 type URI string
+type Ability string
 
 type Authorization struct {
   # Authorization is denoted by the set of links been authorized
-  scope   [&Any] (implicit [])
+  scope   [&Any] (implicit "[]")
   # Scope signed by the invoker
   s       VarSig
 }
 
-type Invocation<In> struct {
-  task &Task<In>
-  authorization  &Authorization
-} representation tuple
+type Invocation struct {
+  v       SemVer
 
-type Receipt<In, Ok, Error> struct {
-  ran     &Invocation<In>
+  run     &Task
+  # Receipt of the invocation that caused this invocation
+  cause   optional &Invocation
+  # Task authorization.
+  auth    &Authorization
 
-  # output of the invocation
-  out     Result<Ok, Error>
-  # effects to be performed
-  fx      optional &Promise<Any>
+  meta    {String : any} (implicit "{}")
 
-  # Related receipts
-  origin  optional &Receipt<In, Any, Any>
+  prf     [&UCAN] (implicit "[]")
+}
+type SemVer string
+
+type Receipt struct {
+  # Invocation this is a receipt for
+  ran     &Invocation
+
+  # Output of the invocation
+  out     Result
+
+  # Effects to be performed
+  fx      Effect        (implicit "{}")
 
   # All the other metadata
-  meta    { String: Any } (implicit {})
+  meta    {String: any} (implicit "{}")
 
   # Principal that issued this receipt. If omitted issuer is
   # inferred from the invocation task audience.
@@ -422,27 +423,49 @@ type Receipt<In, Ok, Error> struct {
 
   # When issuer is different from executor this MUST hold a UCAN
   # delegation chain from executor to the issuer. Should be omitted executor is an issuer.
-  prf     [&UCAN] implicit ([])
+  prf     [&UCAN]       (implicit "[]")
 
-  # Signature from the `iss`.
+  # Signature from the "iss".
   s       Varsig
 }
 
-type Result<Ok, Error> union {
-  | Ok ("ok") # Success
-  | Error ("error") # Error
+type Result union {
+  | any    "ok"    # Success
+  | any    "error" # Error
 } representation kinded
 
-type Promise<In> union {
-  | &Task<In>          ("ucan/task")
-  | &Invocation<In>    ("ucan/invocation")
-} representation keyed
+# Represents a request to invoke enclosed set of tasks concurrently
+type Effect struct {
+  # Primary set of tasks to be invoked
+  fork      [&Invocation]     (implicit "[]")
+  
+  # Additional task to be invoked with added semantics
+  # of representing a workflow execution continuation.
+  join       optional &Promise
+}
 
-# Promise is a way to reference invocation receipt
-type Await<In> union {
-  &Promise<In>    "await/*"
-  &Promise<In>    "await/ok"
-  &Promise<In>    "await/error"
+# Promise is an Invocation with optional 'auth' field which if omitted
+# is implicitly an 'auth' of the Invocation that contains Await.
+type Promise struct {
+  v       SemVer
+
+  run     &Task
+  # Receipt of the invocation that caused this invocation
+  cause   optional &Invocation
+  # Task authorization. If omitted can be interpreted as requires
+  # authorization 
+  auth    optional &Authorization
+
+  meta    {String : any} (implicit "{}")
+
+  prf     [&UCAN] (implicit "[]")
+}
+
+# Promise is a way to reference result of the invocation
+type Await union {
+  | &Promise    "await/*"
+  | &Promise    "await/ok"
+  | &Promise    "await/error"
 } representation keyed
 ```
 
@@ -454,91 +477,79 @@ Using the JavaScript analogy from the introduction, a Task is similar to wrappin
 
 ```json
 {
-  "v": "0.1.0",
-  "with": "mailto://alice@example.com",
   "do": "msg/send",
+  "with": "mailto:alice@example.com",
   "input": {
-    "to": ["bob@example.com", "carol@example.com"],
+    "to": [
+      "bob@example.com",
+      "carol@example.com"
+    ],
     "subject": "hello",
     "body": "world"
-  },
-  "prf": [
-    { "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha" }
-  ]
-}
-```
-
-```js
-// Pseudocode
-() => msg.send("mailto:alice@example.com", {
-  to: ["bob@example.com", "carol@example.com"],
-  subject: "hello",
-  body: "world"
-})
-```
-
-Later, when we explore [Promise]s, this also includes capturing the promise:
-
-```json
-{
-  "bafyreihroupaenuxjduzs4ynympv3uawcct4mj4sa7ciuqqlss4httehiu": {
-    "v": "0.1.0",
-    "do": "crud/read",
-    "with": "https://example.com/mailinglist",
-    "prf": [
-      { "/": "bafyreib2dldcev74g5i76bacd4w72gowuraouv2kvnwa2ympvrvtybcsfi" }
-    ]
-  },
-  "bafyreigiz22kfo4bbrsl3jyspm5ykuh2jk5hxmduc5yzijp3dzegvvi6tq": {
-    "v": "0.1.0",
-    "with": "mailto://alice@example.com",
-    "do": "msg/send",
-    "input": {
-      "to": {
-        "await/*": {
-          "ucan/task": {
-            "/": "bafyreihroupaenuxjduzs4ynympv3uawcct4mj4sa7ciuqqlss4httehiu"
-          }
-        }
-      },
-      "subject": "hello",
-      "body": "world"
-    },
-    "prf": [
-      { "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha" }
-    ]
   }
 }
 ```
 
 ```js
 // Pseudocode
-const mailingList = crud.read("https://exmaple.com/mailinglist")
-msg.send("mailto:alice@example.com", {
-  to: (await mailingList).ok,
+() =>
+  msg.send("mailto:alice@example.com", {
+    to: ["bob@example.com", "carol@example.com"],
+    subject: "hello",
+    body: "world"
+  })
+```
+
+Later, when we explore promise [pipelines], this also includes capturing the promise:
+
+```json
+{
+  "bafyreid32aunjg6g6buib7bva2sa5ni4c6eaftgykyh6z6rnhcjxh4yk2y": {
+    "do": "crud/read",
+    "with": "https://exmaple.com/mailinglist"
+  },
+  "bafyreigfusg7tgegda7pxdn7px5vs7wxqk5nybr5ewjht4xas357x6ryia": {
+    "do": "msg/send",
+    "with": "mailto://alice@example.com",
+    "input": {
+      "to": {
+        "await/ok": {
+          "/": "bafyreifkeu34pzda27fozfcboh25psekhqehkvnekltoiaspb5jsp6pj5q"
+        }
+      },
+      "subject": "hello",
+      "body": "world"
+    }
+  }
+}
+```
+
+```js
+// Pseudocode
+const mailingList = crud.read("https://exmaple.com/mailinglist");
+const sendEmail = msg.send("mailto://alice@example.com", {
+  to: mailingList.await().ok,
   subject: "hello",
-  body: "world",
-})
+  body: "world"
+});
 ```
 
 ## 3.1 Schema
 
 ```ipldsch
-type Task<In> struct {
+type Task struct {
   v       SemVer
-
   with    URI
   do      Ability
-
-  input   In (implicit {})
-  meta    {String : Any} (implicit {})
-  nnc     string (implicit "")
-
-  prf     [&UCAN] (implicit [])
+  input   {String:any}    (implicit "{}")
+  meta    {String:any}    (implicit "{}")
+  nnc     string          (implicit "''")
+  prf     [&UCAN]         (implicit "[]")
 }
 
-type SemVer string
 type URI string
+type SemVer string
+
 ```
 
 ## 3.2 Fields
@@ -564,13 +575,11 @@ If present, `input` field MUST have an IPLD [map representation][ipld representa
 1. [struct](https://ipld.io/docs/schemas/features/representation-strategies/#struct-map-representation) in map representation.
 2. [keyed](https://ipld.io/docs/schemas/features/representation-strategies/#union-keyed-representation), [enveloped](https://ipld.io/docs/schemas/features/representation-strategies/#union-envelope-representation) or [inline](https://ipld.io/docs/schemas/features/representation-strategies/#union-inline-representation) union.
 3. [unit](https://github.com/ipld/ipld/blob/353baf885adebb93191cbe1f7be34f0517e20bbd/specs/schemas/schema-schema.ipldsch#L753-L789) in empty map representation.
-3. [map](https://ipld.io/docs/schemas/features/representation-strategies/#map-map-representation) in map representation.
-
+4. [map](https://ipld.io/docs/schemas/features/representation-strategies/#map-map-representation) in map representation.
 
 UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type of `input` allowed.
 
 If `input` field is not present, it is implicitly a `unit` represented as empty map.
-
 
 ### 3.2.5 Metadata
 
@@ -582,11 +591,9 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 
 If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple invocations are unique.
 
-
 ### 3.2.7 Proofs
 
 The `prf` field MUST contain links to any UCANs that provide the authority to perform this task. All of the outermost proofs MUST have `aud` field set to the [Executor]'s DID. All of the outmost proofs MUST have `iss` field set to the [Invoker]'s DID.
-
 
 ## 3.3 DAG-JSON Examples
 
@@ -594,9 +601,8 @@ The `prf` field MUST contain links to any UCANs that provide the authority to pe
 
 ```json
 {
-  "v": "0.1.0",
-  "with": "https://example.com/blog/posts",
   "do": "crud/create",
+  "with": "https://example.com/blog/posts",
   "input": {
     "headers": {
       "content-type": "application/json"
@@ -604,13 +610,13 @@ The `prf` field MUST contain links to any UCANs that provide the authority to pe
     "payload": {
       "title": "How UCAN Tasks Changed My Life",
       "body": "This is the story of how one spec changed everything...",
-      "topics": ["authz", "journal"],
+      "topics": [
+        "authz",
+        "journal"
+      ],
       "draft": true
     }
-  },
-  "prf": [
-    { "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a" }
-  ]
+  }
 }
 ```
 
@@ -618,21 +624,16 @@ The `prf` field MUST contain links to any UCANs that provide the authority to pe
 
 ```json
 {
-  "v": "0.1.0",
-  "with": "mailto:akiko@example.com",
   "do": "msg/send",
+  "with": "mailto:akiko@example.com",
   "input": {
-    "to": ["boris@example.com", "carol@example.com"],
+    "to": [
+      "boris@example.com",
+      "carol@example.com"
+    ],
     "subject": "Coffee",
     "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!"
-  },
-  "meta": {
-    "dev/priority": "high",
-    "dev/tags": ["friends", "coffee"]
-  },
-  "prf": [
-    { "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4" }
-  ]
+  }
 }
 ```
 
@@ -640,21 +641,18 @@ The `prf` field MUST contain links to any UCANs that provide the authority to pe
 
 ```json
 {
-  "v": "0.1.0",
-  "with": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
   "do": "wasm/run",
+  "with": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
   "input": {
     "func": "add_one",
-    "args": [42]
-  },
-  "prf": [
-    { "/": "bafyreibrqkoin6jzc35hnbrfbsenmcyvd26bn3xyq4of6iwk5z4h63qr34" }
-  ]
+    "args": [
+      42
+    ]
+  }
 }
 ```
 
 # 4 Authorization
-
 
 An [Authorization] is cryptographically signed data set. It represents an authorization to run [Task]s in that are included in `scope` data set.
 
@@ -668,8 +666,8 @@ type Authorization struct {
   s       VarSig
 }
 ```
-### 4.2 Fields
 
+### 4.2 Fields
 
 #### 4.2.1 Authorization Scope
 
@@ -677,71 +675,79 @@ The `scope` field MUST be a set of links been authorized. It SHOULD be encoded a
 
 If `scope` field is omitted, it is implicitly a an empty list and has no practical use as it authorizes nothing.
 
-
 ### 4.2.2 Signature
 
 The `s` field MUST contain a [Varsig] of the [CBOR] encoded `scope` field.
 
 ## 4.3 DAG-JSON Example
 
-
 ```json
 {
   "scope": [
-    { "/": "bafyreihroupaenuxjduzs4ynympv3uawcct4mj4sa7ciuqqlss4httehiu" },
-    { "/": "bafyreigiz22kfo4bbrsl3jyspm5ykuh2jk5hxmduc5yzijp3dzegvvi6tq" }
+    {
+      "/": "bafyreigfusg7tgegda7pxdn7px5vs7wxqk5nybr5ewjht4xas357x6ryia"
+    },
+    {
+      "/": "bafyreid32aunjg6g6buib7bva2sa5ni4c6eaftgykyh6z6rnhcjxh4yk2y"
+    }
   ],
   "s": {
     "/": {
-      "bytes": "7aEDQBzEB/4ViFVHUelItLNcVbXOQEx9rWmfTfoIVnA4QtL08yA3fPcXZd0kRE3Qr0BD61es4R/XHM/yK+kX1PfiWAk"
+      "bytes": "7aEDQJBsO/9rkcgQQ9qvSC0E60MdqGjpIHXuc4VbkfjEeYR7iAvAY+0QEN9kAFcwh6/kww4bK/I7xsqLzO5kG0x+2Qs"
     }
-  },
+  }
 }
 ```
 
 # 5 Invocation
 
-As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. [Tasks] are not executable until they have been authorized by [Invoker] using [Authorization].
+As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation]s are not executable until they have been provided provable authority (in form of UCANs in the `prf` field) and an [Authorization] (in the `auth` field) from the [Invoker].
 
-Invocation describes `(task, authorization)` tuple and instructs [Executor] to run the [Task].
-
-The `authorization` MUST authorize the `task` by including link to it in it's `scope` field. The Invocation of the [Task] that is not included in the linked [Authorization] `scope` MUST be considered invalid.
+If `auth` field MUST be set to the [Authorization] (link) which contains `run` in it's scope field. The Invocation of the [Task] with an [Authorization] which does not includes [Task] in the `scope` MUST be considered invalid.
 
 ## 5.1 Schema
 
 ```ipldsch
 type Invocation struct {
-  task &Task
-  authorization  &Authorization
-} representation tuple
+  v       SemVer
+
+  run     &Task
+  # Receipt of the invocation that caused this invocation
+  cause   optional &Invocation
+  # Task authorization.
+  auth    &Authorization
+
+  meta    {String : any} (implicit "{}")
+
+  prf     [&UCAN] (implicit "[]")
+}
+type SemVer string
 ```
 
 ## 5.2 Fields
 
-### 5.2.1
+### 5.2.1 Task
 
-The `task` field MUST contain a link to the [Task] to be run.
+The `run` field MUST contain a link to the [Task] to be run.
 
-### 5.2.2
+### 5.2.2 Authorization
 
-The `authorization` field MUST contain a link to the [Authorization] that authorizes invoked `task`.
+The `auth` field MUST contain a link to the [Authorization] that authorizes invoked [Task] in the `run` field. Linked [Authorization] MUST contain `run` in it's `scope`.
+
+### 5.2.3 Cause
+
+Some [Task]s may be invoked as an effect caused by another [Task] [Invocation]. Such Invocations SHOULD have `cause` field set to the [Invocation] (link) that caused it. The [Receipt] of the causing [Invocation] (Invocation linked from `cause` field) SHOULD have an `Effect` (the `fx` field) containing cased [Invocation].
 
 ## 5.3 DAG-JSON Example
 
 ### 5.3.1 Single Invocation
 
-
 ```json
 {
   "blocks": {
-    "bafyreihwj7mouljcwl7s7xpp6sfexptedrmkraoro2tcgiyu4jnjg2rauu": [
-      { "/": "bafyreiduxn4l73hs5abjjgpyyazmgar7fd64pdlj62hofr2qm7prnqkwuu" },
-      { "/": "bafyreibgo4bq2kxf4ykwz7c4zyvulfytwn46xk5ml2c7tq57fp6d7mhjvq" }
-    ],
-    "bafyreiduxn4l73hs5abjjgpyyazmgar7fd64pdlj62hofr2qm7prnqkwuu": {
-      "v": "0.1.0",
-      "with": "https://example.com/blog/posts",
+    "bafyreibgqjpwjks2dh2zgvq5ypuh5bly6quoi2dxjzfoa676owl6tscz5q": {
       "do": "crud/create",
+      "with": "https://example.com/blog/posts",
       "input": {
         "headers": {
           "content-type": "application/json"
@@ -749,27 +755,45 @@ The `authorization` field MUST contain a link to the [Authorization] that author
         "payload": {
           "title": "How UCAN Tasks Changed My Life",
           "body": "This is the story of how one spec changed everything...",
-          "topics": ["authz", "journal"],
+          "topics": [
+            "authz",
+            "journal"
+          ],
           "draft": true
         }
+      }
+    },
+    "bafyreifpdtrqxeqvg5r5ctvcihnsrregsnw3gi74unbl66yf3dio2fee4a": {
+      "v": "0.1.0",
+      "run": {
+        "/": "bafyreibgqjpwjks2dh2zgvq5ypuh5bly6quoi2dxjzfoa676owl6tscz5q"
+      },
+      "auth": {
+        "/": "bafyreifpvyetnerhqoqdijxx4kf6hhofaz7momudq52scepsxzksshxm5a"
       },
       "prf": [
-        { "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a" }
+        {
+          "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
+        }
       ]
     },
-    "bafyreibgo4bq2kxf4ykwz7c4zyvulfytwn46xk5ml2c7tq57fp6d7mhjvq": {
+    "bafyreifpvyetnerhqoqdijxx4kf6hhofaz7momudq52scepsxzksshxm5a": {
       "scope": [
-        { "/": "bafyreiduxn4l73hs5abjjgpyyazmgar7fd64pdlj62hofr2qm7prnqkwuu" }
+        {
+          "/": "bafyreibgqjpwjks2dh2zgvq5ypuh5bly6quoi2dxjzfoa676owl6tscz5q"
+        }
       ],
       "s": {
         "/": {
-          "bytes": "7aEDQIUWpsYzEkIX8gjunh81kgGFW9KYlEOewghwmowQRCuhkQsxZmpymmfsXVFSL6m79O1s5c+G2pgqODu2qUM4nAY"
+          "bytes": "7aEDQDqN6XjxQnEXQLlg03zRXpoIpA/0ldLCVHA0hDdJLLQlRvQoh4Q24eAL3mozij08vTcKQhkvqClAuJ9FJr1eNAo"
         }
       }
     }
   },
   "roots": [
-    { "/": "bafyreihwj7mouljcwl7s7xpp6sfexptedrmkraoro2tcgiyu4jnjg2rauu" }
+    {
+      "/": "bafyreifpdtrqxeqvg5r5ctvcihnsrregsnw3gi74unbl66yf3dio2fee4a"
+    }
   ]
 }
 ```
@@ -779,14 +803,9 @@ The `authorization` field MUST contain a link to the [Authorization] that author
 ```json
 {
   "blocks": {
-    "bafyreib527h7rxykieyccwqckfvbrxfwkf6dbiwnilakf7ha3rlofeazdy": [
-      { "/": "bafyreiduxn4l73hs5abjjgpyyazmgar7fd64pdlj62hofr2qm7prnqkwuu" },
-      { "/": "bafyreigdxhwdln62fekut623s5hipnhkgsc7nurtg4utsrlbt6di4dyptm" }
-    ],
-    "bafyreiduxn4l73hs5abjjgpyyazmgar7fd64pdlj62hofr2qm7prnqkwuu": {
-      "v": "0.1.0",
-      "with": "https://example.com/blog/posts",
+    "bafyreibgqjpwjks2dh2zgvq5ypuh5bly6quoi2dxjzfoa676owl6tscz5q": {
       "do": "crud/create",
+      "with": "https://example.com/blog/posts",
       "input": {
         "headers": {
           "content-type": "application/json"
@@ -794,50 +813,127 @@ The `authorization` field MUST contain a link to the [Authorization] that author
         "payload": {
           "title": "How UCAN Tasks Changed My Life",
           "body": "This is the story of how one spec changed everything...",
-          "topics": ["authz", "journal"],
+          "topics": [
+            "authz",
+            "journal"
+          ],
           "draft": true
         }
-      },
-      "prf": [
-        { "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a" }
-      ],
+      }
     },
-    "bafyreiefdnvc5xuakriluhev5gpqephudvkkwhrbo6ixz5cocvi3camsra": [
-      { "/": "bafyreicewv7jbynidkzljwc3okytusrljgjpn7xjamrrcnokgp5qei77gy" },
-      { "/": "bafyreigdxhwdln62fekut623s5hipnhkgsc7nurtg4utsrlbt6di4dyptm" }
-    ],
-    "bafyreicewv7jbynidkzljwc3okytusrljgjpn7xjamrrcnokgp5qei77gy": {
-      "v": "0.1.0",
-      "with": "mailto:akiko@example.com",
+    "bafyreiefy3rmuhla7uoxsjbv2zmz2ysmgy3erigwiyckcglxes6sgywms4": {
       "do": "msg/send",
+      "with": "mailto:akiko@example.com",
       "input": {
-        "to": ["boris@example.com", "carol@example.com"],
+        "to": [
+          "boris@example.com",
+          "carol@example.com"
+        ],
         "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!",
         "subject": "Coffee"
+      }
+    },
+    "bafyreiaf4vq3ia7ykisqaxb3oxxjgam226b5juzia6xmrpjgodpief42cq": {
+      "v": "0.1.0",
+      "run": {
+        "/": "bafyreibgqjpwjks2dh2zgvq5ypuh5bly6quoi2dxjzfoa676owl6tscz5q"
       },
-      "meta": {
-        "dev/priority": "high",
-        "dev/tags": ["friends", "coffee"]
+      "auth": {
+        "/": "bafyreiatkpx7p4m2jlry547in4asajlyqncmvpiykprgyd6uqfwlyvfirm"
       },
       "prf": [
-        { "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4" }
-      ],
-    },
-    "bafyreigdxhwdln62fekut623s5hipnhkgsc7nurtg4utsrlbt6di4dyptm": {
-      "scope": [
-        { "/": "bafyreiduxn4l73hs5abjjgpyyazmgar7fd64pdlj62hofr2qm7prnqkwuu" },
-        { "/": "bafyreicewv7jbynidkzljwc3okytusrljgjpn7xjamrrcnokgp5qei77gy" }
+        {
+          "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
+        }
       ]
+    },
+    "bafyreifpjetehajrap63g45djib2mxdzlr5wl442kbqgwpozfoiz76535u": {
+      "v": "0.1.0",
+      "run": {
+        "/": "bafyreiefy3rmuhla7uoxsjbv2zmz2ysmgy3erigwiyckcglxes6sgywms4"
+      },
+      "auth": {
+        "/": "bafyreiatkpx7p4m2jlry547in4asajlyqncmvpiykprgyd6uqfwlyvfirm"
+      },
+      "prf": [
+        {
+          "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"
+        }
+      ]
+    },
+    "bafyreiatkpx7p4m2jlry547in4asajlyqncmvpiykprgyd6uqfwlyvfirm": {
+      "scope": [
+        {
+          "/": "bafyreiefy3rmuhla7uoxsjbv2zmz2ysmgy3erigwiyckcglxes6sgywms4"
+        },
+        {
+          "/": "bafyreibgqjpwjks2dh2zgvq5ypuh5bly6quoi2dxjzfoa676owl6tscz5q"
+        }
+      ],
       "s": {
         "/": {
-          "bytes": "7aEDQIU6IPBZ8JMaB7mmTAwmIpMR4qMGUdD8R/cU8rc5uzxSQhetKw1dFdePqbffdC6aKdifv5MXO0tA2iKfN7tkhwI"
+          "bytes": "7aEDQFbdUsz5BvcCGkzwVtthNoQI/bxXi2CO+bmlFIbmfll/5+40dadU6sIY2vUfxYgUywprct3H+yIYIp0HuNdgxQM"
         }
-      },
+      }
     }
   },
   "roots": [
-    { "/": "bafyreib527h7rxykieyccwqckfvbrxfwkf6dbiwnilakf7ha3rlofeazdy" },
-    { "/": "bafyreiefdnvc5xuakriluhev5gpqephudvkkwhrbo6ixz5cocvi3camsra" }
+    {
+      "/": "bafyreiaf4vq3ia7ykisqaxb3oxxjgam226b5juzia6xmrpjgodpief42cq"
+    },
+    {
+      "/": "bafyreifpjetehajrap63g45djib2mxdzlr5wl442kbqgwpozfoiz76535u"
+    }
+  ]
+}
+```
+
+### 5.3.3 Causal Invocations
+
+```json
+{
+  "blocks": {
+    "bafyreifcerdvicarktlnif5uj25ultgpedwg63nxhmp7anoepaamqj4eji": {
+      "do": "crud/update",
+      "with": "dns:example.com?TYPE=TXT",
+      "input": {
+        "value": "hello world"
+      }
+    },
+    "bafyreicc3rilzaxravqju766yr4v7p6nm6sjsd4lbkfa4uqohbbxaejh7e": {
+      "v": "0.1.0",
+      "run": {
+        "/": "bafyreifcerdvicarktlnif5uj25ultgpedwg63nxhmp7anoepaamqj4eji"
+      },
+      "auth": {
+        "/": "bafyreifw2hxvz66fxx7vsn6q3ayrc62smhvt7jta3ck2u6kf4xgqo524hm"
+      },
+      "cause": {
+        "/": "bafyreiekrhjlfend2mwcmtakwshuctotwqcm2wriya6thpjcgvjzfmkt24"
+      },
+      "prf": [
+        {
+          "/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"
+        }
+      ]
+    },
+    "bafyreifw2hxvz66fxx7vsn6q3ayrc62smhvt7jta3ck2u6kf4xgqo524hm": {
+      "scope": [
+        {
+          "/": "bafyreifcerdvicarktlnif5uj25ultgpedwg63nxhmp7anoepaamqj4eji"
+        }
+      ],
+      "s": {
+        "/": {
+          "bytes": "7aEDQEkocMddH2BF4wuMRSlJaJFhu7pQaAInuzLrfU3TQd9XV/Rd0I6N6OvxPaCebNfpuCXrAgtlAxVh+sn8gWSSegk"
+        }
+      }
+    }
+  },
+  "roots": [
+    {
+      "/": "bafyreicc3rilzaxravqju766yr4v7p6nm6sjsd4lbkfa4uqohbbxaejh7e"
+    }
   ]
 }
 ```
@@ -849,9 +945,10 @@ A `Result` records the output of the [Task], as well as its success or failure s
 ## 6.1 Schema
 
 ```ipldsch
-type Result<Ok, Error> union {
-  | Ok ("ok") # Success
-  | Error ("error") # Error
+type Result union {
+  | any "ok"
+  | any "error"
+} representation keyed
 }
 ```
 
@@ -862,7 +959,7 @@ type Result<Ok, Error> union {
 The success branch MUST contain the value returned from a successful [Task] wrapped in the `"ok"` tag. The exact shape of the returned data is left undefined to allow for flexibility in various Task types.
 
 ```json
-{"ok": 42}
+{ "ok": 42 }
 ```
 
 ## 6.2.2 Failure
@@ -880,30 +977,110 @@ If no information is available, this field SHOULD be set to `{}`.
 }
 ```
 
-# 7 Receipt
+# 7 Effect
 
-An [Invocation] Receipt is an attestation of the [Result] of an Invocation. A Receipt MUST be signed by the [Executor] or it's delegate. If signed by delegate, proof of delegation from [Executor] to the Issuer (the `iss` of the receipt) MUST be provided in `prf`.
+Workflows often consist of many, sometimes concurrent, steps which form an execution threads. Steps of such workflows are discrete [Task] [Invocation]s, each producing some [Result] and a description of subsequent step(s) caused by it. Subsequent steps are denoted with an `Effect`, a set of [Invocation]s that [Executor] must perform to advance workflow execution.
+
+All of the [Invocation]s of the `Effect` MUST be concurrent with one another, unless explicitly arranged differently using [Pipelines].
+
+Effect MAY instruct the [Executor] to run set of [Task] [Invocation]s in concurrent execution threads by providing them as list under `fork` field.
+
+Effect MAY instruct the [Executor] that the [Task] [Invocation] is a continuation of the currnent execution thread by providing it under `join` field.
+
+Often [Invocation] in the `join` field will synthesize [Result]s of the concurrent execution threads (spawned by `fork`), and incorporate them into the current execution thread.
+
+It is also possible for the thread to complete execution (omit `join` field) and leave concurrent threads behind. The `join` field, simply demarks the execution thread and provides a way to follow it through trail of [Receipt]s.
+
+## 7.1 Schema
+
+```ipldsch
+# Represents a request to invoke enclosed set of tasks concurrently
+type Effect {
+  # Primary set of tasks to be invoked
+  fork      [&Invocation] (implicit "[]")
+  
+  # Additional task to be invoked with added semantics
+  # of representing a workflow execution continuation.
+  join       optional &Invocation
+}
+```
+
+## 7.2 Fields
+
+### 7.2.1 Forked Task Invocations
+
+The OPTIONAL `fork` field, if present MUST be a list of an alphabetically ordered [Invocation] links. List MUST NOT not contain duplicate entries. Every linked [Invocation] MUST have `cause` field set to the same [Invocation] (link) as the `run` field of the containing [Receipt].
+
+### 7.2.2 Joined Task Invocation
+
+The OPTIONAL `join` field, if present MUST be set to an [Invocation] link. Linked [Invocation] in the `join` field MUST have `cause` field set to the same [Invocation] (link) as the `run` field of the containing [Receipt].
+
+## 7.4 DAG-JSON Examples
+
+### 7.4.1 Effect spawning concurrent threads
+
+```json
+{
+  "fork": [
+    {
+      "/": "bafyreigtbbrfic7gduybn2lcncbbzycbef3kt3aqeguko5dmuhpmf73zmu"
+    },
+    {
+      "/": "bafyreidj2fkidh5g4tlldael7dfw27va6vbn6ah6pv7hirsandzwp25pj4"
+    }
+  ]
+}
+```
+
+### 7.4.2 Effect continuing thread execution
+
+```json
+{
+  "join": {
+    "/": "bafyreigqsmtpw6qliojfzupzbxsnkn4yave7vov2jvvrtye7w4nomvd7yq"
+  }
+}
+```
+
+### 7.4.1 Effect with fork & join
+
+```json
+{
+  "fork": [
+    {
+      "/": "bafyreieljernknkcrmefokxxperobictfndo4v4cazkjmqfwuog4puawxm"
+    },
+    {
+      "/": "bafyreiho3x2lbi6a5irw3orgrzrivkakr7iymalpukmxsvdsoqlxpcjsfq"
+    }
+  ],
+  "join": {
+    "/": "bafyreidtsxqd5fcuwdgverklwpcgbgzixsf6z6wgelybiakpwec3q75iwa"
+  }
+}
+```
+
+# 8 Receipt
+
+A `Receipt` is an attestation of the [Result] and a caused [Effect] by the [Task] [Invocation]. A Receipt MUST be signed by the [Executor] or it's delegate. If signed by the delegate, the proof of delegation from the [Executor] to the Issuer (the `iss` of the receipt) MUST be provided in `prf`.
 
 **NB: a Receipt this does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
 Receipts MUST use the same version as the invocation that they contain.
 
-## 7.1 Schema
+## 8.1 Schema
 
 ```ipldsch
-type Receipt<In, Ok, Error> struct {
-  ran     &Invocation<In>
+type Receipt struct {
+  ran     &Invocation
 
   # output of the invocation
-  out     Result<Ok, Error>
+  out     Result
   # Effects to be performed
-  fx      optional &Promise<Any>
-
-  # Related receipts
-  origin  optional &Receipt<In, Any, Any>
+  fx      Effect (implicit "{}")
 
   # All the other metadata
-  meta    { String: Any } (implicit {})
+  meta    {String: any} (implicit "{}")
 
   # Principal that issued this receipt. If omitted issuer is
   # inferred from the invocation task audience.
@@ -911,157 +1088,149 @@ type Receipt<In, Ok, Error> struct {
 
   # When issuer is different from executor this MUST hold a UCAN
   # delegation chain from executor to the issuer. Should be omitted executor is an issuer.
-  prf     [&UCAN] implicit ([])
+  prf     [&UCAN] (implicit "[]")
 
   # Signature from the `iss`.
   s       Varsig
 }
 ```
 
-## 7.2 Fields
+## 8.2 Fields
 
-### 7.2.1 Ran Invocation
+### 8.2.1 Ran Invocation
 
 The `ran` field MUST include a link to the [Invocation] that the Receipt is for.
 
-### 7.2.2 Output
+### 8.2.2 Output
 
 The `out` field MUST contain the output of the invocation in [Result] format.
 
-### 7.2.3 Effects
+### 8.2.3 Effect
 
-Some [Task]s may represent step in a complex workflow with multiple, sometimes concurrent, steps. Such [Task]s MAY capture state of the workflow in the `out` field of the [Receipt] and specify consequent step(s) using [Promise] in the `fx` field of the [Receipt].
+The OPTIONAL `fx` field, if present MUST be set to the caused [Effect]. The [Executor] SHOULD perform contained [Task] [Invocation]s to progress a workflow execution.
 
-The OPTIONAL `fx` field, if present MUST contain link to a [Promise]. [Executor] SHOULD perform the [Task] underlying a [Promise] in the `fx` field to progress a workflow execution.
+If `fx` does not contain OPTIONAL `join` field, it denotes completion of the current execution thread.
 
-If `fx` field is omitted, it denote an completion of the workflow execution.
-
-### 7.2.4 Linked Receipts
-
-Some [Invocation]s may represent step in a complex workflow with multiple steps. Each completed step in such a workflow would have corresponding [Receipt]. Each subsequent receipt SHOULD set `origin` field to a [Receipt] link of the preeceding step. This establishes a signed chain of receipts that leading to any one Receipt.  
-
-The `origin` field MUST be omitted for [Invocation]s that represent first or only step in the workflow.
-
-### 6.2.4 Metadata Fields
+### 8.2.4 Metadata Fields
 
 The metadata field MAY be omitted or used to contain additional data about the receipt. This field MAY be used for tags, commentary, trace information, and so on.
 
-### 6.2.5 Receipt Issuer
+### 8.2.5 Receipt Issuer
 
 The OPTIONAL `iss` field, if present MUST contain the signer of the receipt. It MUST be an [Executor] or it's delegate. If delegate proof of delegation MUST be provided in `prf` field.
 
 If `iss` field is omitted, it MUST implicitly imply an [Executor].
 
-### 6.2.6 Proofs
-
+### 8.2.6 Proofs
 
 The `prf` field MUST contain links to UCAN(s) that that delegate authority to perform the invocation from the [Executor] to the Receipt issuer (`iss`). If [Executor] and the Issuer are same no proofs are required.
 
-### 6.2.7 Signature
+### 8.2.7 Signature
 
 The `s` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without `s` field. The signature MUST be generated by the issuer (`iss`).
 
-## 6.3 DAG-JSON Examples
+## 8.3 DAG-JSON Examples
 
-### 6.3.1 Issued by Executor
+### 8.3.1 Issued by Executor
 
 ```json
 {
   "ran": {
-    "/": "bafyreibt3t5uzjiwn4b3rszto6ox2z4najv45rzi75dooti3ad2rl7qkoi"
+    "/": "bafyreifkeu34pzda27fozfcboh25psekhqehkvnekltoiaspb5jsp6pj5q"
   },
   "out": {
     "ok": {
-      "from": "bob@example.com",
-      "text": "Hello world!"
+      "members": [
+        "bob@example.com",
+        "alice@web.mail"
+      ]
     }
   },
   "meta": {
     "retries": 2,
-    "time": [400, "hours"]
+    "time": [
+      400,
+      "hours"
+    ]
   },
   "s": {
     "/": {
-      "bytes": "7aEDQJBRBQPMyopsMw84vBQa2EdrRZtz9Kk7oF+tZ5eVIKSjeQwy1ReCGVXkt56cEhlOER7uOpIugSwUtf8VapW1TQM"
+      "bytes": "7aEDQIeyhI1chc8p3jpODozaxomV3y+rym9f+G7kIxyjsV0bqZZELGeCaYhIMYSmXk5aSAdufXJwLCFT6vsbm7DDqA0"
     }
   }
 }
 ```
 
-### 6.3.2 Issued by Delegate
+### 8.3.2 Issued by Delegate
 
 ```json
 {
   "ran": {
-    "/": "bafyreicewv7jbynidkzljwc3okytusrljgjpn7xjamrrcnokgp5qei77gy"
+    "/": "bafyreifkeu34pzda27fozfcboh25psekhqehkvnekltoiaspb5jsp6pj5q"
   },
-  "iss": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
   "out": {
     "ok": {
-      "from": "bob@example.com",
-      "text": "Hello world!"
+      "members": [
+        "bob@example.com",
+        "alice@web.mail"
+      ]
     }
   },
   "meta": {
     "retries": 2,
-    "time": [400, "hours"]
+    "time": [
+      400,
+      "hours"
+    ]
   },
+  "iss": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
   "prf": [
-    { "/": "bafyreihfgvlol74ugosa5gkzvbsghmq7wiqn4xvgack4uwn4qagrml6p74" }
+    {
+      "/": "bafyreihfgvlol74ugosa5gkzvbsghmq7wiqn4xvgack4uwn4qagrml6p74"
+    }
   ],
   "s": {
     "/": {
-      "bytes": "7aEDQBAv3B11GOo5Yoa/wMILlK0L3565ainer90OFa0h8XA4awZFKB3bfq0DL00HH+r4tKVq3k440HIG0apYcWppFwI"
+      "bytes": "7aEDQB1URqWf6LhVUhbSgCOERp5wEGH0sEPqGvLrYpwsh5QslqVrwW8EXMjlRgeKeyHkM7yXxqzTXdnkB0tqFgMYOAk"
     }
   }
 }
 ```
 
-### 6.3.3 Receipts with effects
+### 7.3.3 Receipts with effects
 
 ```json
 {
   "ran": {
-    "/": "bafyreicrhbr7jjt6pvhldnrl7g6tr4r5uspgea52xo23a2yegfnpspeste"
-  },
-  "out": {
-    "ok": {}
-  },
-  "fx": {
-    "/": "bafyreib6mgm5few6pnajc25h6r6trp2kbi6xrmhafnmby3hrflmgql2kna"
-  },  
-  "s": {
-    "/": {
-      "bytes": "7aEDQMO5k6OtYgHSRVIR2sqn97TTfrhLrdTSusoYOAaCV2lg37xI22QMjMhW44eVgkIRcWcbLO4YdrJfcwG4t3jzegM"
-    }
-  }
-}
-```
-
-### 6.3.4 Chained Receipt
-
-```json
-{
-  "ran": {
-    "/": "bafyreicrhbr7jjt6pvhldnrl7g6tr4r5uspgea52xo23a2yegfnpspeste"
+    "/": "bafyreicjvdt44rclleycshdpkpsnxpksztn5bmx6w6ximjmod7osuvs76i"
   },
   "out": {
     "ok": {
-      "capacity": "3GiB"
+      "status": 200
     }
   },
-  "origin": {
-    "/": "bafyreiga5grjokrjgjn62kbwdf6oz3w5m4hj4ck3ln6k6bw3wguiv2s6oy"
+  "fx": {
+    "fork": [
+      {
+        "/": "bafyreieljernknkcrmefokxxperobictfndo4v4cazkjmqfwuog4puawxm"
+      },
+      {
+        "/": "bafyreiho3x2lbi6a5irw3orgrzrivkakr7iymalpukmxsvdsoqlxpcjsfq"
+      }
+    ],
+    "join": {
+      "/": "bafyreidtsxqd5fcuwdgverklwpcgbgzixsf6z6wgelybiakpwec3q75iwa"
+    }
   },
   "s": {
     "/": {
-      "bytes": "7aEDQFhBCM0NkHNMpHVn1UWnI90S0hHKMiDbqj4Gf3U3QNRpVM5/Ta9Uy94khq14TREmEWBwkqVMEk/EJ46a4NF33AY"
+      "bytes": "7aEDQMhFF0SuvqImvMRUAORuY5uJttauHMRvt0kwFRXkidPqvkrouDr49lBkMKrGrCcJslpcp+/MeG0FoTjxdo3KQQc"
     }
   }
 }
 ```
 
-# 8 Pipelines
+# 9 Pipelines
 
 > Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
 >
@@ -1071,59 +1240,104 @@ There MAY not be enough information to described an Invocation at creation time.
 
 Some invocations MAY require input from set of other invocations. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of one invocations into the input of the other. This liberates the invoker from waiting for each step.
 
-A [Promise] / [Await] MAY be used as a variable placeholder for a concrete value in an [Invocation] output, waiting on a previous step to complete.
+An [Await] MAY be used as a variable placeholder for a concrete value in an [Invocation] output, waiting on a previous step to complete.
 
 For example, consider the following invocation batch:
 
 ```json
 {
-  "bafyreif7wiz4mz3ojmmvrz2p5m6ay5nqbi7ghwmheccv5rqgjtkrk5wyi4": {
-    "v": "0.1.0",
-    "with": "https://example.com/blog/posts",
-    "do": "crud/create",
-    "input": {
-      "payload": {
-        "body": "This is the story of how one spec changed everything...",
-        "title": "How UCAN Tasks Changed My Life"
+  "blocks": {
+    "bafyreicxndtwegag3mmc6vos7xponkb2pkm7x5p5clbbgbheyuxssam6ka": {
+      "do": "crud/create",
+      "with": "https://example.com/blog/posts",
+      "input": {
+        "payload": {
+          "title": "How UCAN Tasks Changed My Life",
+          "body": "This is the story of how one spec changed everything..."
+        }
       }
     },
-    "prf": [
-      { "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a" }
-    ]
-  },
-  "bafyreifc2ytuc5dv454a7c6cxk3mm7gt6skoptzj5rtc3ijf65v2bjxssy": {
-    "v": "0.1.0",
-    "with": "https://example.com/users/editors",
-    "do": "crud/read",
-    "prf": [
-      { "/": "bafyreie3ukg4h2kf7lnx7k62kjujlo2a5l66rh7e7vlj52fnsrj7tuc2ya" }
-    ]
-  },
-  "bafyreibodwqz5ghsvf6nmopdbkksp46roc6zakmmd7gv6flymc2edeeq3q": {
-    "v": "0.1.0",
-    "with": "mailto:akiko@example.com",
-    "do": "msg/send",
-    "input": {
-      "to": {
-        "await/ok": {
-          "ucan/task": {
-            "/": "bafyreifc2ytuc5dv454a7c6cxk3mm7gt6skoptzj5rtc3ijf65v2bjxssy"
-          }
-        }
+    "bafyreici7ms2diig6y3ju64f3y5q3rn4zezbmxoiv3hwxleaoia6sg5v2u": {
+      "v": "0.1.0",
+      "run": {
+        "/": "bafyreicxndtwegag3mmc6vos7xponkb2pkm7x5p5clbbgbheyuxssam6ka"
       },
-      "subject": "Coffee",
-      "body": {
-        "await/ok": {
-          "ucan/task": {
-            "/": "bafyreif7wiz4mz3ojmmvrz2p5m6ay5nqbi7ghwmheccv5rqgjtkrk5wyi4"
+      "prf": [
+        {
+          "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
+        }
+      ]
+    },
+    "bafyreibsgkiansdaty6eeuwtutmx6ztyp2wcmucoisyxzdlfeo74rhvuvi": {
+      "do": "crud/read",
+      "with": "https://example.com/users/editors"
+    },
+    "bafyreiamphjpf5bwht6le4v2fsbxa55omerv3lpoyhi3bzzimcrii7vfri": {
+      "v": "0.1.0",
+      "run": {
+        "/": "bafyreibsgkiansdaty6eeuwtutmx6ztyp2wcmucoisyxzdlfeo74rhvuvi"
+      },
+      "prf": [
+        {
+          "/": "bafyreie3ukg4h2kf7lnx7k62kjujlo2a5l66rh7e7vlj52fnsrj7tuc2ya"
+        }
+      ]
+    },
+    "bafyreiedbqqzfbo7kqdu3gjfcmfq7ffhzbs37qmu4q73mgtwm7h54jfbsm": {
+      "do": "msg/send",
+      "with": "mailto:akiko@example.com",
+      "input": {
+        "to": {
+          "await/ok": {
+            "/": "bafyreici7ms2diig6y3ju64f3y5q3rn4zezbmxoiv3hwxleaoia6sg5v2u"
+          }
+        },
+        "subject": "Coffee",
+        "body": {
+          "await/ok": {
+            "/": "bafyreiamphjpf5bwht6le4v2fsbxa55omerv3lpoyhi3bzzimcrii7vfri"
           }
         }
       }
     },
-    "prf": [
-      { "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4" }
-    ]
-  }
+    "bafyreic7ypuk4xd4kvintknoxfgy33ttkr3kv2vp2fenpylecofhuswiye": {
+      "v": "0.1.0",
+      "run": {
+        "/": "bafyreiedbqqzfbo7kqdu3gjfcmfq7ffhzbs37qmu4q73mgtwm7h54jfbsm"
+      },
+      "auth": {
+        "/": "bafyreifz5u3yzkophibkf4w23doou4pvhmqdje27cwihnl7obsbyeo3qym"
+      },
+      "prf": [
+        {
+          "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"
+        }
+      ]
+    },
+    "bafyreifz5u3yzkophibkf4w23doou4pvhmqdje27cwihnl7obsbyeo3qym": {
+      "scope": [
+        {
+          "/": "bafyreiedbqqzfbo7kqdu3gjfcmfq7ffhzbs37qmu4q73mgtwm7h54jfbsm"
+        },
+        {
+          "/": "bafyreicxndtwegag3mmc6vos7xponkb2pkm7x5p5clbbgbheyuxssam6ka"
+        },
+        {
+          "/": "bafyreibsgkiansdaty6eeuwtutmx6ztyp2wcmucoisyxzdlfeo74rhvuvi"
+        }
+      ],
+      "s": {
+        "/": {
+          "bytes": "7aEDQJb+yWxXmprXwpBSvvMtyGjG75QHA90UkQduagjS1DpQnqE4NB3Bm41j7q8ODIKBnPXtZAHBaX/VxGUJvD8DXAo"
+        }
+      }
+    }
+  },
+  "roots": [
+    {
+      "/": "bafyreic7ypuk4xd4kvintknoxfgy33ttkr3kv2vp2fenpylecofhuswiye"
+    }
+  ]
 }
 ```
 
@@ -1152,84 +1366,83 @@ After resolution, the [Invocation] MUST be validated against the [Authorization]
 
 Promises MAY be used across [Invocation]s with a same [Authorization], or across [Invocation]s with different [Authorization] and MAY even be across multiple Invokers and Executors. As long as the invocation can be resolved, it MAY be promised. This is sometimes referred to as ["promise pipelining"](http://erights.org/elib/distrib/pipeline.html).
 
+## 9.2 Promise
 
-## 8.1 Promise
+A `Promise` has a same representation as [Invocation] with only difference being that `auth` field is OPTIONAL. Promise MAY be used by an [Invocation] to [Await] another [Invocation] authorized with the same [Authorization]. [Invocation] MAY be used directly everywhere else in place of the [Promise].
 
-A `Promise` describes eventual output `Result` of the [Invocation].
+### 9.2.1 Schema
 
-### 8.1.1 Schema
+```ipldsh
+# Promise is an Invocation with optional 'auth' field which if omitted
+# is implicitly an 'auth' of the Invocation that contains Await.
+type Promise struct {
+  v       SemVer
 
-```ipldsch
-type Promise<In> union {
-  | &Invocation<In>    ("ucan/invocation")
-  | &Task<In>          ("ucan/task")
-} representation keyed
-```
+  run     &Task
+  # Receipt of the invocation that caused this invocation
+  cause   optional &Invocation
+  # Task authorization. If omitted can be interpreted as requires
+  # authorization 
+  auth    optional &Authorization
 
-#### 8.1.2 Variants
+  meta    {String : any} (implicit "{}")
 
-##### 8.1.2.1 Invocation Promise
-
-A `Promise` of the [Invocation] MUST be a link to that invocation wrapped in the `"ucan/invocation"` tag.
-
-```ts
-{
-  "ucan/invocation": {
-    "/": "bafyreihdw5dpnggixaee3rwn5kr3vhvfvokj3hi24uk2swp4nizyjdhdeq"
-  }
+  prf     [&UCAN] (implicit "[]")
 }
+
 ```
 
-##### 8.1.2.2 Task Promise
+## 9.3 Await
 
-An `Promise` of the [Invocation] that shares [Authorization] with a [Task] referencing it MUST be a link to the invocation [Task] wrapped in the `"ucan/task"` tag.
+An `Await` describes an output of the [Invocation]. An `Await` MUST resolve to an output [Result] with `await/*` variant. If unwrapping success or failure case is desired, corresponding `await/ok` or `await/error` variants MUST be used.
 
-Note that [Task]s with the same [Authorization] will be unable to reference [Invocation] since [Authorization] CAN be created after all the [Task]s being authorized. The `"ucan/task"` tagged Promise MAY be used in such cases.
+An [Invocation] from the [Await] is resolved by:
 
-## 8.2 Await
+1. Creating a new [Invocation].
+1. Setting all of the fields, but `auth` to same values as an underlying [Promise].
+1. If OPTIONAL `auth` field of the underlying [Promise] is set:
+    - then set `auth` of the invoaction to the same value
+    - else set `auth` of the invocation to the `auth` of the [Invocation] containing [Await] been resolved.
 
-An `Await` describes an output of the [Invocation]. An `Await` MUST resolve to an output [Result] with `await/*` variant. If unwrapping success or failure case is desired corresponding `await/ok` or `await/error` variants MUST be used.
-
-### 8.2.1 Schema
+### 9.3.1 Schema
 
 ```ipldsch
-type Await<In> union {
-  &Promise<In>    "await/*"
-  &Promise<In>    "await/ok"
-  &Promise<In>    "await/error"
+type Await union {
+  | &Promise "await/*"
+  | &Promise "await/ok"
+  | &Promise "await/error"
 } representation keyed
 ```
 
-#### 8.2.2 Variants
+#### 9.3.2 Variants
 
-##### 8.2.2.1 Success
+##### 9.3.2.1 Success
 
-The successful output of the [Invocation] MAY be referenced by wrapping a [Promise] in the `"await/ok"` tag.
+The successful output of the [Invocation] MAY be referenced by wrapping corresponding [Promise] in the `"await/ok"` tag.
 
 [Executor] MUST fail [Invocation] that `Await`s successful output of the failed [Invocation].
 
 [Executor] MUST substitute [Task] field set to the [Await] of the successful [Invocation] with an (unwrapped) `ok` value of the output.
 
-##### 8.2.2.1 Failure
+##### 9.3.2.1 Failure
 
-The failed output of the [Invocation] MAY be referenced by wrapping a [Promise] in the `"await/error"` tag.
+The failed output of the [Invocation] MAY be referenced by wrapping corresponding [Promise] in the `"await/error"` tag.
 
 [Executor] MUST fail [Invocation] that `Await`s failed output of the successful [Invocation].
 
 [Executor] MUST substitute [Task] field set to the [Await] of the failed [Invocation] with an (unwrapped) `error` value of the output.
 
-##### 8.2.2.1 Result
+##### 9.3.2.1 Result
 
-The [Result] output of the [Invocation] MAY be reference by wrapping a [Promise] in the `"await/*"` tag.
+The [Result] output of the [Invocation] MAY be reference by wrapping corresponding [Promise] in the `"await/*"` tag.
 
 [Executor] MUST substitute [Task] field set to the [Await] of the [Invocation] with a `Result` value of the output.
 
-
-## 8.3 Dataflow
+## 9.4 Dataflow
 
 Pipelining uses [Await] as inputs to determine the required dataflow graph. The following examples both express the following dataflow graph:
 
-### 7.3.1 Batched
+### 9.4.1 Batched
 
 ```mermaid
 flowchart BR
@@ -1265,7 +1478,7 @@ flowchart BR
       },
       "prf": [
         { "/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau" }
-      ],
+      ]
     },
     "bafyreieeipburgtzg4hr2ghxgspc53szrkstaz4syjat3tex75hjdrau3y": [
       { "/": "bafyreieahqhc2dwrnucyljhpqqsskqak2tc4ehhd6lvxpzuztx72k4xidm" },
@@ -1325,10 +1538,7 @@ flowchart BR
         "payload": {
           "event": "email-notification",
           "from": "mailto://alice@exmaple.com",
-          "to": [
-            "bob@exmaple.com",
-            "carol@example.com"
-          ]
+          "to": ["bob@exmaple.com", "carol@example.com"]
         },
         "_": [
           {
@@ -1345,7 +1555,7 @@ flowchart BR
               }
             }
           }
-        ],
+        ]
       },
       "prf": [
         { "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i" }
@@ -1374,8 +1584,7 @@ flowchart BR
 }
 ```
 
-
-### 7.3.2 Serial
+### 9.4.2 Serial
 
 ```mermaid
 flowchart TB
@@ -1410,59 +1619,71 @@ flowchart TB
 ```json
 {
   "blocks": {
-    "bafyreid5ltmhwuhgcbxa3dwd5erymqdpfsyhlwudlfylu3wrzy6fjbvuoy": [
-      { "/": "bafyreigb54cv7jl4rt32nl5r7udzhbavd7c4ct5pkfkuept2ufrpig3zli" },
-      { "/": "bafyreicwrzsyonu4efnwtmwqax2s2fbv5padbyk66zwl6kkvrkrd5qavpy" }
-    ],
-    "bafyreigb54cv7jl4rt32nl5r7udzhbavd7c4ct5pkfkuept2ufrpig3zli": {
-      "v": "0.1.0",
-      "with": "dns:example.com?TYPE=TXT",
+    "bafyreifcerdvicarktlnif5uj25ultgpedwg63nxhmp7anoepaamqj4eji": {
       "do": "crud/update",
+      "with": "dns:example.com?TYPE=TXT",
       "input": {
         "value": "hello world"
+      }
+    },
+    "bafyreieogoqh5rolyt4livorznwhg63ml4oon3vdxnkqvc7svya4gisppe": {
+      "v": "0.1.0",
+      "run": {
+        "/": "bafyreifcerdvicarktlnif5uj25ultgpedwg63nxhmp7anoepaamqj4eji"
       },
       "prf": [
-        { "/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau" }
+        {
+          "/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"
+        }
       ]
     },
-    "bafyreigbtlydjneybqpy6r3u5hobsempr335tjw4ozm2aun5yrcj2whdgi": [
-      { "/": "bafyreieahqhc2dwrnucyljhpqqsskqak2tc4ehhd6lvxpzuztx72k4xidm" },
-      { "/": "bafyreicwrzsyonu4efnwtmwqax2s2fbv5padbyk66zwl6kkvrkrd5qavpy" }
-    ],
-    "bafyreieahqhc2dwrnucyljhpqqsskqak2tc4ehhd6lvxpzuztx72k4xidm": {
-      "v": "0.1.0",
-      "with": "mailto://alice@example.com",
+    "bafyreieqqhr7pznb77ffngpqnhmlcoi3666zc7qmhvdzs26oy6fclqp4dy": {
       "do": "msg/send",
+      "with": "mailto://alice@example.com",
       "input": {
+        "to": "bob@example.com",
+        "subject": "DNSLink for example.com",
         "body": {
           "await/ok": {
-            "ucan/task": {
-              "/": "bafyreigb54cv7jl4rt32nl5r7udzhbavd7c4ct5pkfkuept2ufrpig3zli"
-            }
+            "/": "bafyreieogoqh5rolyt4livorznwhg63ml4oon3vdxnkqvc7svya4gisppe"
           }
-        },
-        "subject": "DNSLink for example.com",
-        "to": "bob@example.com"
+        }
+      }
+    },
+    "bafyreid52dldaayikwgscn43o5gurlrujmlppdejductzdqnsvizvjplze": {
+      "v": "0.1.0",
+      "run": {
+        "/": "bafyreieqqhr7pznb77ffngpqnhmlcoi3666zc7qmhvdzs26oy6fclqp4dy"
+      },
+      "auth": {
+        "/": "bafyreifxyud6cnw26g3t54xsjcjilu6j7laqlge6fds6rgcezl2waivvdi"
       },
       "prf": [
-        { "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha" }
+        {
+          "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha"
+        }
       ]
     },
-    "bafyreicwrzsyonu4efnwtmwqax2s2fbv5padbyk66zwl6kkvrkrd5qavpy": {
+    "bafyreifxyud6cnw26g3t54xsjcjilu6j7laqlge6fds6rgcezl2waivvdi": {
       "scope": [
-        { "/": "bafyreigb54cv7jl4rt32nl5r7udzhbavd7c4ct5pkfkuept2ufrpig3zli" },
-        { "/": "bafyreieahqhc2dwrnucyljhpqqsskqak2tc4ehhd6lvxpzuztx72k4xidm" }
+        {
+          "/": "bafyreifcerdvicarktlnif5uj25ultgpedwg63nxhmp7anoepaamqj4eji"
+        },
+        {
+          "/": "bafyreieqqhr7pznb77ffngpqnhmlcoi3666zc7qmhvdzs26oy6fclqp4dy"
+        }
       ],
       "s": {
         "/": {
-          "bytes": "7aEDQKrLlk87jEJh2ftRMXidqypRf2QtwFUvcTWvKN9G1D5XeLB8o6TtPv2qTF/b+s9r6DAQAavilk8J10yFYDyMUAA"
+          "bytes": "7aEDQFftPMepLGONVlthmxHaa7UbPnwVwJnDdIPrV/WcBTb1lot7OrEblJShcnrHrtcDNe8CRXQK9N58fPjYt4OQfQM"
         }
       }
     }
   },
   "roots": [
-    { "/": "bafyreid5ltmhwuhgcbxa3dwd5erymqdpfsyhlwudlfylu3wrzy6fjbvuoy" },
-    { "/": "bafyreigbtlydjneybqpy6r3u5hobsempr335tjw4ozm2aun5yrcj2whdgi" }
+    {
+      "/": "bafyreid52dldaayikwgscn43o5gurlrujmlppdejductzdqnsvizvjplze"
+    }
   ]
 }
 ```
@@ -1470,84 +1691,95 @@ flowchart TB
 ```json
 {
   "blocks": {
-    "bafyreif4zur3xni5fal23ybxjsw4bm5ezfjp6xgfwjd5ndextr55kr4i34": [
-      { "/": "bafyreigl5x2p3ehppg7xbwexdsr63ljfkcr4oj76lwacwj4rt5vfs2cvky" },
-      { "/": "bafyreiacpop3w22qc722sdovynbwi2so6r2xetqx5hf4xz326iu3we5sqa" }
-    ],
-    "bafyreigl5x2p3ehppg7xbwexdsr63ljfkcr4oj76lwacwj4rt5vfs2cvky": {
-      "v": "0.1.0",
-      "with": "mailto://alice@example.com",
+    "bafyreif2l5ykv6pbdxd636o2iyhr7evorygjczhbfrlhkr5t65t5xjjdm4": {
       "do": "msg/send",
+      "with": "mailto://alice@example.com",
       "input": {
         "to": "carol@example.com",
         "subject": "Hey Carol, DNSLink was updated!",
         "body": {
           "await/ok": {
-            "ucan/invocation": {
-              "/": "bafyreid5ltmhwuhgcbxa3dwd5erymqdpfsyhlwudlfylu3wrzy6fjbvuoy"
-            }
+            "/": "bafyreieogoqh5rolyt4livorznwhg63ml4oon3vdxnkqvc7svya4gisppe"
           }
         }
+      }
+    },
+    "bafyreifwe7q42d54pxmdszzdcayagrkb4btsto5zcfwn434n7yq57v3mxe": {
+      "v": "0.1.0",
+      "run": {
+        "/": "bafyreif2l5ykv6pbdxd636o2iyhr7evorygjczhbfrlhkr5t65t5xjjdm4"
       },
       "prf": [
-        { "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha" }
+        {
+          "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha"
+        }
       ]
     },
-    "bafyreibvwhdqydz4qq3narocqsvnqbxoegxgmmlp35mewn53rjxeltfccu": [
-      { "/": "bafyreifaip4infpqh76r7nlscubkfznhoiko224i2sthy7w3atfsmrff2a" },
-      { "/": "bafyreiacpop3w22qc722sdovynbwi2so6r2xetqx5hf4xz326iu3we5sqa" }
-    ],
-    "bafyreifaip4infpqh76r7nlscubkfznhoiko224i2sthy7w3atfsmrff2a": {
-      "v": "0.1.0",
-      "with": "https://example.com/report",
+    "bafyreieym67mo7s5wjgwcnxrnn75vn4nn5w33snicuc34ppp4t5dshphya": {
       "do": "crud/update",
+      "with": "https://example.com/report",
       "input": {
         "payload": {
           "from": "mailto://alice@exmaple.com",
-          "to": ["bob@exmaple.com", "carol@example.com"],
+          "to": [
+            "bob@exmaple.com",
+            "carol@example.com"
+          ],
           "event": "email-notification"
         },
         "_": [
           {
             "await/ok": {
-              "ucan/invocation": {
-                "/": "bafyreigbtlydjneybqpy6r3u5hobsempr335tjw4ozm2aun5yrcj2whdgi"
-              }
+              "/": "bafyreid52dldaayikwgscn43o5gurlrujmlppdejductzdqnsvizvjplze"
             }
           },
           {
             "await/ok": {
-              "ucan/task": {
-                "/": "bafyreifjjvdd6hoi7wjot7tjaubwztqldds332bgq6a4n37d6s5slxkbvy"
-              }
+              "/": "bafyreifwe7q42d54pxmdszzdcayagrkb4btsto5zcfwn434n7yq57v3mxe"
             }
           }
         ]
+      }
+    },
+    "bafyreiahe6v4vsr3gzqn6s6wxcuauyoqvuzh524tkxiwr4lzcskywsc6p4": {
+      "v": "0.1.0",
+      "run": {
+        "/": "bafyreieym67mo7s5wjgwcnxrnn75vn4nn5w33snicuc34ppp4t5dshphya"
+      },
+      "auth": {
+        "/": "bafyreih6b5uc3xzhh6xnta7iqbwhe5t62kekzcjpssx5adyh5pky7m5j2e"
       },
       "prf": [
-        { "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i" }
+        {
+          "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+        }
       ]
     },
-    "bafyreiacpop3w22qc722sdovynbwi2so6r2xetqx5hf4xz326iu3we5sqa": {
+    "bafyreih6b5uc3xzhh6xnta7iqbwhe5t62kekzcjpssx5adyh5pky7m5j2e": {
       "scope": [
-        { "/": "bafyreigl5x2p3ehppg7xbwexdsr63ljfkcr4oj76lwacwj4rt5vfs2cvky" },
-        { "/": "bafyreifaip4infpqh76r7nlscubkfznhoiko224i2sthy7w3atfsmrff2a" }
+        {
+          "/": "bafyreif2l5ykv6pbdxd636o2iyhr7evorygjczhbfrlhkr5t65t5xjjdm4"
+        },
+        {
+          "/": "bafyreieym67mo7s5wjgwcnxrnn75vn4nn5w33snicuc34ppp4t5dshphya"
+        }
       ],
       "s": {
         "/": {
-          "bytes": "7aEDQBCcyIzfbMRT/UnUF3LgY7Xp/hhhpJfr4kRuEQEgmxcATSE1iLD7VOLMA0nauhqRM7RFUIGjxt1CAf4tZY+yOQE"
+          "bytes": "7aEDQKkxnSFpFpj51Q715C7FWemiXgSKXdHZyN0XBsOym+/yBaF46iX98XYF789cdkRBQACUfzM5cRhFYvwZpljitA8"
         }
       }
     }
   },
   "roots": [
-    { "/": "bafyreif4zur3xni5fal23ybxjsw4bm5ezfjp6xgfwjd5ndextr55kr4i34" },
-    { "/": "bafyreibvwhdqydz4qq3narocqsvnqbxoegxgmmlp35mewn53rjxeltfccu" }
+    {
+      "/": "bafyreiahe6v4vsr3gzqn6s6wxcuauyoqvuzh524tkxiwr4lzcskywsc6p4"
+    }
   ]
 }
 ```
 
-# 6 Prior Art
+# 10 Prior Art
 
 [ucanto RPC](https://github.com/web3-storage/ucanto) from DAG House is a production system that uses UCAN as the basis for an RPC layer.
 
@@ -1559,7 +1791,7 @@ The [Object Capability Network (OCapN)](https://github.com/ocapn/ocapn) protocol
 
 [Cap 'n Proto RPC](https://capnproto.org/) is an influential RPC framework [based on concepts from CapTP](https://capnproto.org/rpc.html#specification).
 
-# 12 Acknowledgements
+# 11 Acknowledgements
 
 Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering work](http://erights.org/talks/thesis/markm-thesis.pdf) on [capability systems](http://erights.org/).
 
@@ -1579,24 +1811,21 @@ Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many con
 
 Thanks to [Rod Vagg](https://github.com/rvagg/) for the clarifications on IPLD Schema implicits and the general IPLD worldview.
 
-
 [dag-json]: https://ipld.io/docs/codecs/known/dag-json/
 [varsig]: https://github.com/ChainAgnostic/varsig/
-[ipld schema]: https://ipld.io/docs/schemas/
 [ucan-ipld]: https://github.com/ucan-wg/ucan-ipld/
 [ucan]: https://github.com/ucan-wg/spec/
 [dag-cbor]: https://ipld.io/specs/codecs/dag-cbor/spec/
-[car]: https://ipld.io/specs/transport/car/carv1/
-[ipld representation]:https://ipld.io/docs/schemas/features/representation-strategies/
-[lazy-vs-eager]: #112-Lazy-vs-Eager-Evaluation
+[ipld representation]: https://ipld.io/docs/schemas/features/representation-strategies/
+[lazy-vs-eager]: #112-lazy-vs-eager-evaluation
 [invoker]: #211-invoker
 [executor]: #212-executor
 [task]: #3-task
 [authorization]: #4-authorization
-[invocation]: #5-Invocation
-[result]: #6-Result
-[receipt]: #7-receipt
-[pipelines]: #8-Pipelines
-[promise]: #81-promise
-[await]: #82-await
-[dataflow]: #83-dataflow
+[invocation]: #5-invocation
+[result]: #6-result
+[effect]: #7-effect
+[receipt]: #8-receipt
+[pipelines]: #9-pipelines
+[promise]: #92-promise
+[await]: #93-await
