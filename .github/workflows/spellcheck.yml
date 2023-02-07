@@ -1,7 +1,9 @@
-name: 'spellcheck'
+name: "spellcheck"
 on:
-  pull_request:
   push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   spellcheck:

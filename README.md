@@ -989,7 +989,7 @@ Effect MAY instruct the [Executor] that the [Task] [Invocation] is a continuatio
 
 Often [Invocation] in the `join` field will synthesize [Result]s of the concurrent execution threads (spawned by `fork`), and incorporate them into the current execution thread.
 
-It is also possible for the thread to complete execution (omit `join` field) and leave concurrent threads behind. The `join` field, simply demarks the execution thread and provides a way to follow it through trail of [Receipt]s.
+It is also possible for the thread to complete execution (omit `join` field) and leave concurrent threads behind. The `join` field, simply marks the execution thread and provides a way to follow it through trail of [Receipt]s.
 
 ## 7.1 Schema
 
@@ -1401,7 +1401,7 @@ An [Invocation] from the [Await] is resolved by:
 1. Creating a new [Invocation].
 1. Setting all of the fields, but `auth` to same values as an underlying [Promise].
 1. If OPTIONAL `auth` field of the underlying [Promise] is set:
-    - then set `auth` of the invoaction to the same value
+    - then set `auth` of the invocation to the same value
     - else set `auth` of the invocation to the `auth` of the [Invocation] containing [Await] been resolved.
 
 ### 9.3.1 Schema
