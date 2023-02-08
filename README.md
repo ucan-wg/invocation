@@ -63,9 +63,13 @@ Delegating a capability is like the statement `message`. Task is akin to `messag
 
 However, there is clearly a distinction between passing a function and invoking it. The same is true for capabilities: delegating the authority to do something is not the same as asking for it to be done immediately, even if sometimes it's clear from context.
 
-## 1.2 Gossiping of delegations
+## 1.2 Delegation Gossip
 
-In web3.storage user `alice@web.mail` can delegate to store file in her space to `bob@send.io` by sending that delegation to `web3.storage`. If service were to interpret this as invocation it would fail due to principal misalignment. By distinguishing capability invocation from delegation service is able to more correctly handle such a message, if it is an invocation it will still error due to principal misalignment, if it is a delegation it will hold it in Bob's inbox to be picked up when he's comes online.
+UCAN delegation can be gossiped freely between services. This is not true for invocation.
+
+For example, if `alice@example.com` delegates her `web3.storage` storage quota to `bob@example.com`, it may be benificial for all of the related `web3.storage` services to cache this information. If this were to be understood as an invocation, then gossiping this information would lead to validation failures due to principal misalignment in the certificate chain.
+
+By distinguishing invocation from delegation, agents are able to understand the user intention, and this handle such messages accordingly. Receipt of an invocation with misaligned principles will fail, but a delegation may be held in e.g. Bob's proxy inbox to be acted on when he comes online or widely distributed across the `web3.storage` infrastructure.
 
 ## 1.3 Separation of Concerns
 
@@ -398,7 +402,7 @@ type Invocation struct {
   # Task authorization.
   auth    &Authorization
 
-  meta    {String : any}
+  meta    {String : Any}
 
   prf     [&UCAN]
 }
@@ -440,8 +444,7 @@ type Effect struct {
   # Primary set of tasks to be invoked
   fork      [&Invocation]
   
-  # Additional task to be invoked with added semantics
-  # of representing a workflow execution continuation.
+  # Continuation for straight-line programs
   join       optional &Promise
 }
 
@@ -703,7 +706,9 @@ The `s` field MUST contain a [Varsig] of the [CBOR] encoded `scope` field.
 
 As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation]s are not executable until they have been provided provable authority (in form of UCANs in the `prf` field) and an [Authorization] (in the `auth` field) from the [Invoker].
 
-If `auth` field MUST be set to the [Authorization] (link) which contains `run` in it's scope field. The Invocation of the [Task] with an [Authorization] which does not includes [Task] in the `scope` MUST be considered invalid.
+The `auth` field MUST be contain an [Authorization](#4-Authorization) which signs over the `&Task` in `run`.
+
+Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. An `Invocation` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
 
 ## 5.1 Schema
 
@@ -732,11 +737,11 @@ The `run` field MUST contain a link to the [Task] to be run.
 
 ### 5.2.2 Authorization
 
-The `auth` field MUST contain a link to the [Authorization] that authorizes invoked [Task] in the `run` field. Linked [Authorization] MUST contain `run` in it's `scope`.
+The `auth` field MUST contain a link to the [Authorization] that authorizes invoked [Task] in the `run` field. The linked [Authorization] MUST contain `run` in its `scope`.
 
 ### 5.2.3 Cause
 
-Some [Task]s may be invoked as an effect caused by another [Task] [Invocation]. Such Invocations SHOULD have `cause` field set to the [Invocation] (link) that caused it. The [Receipt] of the causing [Invocation] (Invocation linked from `cause` field) SHOULD have an `Effect` (the `fx` field) containing cased [Invocation].
+[Task]s MAY be invoked as an effect caused by another [Task] [Invocation]. These SHOULD have `cause` field set to the [Invocation] (link) that caused it. The [Receipt] of the causing [Invocation] (Invocation linked from `cause` field) MUST have an `Effect` (the `fx` field) containing cased [Invocation].
 
 ## 5.3 DAG-JSON Example
 
@@ -1103,7 +1108,7 @@ The `ran` field MUST include a link to the [Invocation] that the Receipt is for.
 
 ### 8.2.2 Output
 
-The `out` field MUST contain the output of the invocation in [Result] format.
+The `out` field MUST contain the value output of the invocation in [Result] format.
 
 ### 8.2.3 Effect
 
@@ -1360,7 +1365,7 @@ const notify = msg.send("mailto:akiko@example.com", {
 })
 ```
 
-While a [Await] MAY be substituted for any field in a [Task], substituting the `do` field is NOT RECOMMENDED. The `do` field is critical in understanding what kind of action will be performed, and schedulers SHOULD use this fields to grant atomicity, parallelize tasks, and so on.
+While an [Await] MAY be substituted for any field in a [Task], substituting the `do` field is NOT RECOMMENDED. The `do` field is critical in understanding what kind of action will be performed, and schedulers SHOULD use this fields to grant atomicity, parallelize tasks, and so on.
 
 After resolution, the [Invocation] MUST be validated against the [Authorization] and linked UCAN proofs by the [Executor]. A Promise resolved to an [Invocation] that is not backed by a valid UCAN MUST NOT be executed, and SHOULD return an unauthorized error to the user. A Promise resolved to an [Invocation] with the [Authorization] that does not include invoked [Task] MUST NOT be executed, and SHOULD return an unauthorized error to the user.
 
@@ -1394,7 +1399,7 @@ type Promise struct {
 
 ## 9.3 Await
 
-An `Await` describes an output of the [Invocation]. An `Await` MUST resolve to an output [Result] with `await/*` variant. If unwrapping success or failure case is desired, corresponding `await/ok` or `await/error` variants MUST be used.
+An `Await` describes the eventual output of the referenced [Invocation]. An `Await` MUST resolve to an output [Result] with `await/*` variant. If unwrapping success or failure case is desired, corresponding `await/ok` or `await/error` variants MUST be used.
 
 An [Invocation] from the [Await] is resolved by:
 
