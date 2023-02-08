@@ -707,7 +707,7 @@ The `s` field MUST contain a [Varsig] of the [CBOR] encoded `scope` field.
 
 As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation]s are not executable until they have been provided provable authority (in form of UCANs in the `prf` field) and an [Authorization] (in the `auth` field) from the [Invoker].
 
-The `auth` field MUST be contain an [Authorization](#4-Authorization) which signs over the `&Task` in `run`.
+The `auth` field MUST be contain an [Authorization] which signs over the `&Task` in `run`.
 
 Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. An `Invocation` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
 
