@@ -128,6 +128,7 @@ The JSON examples below are given in [DAG-JSON], but UCAN Task is actually defin
 
 ```json
 {"/": "Qmf412jQZiuVUtdgnB36FXFX7xg5V6KEbSJ4dpQuhkLyfD"}
+```
 
 ### Bytes
 
