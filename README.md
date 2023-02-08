@@ -446,7 +446,7 @@ type Effect struct {
   fork      [&Invocation]
   
   # Continuation for straight-line programs
-  join       optional &Promise
+  join       optional &Invocation
 }
 
 # Promise is an Invocation with optional 'auth' field which if omitted
