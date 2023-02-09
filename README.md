@@ -262,10 +262,10 @@ type Result union {
 # Represents a request to invoke enclosed set of tasks concurrently
 type Effect struct {
   # Primary set of tasks to be invoked
-  fork      [&Promise]
+  fork      [&Task]
   
   # Continuation for straight-line programs
-  join       optional &Promise
+  join       optional &Task
 }
 
 # Promise is an Invocation with optional 'auth' field which if omitted
@@ -285,12 +285,6 @@ type Promise struct {
   prf     [&UCAN]
 }
 
-# Promise is a way to reference result of the invocation
-type Await union {
-  | &Promise    "await/*"
-  | &Promise    "await/ok"
-  | &Promise    "await/error"
-} representation keyed
 ```
 
 # 3 Task
@@ -808,7 +802,7 @@ Effects describe requests for future work to be performed. All [Invocation]s in 
 
 [Task]s listed in the `fork` field are first-class and only ordered by promises; they otherwise SHOULD be considered independent and equal. As such, atomic guarintees such as failure of one effect impling failure of other effects if left undefined.
 
-The `join` field describes an OPTIONAL "special" [Invocation] that is treated as a "main" thread. Effects MAY instruct the [Executor] that the [Task] [Invocation] is a continuation of the previous Invocation by providing it under `join` field. This roughly emulates a "main" virtual thread.
+The `join` field describes an OPTIONAL "special" [Invocation] which instruct the [Executor] that the [Task] [Invocation] is a continuation of the previous Invocation. This roughly emulates a virtual thread which terminates in an Invocation that produces Effect without a `join` field.
 
 Tasks in the `fork` field MAY be related to the Task in the `join` field if there exists a Promise referencing either Task. If such a promise does not exist, then they SHOULD be treated as entirely separate and MAY be scheduled, deferred, fail, retry, and so on entirely separately.
 
