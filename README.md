@@ -58,7 +58,7 @@ message() // A message interrupts the user
 Delegating a capability is like the statement `message`. Task is akin to `message()`. It's true that sometimes we know to run things from their surrounding context without the parentheses:
 
 ```js
-;[1, 2, 3].map(message) // Message runs 3 times
+[1, 2, 3].map(message) // Message runs 3 times
 ```
 
 However, there is clearly a distinction between passing a function and invoking it. The same is true for capabilities: delegating the authority to do something is not the same as asking for it to be done immediately, even if sometimes it's clear from context.
@@ -355,11 +355,11 @@ A [Task] is like a deferred function application: a request to perform some acti
 
 ### 2.2.2 Authorization
 
-An [Authorization] is a cryptographically signed proof permitting execution of referenced tasks. It allows invoker to authorize a group of tasks using one cryptographic signature.
+An [Authorization] is a cryptographically signed proof permitting execution of referenced tasks. It allows the [Invoker] to authorize a group of tasks using one cryptographic signature.
 
 ### 2.2.3 Invocation
 
-An [Invocation] is an invoker authorized instruction to the [Executor] to run the [Task].
+An [Invocation] is a command to the [Executor] to run the [Task], authorized by the [Invoker].
 
 ### 2.2.4 Result
 
@@ -379,7 +379,7 @@ An [Effect] are the instruction to the [Executor] to run set of [Task]s concurre
 type Task struct {
   with    URI
   do      Ability
-  input   {String: any}
+  input   {String : Any}
 
   nnc     string
 }
@@ -420,7 +420,8 @@ type Receipt struct {
   fx      Effect
 
   # All the other metadata
-  meta    {String: any}
+  # All the other metadata
+  meta    {String : Any}
 
   # Principal that issued this receipt. If omitted issuer is
   # inferred from the invocation task audience.
@@ -443,10 +444,10 @@ type Result union {
 # Represents a request to invoke enclosed set of tasks concurrently
 type Effect struct {
   # Primary set of tasks to be invoked
-  fork      [&Invocation]
+  fork      [&Promise]
   
   # Continuation for straight-line programs
-  join       optional &Invocation
+  join       optional &Promise
 }
 
 # Promise is an Invocation with optional 'auth' field which if omitted
@@ -677,7 +678,7 @@ type Authorization struct {
 
 The `scope` field MUST be a set of links been authorized. It SHOULD be encoded as an alphabetically ordered list without duplicates.
 
-If `scope` field is omitted, it is implicitly a an empty list and has no practical use as it authorizes nothing.
+If the `scope` field is omitted, it is implicitly treated as an empty list (authorizing nothing).
 
 ### 4.2.2 Signature
 
@@ -742,7 +743,7 @@ The `auth` field MUST contain a link to the [Authorization] that authorizes invo
 
 ### 5.2.3 Cause
 
-[Task]s MAY be invoked as an effect caused by another [Task] [Invocation]. These SHOULD have `cause` field set to the [Invocation] (link) that caused it. The [Receipt] of the causing [Invocation] (Invocation linked from `cause` field) MUST have an `Effect` (the `fx` field) containing cased [Invocation].
+[Task]s MAY be invoked as an effect caused by a prior [Invocation]. Such [Invocation]s SHOULD have a link to the [Invocation] that caused it in the `cause` field. The [Receipt] of the causing [Invocation] (Invocation linked from `cause` field) MUST have an `Effect` (the `fx` field) containing caused [Invocation].
 
 ## 5.3 DAG-JSON Example
 
@@ -983,19 +984,15 @@ If no information is available, this field SHOULD be set to `{}`.
 }
 ```
 
-# 7 Effect
+The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from reuqesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
 
-Workflows often consist of many, sometimes concurrent, steps which form an execution threads. Steps of such workflows are discrete [Task] [Invocation]s, each producing some [Result] and a description of subsequent step(s) caused by it. Subsequent steps are denoted with an `Effect`, a set of [Invocation]s that [Executor] must perform to advance workflow execution.
+Effects describe requests for future work to be performed. All [Invocation]s in an [Effect] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipelines]. The `fx` block contains two fields: `fork` and `join`.
 
-All of the [Invocation]s of the `Effect` MUST be concurrent with one another, unless explicitly arranged differently using [Pipelines].
+[Task]s listed in the `fork` field are first-class and only ordered by promises; they otherwise SHOULD be considered independent and equal. As such, atomic guarintees such as failure of one effect impling failure of other effects if left undefined.
 
-Effect MAY instruct the [Executor] to run set of [Task] [Invocation]s in concurrent execution threads by providing them as list under `fork` field.
+The `join` field describes an OPTIONAL "special" [Invocation] that is treated as a "main" thread. Effects MAY instruct the [Executor] that the [Task] [Invocation] is a continuation of the previous Invocation by providing it under `join` field. This roughly emulates a "main" virtual thread.
 
-Effect MAY instruct the [Executor] that the [Task] [Invocation] is a continuation of the current execution thread by providing it under `join` field.
-
-Often [Invocation] in the `join` field will synthesize [Result]s of the concurrent execution threads (spawned by `fork`), and incorporate them into the current execution thread.
-
-It is also possible for the thread to complete execution (omit `join` field) and leave concurrent threads behind. The `join` field, simply marks the execution thread and provides a way to follow it through trail of [Receipt]s.
+Tasks in the `fork` field MAY be related to the Task in the `join` field if there exists a Promise referencing either Task. If such a promise does not exist, then they SHOULD be treated as entirely separate and MAY be scheduled, deferred, fail, retry, and so on entirely separately.
 
 ## 7.1 Schema
 
@@ -1068,7 +1065,7 @@ The OPTIONAL `join` field, if present MUST be set to an [Invocation] link. Linke
 
 # 8 Receipt
 
-A `Receipt` is an attestation of the [Result] and a caused [Effect] by the [Task] [Invocation]. A Receipt MUST be signed by the [Executor] or it's delegate. If signed by the delegate, the proof of delegation from the [Executor] to the Issuer (the `iss` of the receipt) MUST be provided in `prf`.
+A `Receipt` is an attestation of the [Result] and requested [Effect]s by a [Task] [Invocation]. A Receipt MUST be signed by the [Executor] or it's delegate. If signed by the delegate, the proof of delegation from the [Executor] to the Issuer (the `iss` of the receipt) MUST be provided in `prf`.
 
 **NB: a Receipt this does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
