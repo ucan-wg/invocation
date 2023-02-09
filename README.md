@@ -195,8 +195,8 @@ An [Effect] are the instruction to the [Executor] to run set of [Task]s concurre
 
 ```ipldsch
 type Task struct {
-  with    URI
-  do      Ability
+  on    URI
+  call  Ability
   input   {String : Any}
 
   nnc     string
