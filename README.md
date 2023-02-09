@@ -270,20 +270,6 @@ type Effect struct {
 
 # Promise is an Invocation with optional 'auth' field which if omitted
 # is implicitly an 'auth' of the Invocation that contains Await.
-type Promise struct {
-  v       SemVer
-
-  run     &Task
-  # Receipt of the invocation that caused this invocation
-  cause   optional &Invocation
-  # Task authorization. If omitted can be interpreted as requires
-  # authorization 
-  auth    optional &Authorization
-
-  meta    {String : any}
-
-  prf     [&UCAN]
-}
 
 ```
 
