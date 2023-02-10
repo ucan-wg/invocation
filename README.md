@@ -67,7 +67,7 @@ However, there is clearly a distinction between passing a function and invoking 
 
 UCAN delegation can be gossiped freely between services. This is not true for invocation.
 
-For example, if `alice@example.com` delegates her `web3.storage` storage quota to `bob@example.com`, it may be benificial for all of the related `web3.storage` services to cache this information. If this were to be understood as an invocation, then gossiping this information would lead to validation failures due to principal misalignment in the certificate chain.
+For example, if `alice@example.com` delegates her `web3.storage` storage quota to `bob@example.com`, it may be beneficial for all of the related `web3.storage` services to cache this information. If this were to be understood as an invocation, then gossiping this information would lead to validation failures due to principal misalignment in the certificate chain.
 
 By distinguishing invocation from delegation, agents are able to understand the user intention, and this handle such messages accordingly. Receipt of an invocation with misaligned principles will fail, but a delegation may be held in e.g. Bob's proxy inbox to be acted on when he comes online or widely distributed across the `web3.storage` infrastructure.
 
@@ -195,8 +195,8 @@ An [Effect] are the instruction to the [Executor] to run set of [Task]s concurre
 
 ```ipldsch
 type Task struct {
-  on    URI
-  call  Ability
+  on      URI
+  call    Ability
   input   {String : Any}
 
   nnc     string
@@ -268,9 +268,12 @@ type Effect struct {
   join       optional &Task
 }
 
-# Promise is an Invocation with optional 'auth' field which if omitted
-# is implicitly an 'auth' of the Invocation that contains Await.
-
+# Way to reference result of the Task
+type Await union {
+  | &Task    "await/*"
+  | &Task    "await/ok"
+  | &Task    "await/error"
+} representation keyed
 ```
 
 # 3 Task
@@ -281,8 +284,8 @@ Using the JavaScript analogy from the introduction, a Task is similar to wrappin
 
 ```json
 {
-  "do": "msg/send",
-  "with": "mailto:alice@example.com",
+  "on": "mailto:alice@example.com",
+  "call": "msg/send",
   "input": {
     "to": [
       "bob@example.com",
@@ -308,17 +311,17 @@ Later, when we explore promise [pipelines], this also includes capturing the pro
 
 ```json
 {
-  "bafyreid32aunjg6g6buib7bva2sa5ni4c6eaftgykyh6z6rnhcjxh4yk2y": {
-    "do": "crud/read",
-    "with": "https://exmaple.com/mailinglist"
+  "bafyreieuo63r3y2nuycaq4b3q2xvco3nprlxiwzcfp4cuupgaywat3z6mq": {
+    "on": "https://exmaple.com/mailinglist",
+    "call": "crud/read"
   },
-  "bafyreigfusg7tgegda7pxdn7px5vs7wxqk5nybr5ewjht4xas357x6ryia": {
-    "do": "msg/send",
-    "with": "mailto://alice@example.com",
+  "bafyreihtmwju3okftpeuqe3x3ux5e7c2jescakwnoiyv45vnicke4kdxy4": {
+    "on": "mailto://alice@example.com",
+    "call": "msg/send",
     "input": {
       "to": {
         "await/ok": {
-          "/": "bafyreifkeu34pzda27fozfcboh25psekhqehkvnekltoiaspb5jsp6pj5q"
+          "/": "bafyreieuo63r3y2nuycaq4b3q2xvco3nprlxiwzcfp4cuupgaywat3z6mq"
         }
       },
       "subject": "hello",
@@ -404,8 +407,8 @@ The `prf` field MUST contain links to any UCANs that provide the authority to pe
 
 ```json
 {
-  "do": "crud/create",
-  "with": "https://example.com/blog/posts",
+  "on": "https://example.com/blog/posts",
+  "call": "crud/create",
   "input": {
     "headers": {
       "content-type": "application/json"
@@ -427,8 +430,8 @@ The `prf` field MUST contain links to any UCANs that provide the authority to pe
 
 ```json
 {
-  "do": "msg/send",
-  "with": "mailto:akiko@example.com",
+  "on": "mailto:akiko@example.com",
+  "call": "msg/send",
   "input": {
     "to": [
       "boris@example.com",
@@ -444,8 +447,8 @@ The `prf` field MUST contain links to any UCANs that provide the authority to pe
 
 ```json
 {
-  "do": "wasm/run",
-  "with": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+  "on": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+  "call": "wasm/run",
   "input": {
     "func": "add_one",
     "args": [
@@ -781,6 +784,8 @@ If no information is available, this field SHOULD be set to `{}`.
   }
 }
 ```
+
+## 7 Effect
 
 The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from reuqesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
 
