@@ -22,6 +22,14 @@ Specification version: 0.1.0 or later
 
 ---------------------------------------------------------------------------------
 
+Licensee’s name: Irakli Gozalishvili
+
+Authorized individual and system identifier: gozala
+
+Specification version: 0.1.0 or later
+
+---------------------------------------------------------------------------------
+
 ## Withdrawals
 
 Name of party withdrawing:
