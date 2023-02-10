@@ -173,7 +173,7 @@ A [Task] is like a deferred function application: a request to perform some acti
 
 ### 2.2.2 Authorization
 
-An [Authorization] is a cryptographically signed proof permitting execution of referenced tasks. It allows the [Invoker] to authorize a group of tasks using one cryptographic signature.
+An [Authorization] is a cryptographically signed proof permitting execution of referenced [Task]s. It allows the [Invoker] to authorize a group of tasks using one cryptographic signature.
 
 ### 2.2.3 Invocation
 
@@ -185,7 +185,7 @@ A [Result] is the output of a [Task].
 
 ### 2.2.5 Receipt
 
-A [Receipt] is a cryptographically signed description of the [Invocation] output.
+A [Receipt] is a cryptographically signed description of the [Invocation] output and requested [Effect]s.
 
 ### 2.2.6 Effect
 
@@ -225,6 +225,7 @@ type Invocation struct {
 
   prf     [&UCAN]
 }
+
 type SemVer string
 
 type Receipt struct {
@@ -345,32 +346,22 @@ const sendEmail = msg.send("mailto://alice@example.com", {
 
 ```ipldsch
 type Task struct {
-  with    URI
-  do      Ability
-  input   {String: any}
-
-  nnc     string
+  on URI
+  call Ability
+  input {String:Any}
+  nnc string
 }
-
-
-type URI string
-type Ability string
-
 ```
 
 ## 3.2 Fields
 
-### 3.2.1 UCAN Task Version
+### 3.2.1 Resource
 
-The `v` field MUST contain the SemVer-formatted version of the UCAN Task Specification that this struct conforms to.
-
-### 3.2.2 Resource
-
-The `with` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`](https://en.wikipedia.org/wiki/Data_URI_scheme), [`ipfs`](https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls), or [`magnet`](https://en.wikipedia.org/wiki/Magnet_URI_scheme) URI schemes.
+The `on` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`](https://en.wikipedia.org/wiki/Data_URI_scheme), [`ipfs`](https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls), or [`magnet`](https://en.wikipedia.org/wiki/Magnet_URI_scheme) URI schemes.
 
 ### 3.2.3 Ability
 
-The `do` field MUST contain a [UCAN Ability](https://github.com/ucan-wg/spec/#23-ability). This field can be thought of as the message or trait being sent to the resource.
+The `call` field MUST contain a [UCAN Ability](https://github.com/ucan-wg/spec/#23-ability). This field can be thought of as the message or trait being sent to the resource.
 
 ### 3.2.4 Input
 
@@ -387,19 +378,9 @@ UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type
 
 If `input` field is not present, it is implicitly a `unit` represented as empty map.
 
-### 3.2.5 Metadata
-
-The OPTIONAL `meta` field MAY be used to include human-readable descriptions, tags, execution hints, resource limits, and so on. If present, the `meta` field MUST contain a map with string keys. The contents of the map are left undefined to encourage extensible use.
-
-If `meta` field is not present, it is implicitly a `unit` represented as an empty map.
-
 ### 3.2.6 Nonce
 
 If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple invocations are unique.
-
-### 3.2.7 Proofs
-
-The `prf` field MUST contain links to any UCANs that provide the authority to perform this task. All of the outermost proofs MUST have `aud` field set to the [Executor]'s DID. All of the outmost proofs MUST have `iss` field set to the [Invoker]'s DID.
 
 ## 3.3 DAG-JSON Examples
 
@@ -460,7 +441,7 @@ The `prf` field MUST contain links to any UCANs that provide the authority to pe
 
 # 4 Authorization
 
-An [Authorization] is cryptographically signed data set. It represents an authorization to run [Task]s in that are included in `scope` data set.
+An [Authorization] is cryptographically signed data set. It represents an authorization to run [Task]s that are included in `scope` data set.
 
 ## 4.1 Schema
 
@@ -491,15 +472,15 @@ The `s` field MUST contain a [Varsig] of the [CBOR] encoded `scope` field.
 {
   "scope": [
     {
-      "/": "bafyreigfusg7tgegda7pxdn7px5vs7wxqk5nybr5ewjht4xas357x6ryia"
+      "/": "bafyreihtmwju3okftpeuqe3x3ux5e7c2jescakwnoiyv45vnicke4kdxy4"
     },
     {
-      "/": "bafyreid32aunjg6g6buib7bva2sa5ni4c6eaftgykyh6z6rnhcjxh4yk2y"
+      "/": "bafyreieuo63r3y2nuycaq4b3q2xvco3nprlxiwzcfp4cuupgaywat3z6mq"
     }
   ],
   "s": {
     "/": {
-      "bytes": "7aEDQJBsO/9rkcgQQ9qvSC0E60MdqGjpIHXuc4VbkfjEeYR7iAvAY+0QEN9kAFcwh6/kww4bK/I7xsqLzO5kG0x+2Qs"
+      "bytes": "7aEDQIJB8XXJ6hWbwu40fN4bq8+Zq8BxyybSWXatMVU3VsL+yzVYpeJqsEBQE5rNtUJefR5rRCNimKNZMJjA9/udZQQ"
     }
   }
 }
@@ -534,17 +515,31 @@ type SemVer string
 
 ## 5.2 Fields
 
-### 5.2.1 Task
+### 5.2.1 UCAN Task Version
+
+The `v` field MUST contain the SemVer-formatted version of the UCAN Invocation Specification that this struct conforms to.
+
+### 5.2.2 Task
 
 The `run` field MUST contain a link to the [Task] to be run.
 
-### 5.2.2 Authorization
+### 5.2.3 Cause
+
+[Task]s MAY be invoked as an effect caused by a prior [Invocation]. Such [Invocation]s SHOULD have a `cause` field set to the [Receipt] link of the [Invocation] that caused it. The linked [Receipt] MUST have an `Effect` (the `fx` field) containing invoked [Task] in the `run` field.
+
+### 5.2.4 Authorization
 
 The `auth` field MUST contain a link to the [Authorization] that authorizes invoked [Task] in the `run` field. The linked [Authorization] MUST contain `run` in its `scope`.
 
-### 5.2.3 Cause
+### 5.2.4 Proofs
 
-[Task]s MAY be invoked as an effect caused by a prior [Invocation]. Such [Invocation]s SHOULD have a link to the [Invocation] that caused it in the `cause` field. The [Receipt] of the causing [Invocation] (Invocation linked from `cause` field) MUST have an `Effect` (the `fx` field) containing caused [Invocation].
+The `prf` field MUST contain links to any UCANs that provide the authority to perform this task. All of the outermost proofs MUST have `aud` field set to the [Executor]'s DID. All of the outmost proofs MUST have `iss` field set to the [Invoker]'s DID.
+
+### 5.2.6 Metadata
+
+The OPTIONAL `meta` field MAY be used to include human-readable descriptions, tags, execution hints, resource limits, and so on. If present, the `meta` field MUST contain a map with string keys. The contents of the map are left undefined to encourage extensible use.
+
+If `meta` field is not present, it is implicitly a `unit` represented as an empty map.
 
 ## 5.3 DAG-JSON Example
 
@@ -552,57 +547,50 @@ The `auth` field MUST contain a link to the [Authorization] that authorizes invo
 
 ```json
 {
-  "blocks": {
-    "bafyreibgqjpwjks2dh2zgvq5ypuh5bly6quoi2dxjzfoa676owl6tscz5q": {
-      "do": "crud/create",
-      "with": "https://example.com/blog/posts",
-      "input": {
-        "headers": {
-          "content-type": "application/json"
-        },
-        "payload": {
-          "title": "How UCAN Tasks Changed My Life",
-          "body": "This is the story of how one spec changed everything...",
-          "topics": [
-            "authz",
-            "journal"
-          ],
-          "draft": true
-        }
-      }
-    },
-    "bafyreifpdtrqxeqvg5r5ctvcihnsrregsnw3gi74unbl66yf3dio2fee4a": {
-      "v": "0.1.0",
-      "run": {
-        "/": "bafyreibgqjpwjks2dh2zgvq5ypuh5bly6quoi2dxjzfoa676owl6tscz5q"
+  "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e": {
+    "on": "https://example.com/blog/posts",
+    "call": "crud/create",
+    "input": {
+      "headers": {
+        "content-type": "application/json"
       },
-      "auth": {
-        "/": "bafyreifpvyetnerhqoqdijxx4kf6hhofaz7momudq52scepsxzksshxm5a"
-      },
-      "prf": [
-        {
-          "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
-        }
-      ]
-    },
-    "bafyreifpvyetnerhqoqdijxx4kf6hhofaz7momudq52scepsxzksshxm5a": {
-      "scope": [
-        {
-          "/": "bafyreibgqjpwjks2dh2zgvq5ypuh5bly6quoi2dxjzfoa676owl6tscz5q"
-        }
-      ],
-      "s": {
-        "/": {
-          "bytes": "7aEDQDqN6XjxQnEXQLlg03zRXpoIpA/0ldLCVHA0hDdJLLQlRvQoh4Q24eAL3mozij08vTcKQhkvqClAuJ9FJr1eNAo"
-        }
+      "payload": {
+        "title": "How UCAN Tasks Changed My Life",
+        "body": "This is the story of how one spec changed everything...",
+        "topics": [
+          "authz",
+          "journal"
+        ],
+        "draft": true
       }
     }
   },
-  "roots": [
-    {
-      "/": "bafyreifpdtrqxeqvg5r5ctvcihnsrregsnw3gi74unbl66yf3dio2fee4a"
+  "bafyreic52he5oyk5qje3rscieok5ucdgl2maibx7mecumjtsf7cosx2fum": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e"
+    },
+    "auth": {
+      "/": "bafyreiftkrpdnijison6ttacz4s3qorklp7a3653hq4uaoyznsn6al4rke"
+    },
+    "prf": [
+      {
+        "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
+      }
+    ]
+  },
+  "bafyreiftkrpdnijison6ttacz4s3qorklp7a3653hq4uaoyznsn6al4rke": {
+    "scope": [
+      {
+        "/": "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e"
+      }
+    ],
+    "s": {
+      "/": {
+        "bytes": "7aEDQPPhXNvtVb5/T+O40xXU6TSgJZDFnlVaV3GMlaEo/dvxtyaCLm8uUsFK4xzQsQd82QQUYA6fK506XqjghRlucAQ"
+      }
     }
-  ]
+  }
 }
 ```
 
@@ -610,89 +598,79 @@ The `auth` field MUST contain a link to the [Authorization] that authorizes invo
 
 ```json
 {
-  "blocks": {
-    "bafyreibgqjpwjks2dh2zgvq5ypuh5bly6quoi2dxjzfoa676owl6tscz5q": {
-      "do": "crud/create",
-      "with": "https://example.com/blog/posts",
-      "input": {
-        "headers": {
-          "content-type": "application/json"
-        },
-        "payload": {
-          "title": "How UCAN Tasks Changed My Life",
-          "body": "This is the story of how one spec changed everything...",
-          "topics": [
-            "authz",
-            "journal"
-          ],
-          "draft": true
-        }
-      }
-    },
-    "bafyreiefy3rmuhla7uoxsjbv2zmz2ysmgy3erigwiyckcglxes6sgywms4": {
-      "do": "msg/send",
-      "with": "mailto:akiko@example.com",
-      "input": {
-        "to": [
-          "boris@example.com",
-          "carol@example.com"
+  "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e": {
+    "on": "https://example.com/blog/posts",
+    "call": "crud/create",
+    "input": {
+      "headers": {
+        "content-type": "application/json"
+      },
+      "payload": {
+        "title": "How UCAN Tasks Changed My Life",
+        "body": "This is the story of how one spec changed everything...",
+        "topics": [
+          "authz",
+          "journal"
         ],
-        "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!",
-        "subject": "Coffee"
-      }
-    },
-    "bafyreiaf4vq3ia7ykisqaxb3oxxjgam226b5juzia6xmrpjgodpief42cq": {
-      "v": "0.1.0",
-      "run": {
-        "/": "bafyreibgqjpwjks2dh2zgvq5ypuh5bly6quoi2dxjzfoa676owl6tscz5q"
-      },
-      "auth": {
-        "/": "bafyreiatkpx7p4m2jlry547in4asajlyqncmvpiykprgyd6uqfwlyvfirm"
-      },
-      "prf": [
-        {
-          "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
-        }
-      ]
-    },
-    "bafyreifpjetehajrap63g45djib2mxdzlr5wl442kbqgwpozfoiz76535u": {
-      "v": "0.1.0",
-      "run": {
-        "/": "bafyreiefy3rmuhla7uoxsjbv2zmz2ysmgy3erigwiyckcglxes6sgywms4"
-      },
-      "auth": {
-        "/": "bafyreiatkpx7p4m2jlry547in4asajlyqncmvpiykprgyd6uqfwlyvfirm"
-      },
-      "prf": [
-        {
-          "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"
-        }
-      ]
-    },
-    "bafyreiatkpx7p4m2jlry547in4asajlyqncmvpiykprgyd6uqfwlyvfirm": {
-      "scope": [
-        {
-          "/": "bafyreiefy3rmuhla7uoxsjbv2zmz2ysmgy3erigwiyckcglxes6sgywms4"
-        },
-        {
-          "/": "bafyreibgqjpwjks2dh2zgvq5ypuh5bly6quoi2dxjzfoa676owl6tscz5q"
-        }
-      ],
-      "s": {
-        "/": {
-          "bytes": "7aEDQFbdUsz5BvcCGkzwVtthNoQI/bxXi2CO+bmlFIbmfll/5+40dadU6sIY2vUfxYgUywprct3H+yIYIp0HuNdgxQM"
-        }
+        "draft": true
       }
     }
   },
-  "roots": [
-    {
-      "/": "bafyreiaf4vq3ia7ykisqaxb3oxxjgam226b5juzia6xmrpjgodpief42cq"
-    },
-    {
-      "/": "bafyreifpjetehajrap63g45djib2mxdzlr5wl442kbqgwpozfoiz76535u"
+  "bafyreie5rfou2tubwot7laoicmm6qkbqltbae6uqsh3wo6zmhwjpjdwhii": {
+    "on": "mailto:akiko@example.com",
+    "call": "msg/send",
+    "input": {
+      "to": [
+        "boris@example.com",
+        "carol@example.com"
+      ],
+      "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!",
+      "subject": "Coffee"
     }
-  ]
+  },
+  "bafyreiei3dbiv5mu5zymm6socbcfafg4d43lstizd6eomz2hv6y4o6nkpm": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e"
+    },
+    "auth": {
+      "/": "bafyreiaey7rgkvgegx2ylrtfgfl7lwfoagpessjxoxppeu4gkn2cgdbh7y"
+    },
+    "prf": [
+      {
+        "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
+      }
+    ]
+  },
+  "bafyreihoo7w6jpo43lqulfc3orcvutbsizjoja7uch65h74gf5rbtn5gdy": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafyreie5rfou2tubwot7laoicmm6qkbqltbae6uqsh3wo6zmhwjpjdwhii"
+    },
+    "auth": {
+      "/": "bafyreiaey7rgkvgegx2ylrtfgfl7lwfoagpessjxoxppeu4gkn2cgdbh7y"
+    },
+    "prf": [
+      {
+        "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"
+      }
+    ]
+  },
+  "bafyreiaey7rgkvgegx2ylrtfgfl7lwfoagpessjxoxppeu4gkn2cgdbh7y": {
+    "scope": [
+      {
+        "/": "bafyreie5rfou2tubwot7laoicmm6qkbqltbae6uqsh3wo6zmhwjpjdwhii"
+      },
+      {
+        "/": "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e"
+      }
+    ],
+    "s": {
+      "/": {
+        "bytes": "7aEDQMyGqYw2iwP7uIn+Kav5AWe9l5VnL72Gpkzs1Azp+zs6vnixQPa1aCSrok4XwKkhSlFRmRN8YbyohB6iDFl4CQ8"
+      }
+    }
+  }
 }
 ```
 
@@ -700,49 +678,42 @@ The `auth` field MUST contain a link to the [Authorization] that authorizes invo
 
 ```json
 {
-  "blocks": {
-    "bafyreifcerdvicarktlnif5uj25ultgpedwg63nxhmp7anoepaamqj4eji": {
-      "do": "crud/update",
-      "with": "dns:example.com?TYPE=TXT",
-      "input": {
-        "value": "hello world"
-      }
-    },
-    "bafyreicc3rilzaxravqju766yr4v7p6nm6sjsd4lbkfa4uqohbbxaejh7e": {
-      "v": "0.1.0",
-      "run": {
-        "/": "bafyreifcerdvicarktlnif5uj25ultgpedwg63nxhmp7anoepaamqj4eji"
-      },
-      "auth": {
-        "/": "bafyreifw2hxvz66fxx7vsn6q3ayrc62smhvt7jta3ck2u6kf4xgqo524hm"
-      },
-      "cause": {
-        "/": "bafyreiekrhjlfend2mwcmtakwshuctotwqcm2wriya6thpjcgvjzfmkt24"
-      },
-      "prf": [
-        {
-          "/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"
-        }
-      ]
-    },
-    "bafyreifw2hxvz66fxx7vsn6q3ayrc62smhvt7jta3ck2u6kf4xgqo524hm": {
-      "scope": [
-        {
-          "/": "bafyreifcerdvicarktlnif5uj25ultgpedwg63nxhmp7anoepaamqj4eji"
-        }
-      ],
-      "s": {
-        "/": {
-          "bytes": "7aEDQEkocMddH2BF4wuMRSlJaJFhu7pQaAInuzLrfU3TQd9XV/Rd0I6N6OvxPaCebNfpuCXrAgtlAxVh+sn8gWSSegk"
-        }
-      }
+  "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny": {
+    "on": "dns:example.com?TYPE=TXT",
+    "call": "crud/update",
+    "input": {
+      "value": "hello world"
     }
   },
-  "roots": [
-    {
-      "/": "bafyreicc3rilzaxravqju766yr4v7p6nm6sjsd4lbkfa4uqohbbxaejh7e"
+  "bafyreiemzjyz5sxmeatnlykpzr2feribz6yyxjlvvufsrbodx43t4wfi5m": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
+    },
+    "auth": {
+      "/": "bafyreia6tgroy43hkzywlg4ks7zxyvzgc62wifdvqjyy6uo3hrrrehgb3u"
+    },
+    "cause": {
+      "/": "bafyreibytdkxnyy4zzkiznz4psosqdhazizjrllzmu373ej4r6bckcvwju"
+    },
+    "prf": [
+      {
+        "/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"
+      }
+    ]
+  },
+  "bafyreia6tgroy43hkzywlg4ks7zxyvzgc62wifdvqjyy6uo3hrrrehgb3u": {
+    "scope": [
+      {
+        "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
+      }
+    ],
+    "s": {
+      "/": {
+        "bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"
+      }
     }
-  ]
+  }
 }
 ```
 
@@ -815,62 +786,62 @@ type Effect {
 
 ### 7.2.1 Forked Task Invocations
 
-The OPTIONAL `fork` field, if present MUST be a list of an alphabetically ordered [Invocation] links. List MUST NOT not contain duplicate entries. Every linked [Invocation] MUST have `cause` field set to the same [Invocation] (link) as the `run` field of the containing [Receipt].
+The OPTIONAL `fork` field, if present MUST be a list of an alphabetically ordered [Task] links. List MUST NOT not contain duplicate entries.
 
 ### 7.2.2 Joined Task Invocation
 
-The OPTIONAL `join` field, if present MUST be set to an [Invocation] link. Linked [Invocation] in the `join` field MUST have `cause` field set to the same [Invocation] (link) as the `run` field of the containing [Receipt].
+The OPTIONAL `join` field, if present MUST be set to a [Task] link.
 
-## 7.4 DAG-JSON Examples
+## 7.3 DAG-JSON Examples
 
-### 7.4.1 Effect spawning concurrent threads
+### 7.3.1 Effect spawning concurrent threads
 
 ```json
 {
   "fork": [
     {
-      "/": "bafyreigtbbrfic7gduybn2lcncbbzycbef3kt3aqeguko5dmuhpmf73zmu"
+      "/": "bafyreigmmdzix2vxboojvv6j6h7sgvxnrecdxtglwtqpxw7hybebzlsax4"
     },
     {
-      "/": "bafyreidj2fkidh5g4tlldael7dfw27va6vbn6ah6pv7hirsandzwp25pj4"
+      "/": "bafyreif6gfpzgxnii4ys6a4bjenefg737fb5bgam3onrbmhnoa4llk244q"
     }
   ]
 }
 ```
 
-### 7.4.2 Effect continuing thread execution
+### 7.3.2 Effect continuing thread execution
 
 ```json
 {
   "join": {
-    "/": "bafyreigqsmtpw6qliojfzupzbxsnkn4yave7vov2jvvrtye7w4nomvd7yq"
+    "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
   }
 }
 ```
 
-### 7.4.1 Effect with fork & join
+### 7.3.1 Effect with fork & join
 
 ```json
 {
+  "join": {
+    "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
+  },
   "fork": [
     {
-      "/": "bafyreieljernknkcrmefokxxperobictfndo4v4cazkjmqfwuog4puawxm"
+      "/": "bafyreigmmdzix2vxboojvv6j6h7sgvxnrecdxtglwtqpxw7hybebzlsax4"
     },
     {
-      "/": "bafyreiho3x2lbi6a5irw3orgrzrivkakr7iymalpukmxsvdsoqlxpcjsfq"
+      "/": "bafyreif6gfpzgxnii4ys6a4bjenefg737fb5bgam3onrbmhnoa4llk244q"
     }
-  ],
-  "join": {
-    "/": "bafyreidtsxqd5fcuwdgverklwpcgbgzixsf6z6wgelybiakpwec3q75iwa"
-  }
+  ]
 }
 ```
 
 # 8 Receipt
 
-A `Receipt` is an attestation of the [Result] and requested [Effect]s by a [Task] [Invocation]. A Receipt MUST be signed by the [Executor] or it's delegate. If signed by the delegate, the proof of delegation from the [Executor] to the Issuer (the `iss` of the receipt) MUST be provided in `prf`.
+A `Receipt` is an attestation of the [Result] and requested [Effect]s by a [Task] [Invocation]. A Receipt MUST be signed by the [Executor] or it's delegate. If signed by the delegate, the proof of delegation from the [Executor] to the delegate (the `iss` of the receipt) MUST be provided in `prf`.
 
-**NB: a Receipt this does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
+**NB: a Receipt does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
 Receipts MUST use the same version as the invocation that they contain.
 
@@ -913,27 +884,27 @@ The `out` field MUST contain the value output of the invocation in [Result] form
 
 ### 8.2.3 Effect
 
-The OPTIONAL `fx` field, if present MUST be set to the caused [Effect]. The [Executor] SHOULD perform contained [Task] [Invocation]s to progress a workflow execution.
+The OPTIONAL `fx` field, if present MUST be set to the caused [Effect]. The [Executor] SHOULD invoke contained [Task] to progress a workflow execution.
 
 If `fx` does not contain OPTIONAL `join` field, it denotes completion of the current execution thread.
 
 ### 8.2.4 Metadata Fields
 
-The metadata field MAY be omitted or used to contain additional data about the receipt. This field MAY be used for tags, commentary, trace information, and so on.
+The OPTIONAL metadata field MAY be omitted or used to contain additional data about the receipt. This field MAY be used for tags, commentary, trace information, and so on.
 
 ### 8.2.5 Receipt Issuer
 
-The OPTIONAL `iss` field, if present MUST contain the signer of the receipt. It MUST be an [Executor] or it's delegate. If delegate proof of delegation MUST be provided in `prf` field.
+The OPTIONAL `iss` field, if present MUST contain the DID of the [Executor] delegate that signed it. If field is present, delegation from [Executor] MUST be included in the `prf` field.
 
-If `iss` field is omitted, it MUST implicitly imply an [Executor].
+If `iss` field is omitted, Receipt MUST be signed by the [Executor].
 
 ### 8.2.6 Proofs
 
-The `prf` field MUST contain links to UCAN(s) that that delegate authority to perform the invocation from the [Executor] to the Receipt issuer (`iss`). If [Executor] and the Issuer are same no proofs are required.
+If OPTIONAL `prf` field is present, MUST contain link to UCAN delegatation authorizing Receipt Issuer (`iss`) to carry [Task] execution.
 
 ### 8.2.7 Signature
 
-The `s` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without `s` field. The signature MUST be generated by the issuer (`iss`).
+The `s` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without `s` field. The signature MUST be generated by the [Executor] or a delegate if OPTIONAL `iss` field is set.
 
 ## 8.3 DAG-JSON Examples
 
@@ -942,7 +913,7 @@ The `s` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without 
 ```json
 {
   "ran": {
-    "/": "bafyreifkeu34pzda27fozfcboh25psekhqehkvnekltoiaspb5jsp6pj5q"
+    "/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu"
   },
   "out": {
     "ok": {
@@ -961,7 +932,7 @@ The `s` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without 
   },
   "s": {
     "/": {
-      "bytes": "7aEDQIeyhI1chc8p3jpODozaxomV3y+rym9f+G7kIxyjsV0bqZZELGeCaYhIMYSmXk5aSAdufXJwLCFT6vsbm7DDqA0"
+      "bytes": "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU"
     }
   }
 }
@@ -972,7 +943,7 @@ The `s` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without 
 ```json
 {
   "ran": {
-    "/": "bafyreifkeu34pzda27fozfcboh25psekhqehkvnekltoiaspb5jsp6pj5q"
+    "/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu"
   },
   "out": {
     "ok": {
@@ -997,18 +968,18 @@ The `s` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without 
   ],
   "s": {
     "/": {
-      "bytes": "7aEDQB1URqWf6LhVUhbSgCOERp5wEGH0sEPqGvLrYpwsh5QslqVrwW8EXMjlRgeKeyHkM7yXxqzTXdnkB0tqFgMYOAk"
+      "bytes": "7aEDQKxIrga+88HNDd69Ho4Ggz8zkf+GxWC6dAGYua6l85YgiL3NqGxyGAygiSZtWrWUo6SokgOys2wYE7N+novtcwo"
     }
   }
 }
 ```
 
-### 7.3.3 Receipts with effects
+### 7.3.3 Receipt with effects
 
 ```json
 {
   "ran": {
-    "/": "bafyreicjvdt44rclleycshdpkpsnxpksztn5bmx6w6ximjmod7osuvs76i"
+    "/": "bafyreig3qnao4suz3lchh4joof7fhlobmgxhaal3vw4vtcghtlgtp7u4xy"
   },
   "out": {
     "ok": {
@@ -1016,21 +987,21 @@ The `s` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without 
     }
   },
   "fx": {
+    "join": {
+      "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
+    },
     "fork": [
       {
-        "/": "bafyreieljernknkcrmefokxxperobictfndo4v4cazkjmqfwuog4puawxm"
+        "/": "bafyreigmmdzix2vxboojvv6j6h7sgvxnrecdxtglwtqpxw7hybebzlsax4"
       },
       {
-        "/": "bafyreiho3x2lbi6a5irw3orgrzrivkakr7iymalpukmxsvdsoqlxpcjsfq"
+        "/": "bafyreif6gfpzgxnii4ys6a4bjenefg737fb5bgam3onrbmhnoa4llk244q"
       }
-    ],
-    "join": {
-      "/": "bafyreidtsxqd5fcuwdgverklwpcgbgzixsf6z6wgelybiakpwec3q75iwa"
-    }
+    ]
   },
   "s": {
     "/": {
-      "bytes": "7aEDQMhFF0SuvqImvMRUAORuY5uJttauHMRvt0kwFRXkidPqvkrouDr49lBkMKrGrCcJslpcp+/MeG0FoTjxdo3KQQc"
+      "bytes": "7aEDQAHWabtCE+QikM3Np94TrA5T8n2yXqy8Uf35hgw0fe5c2Xi1O0h/JgrFmGl2Gsbhfm05zpdQmwfK2f/Sbe00YQE"
     }
   }
 }
@@ -1046,104 +1017,75 @@ There MAY not be enough information to described an Invocation at creation time.
 
 Some invocations MAY require input from set of other invocations. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of one invocations into the input of the other. This liberates the invoker from waiting for each step.
 
-An [Await] MAY be used as a variable placeholder for a concrete value in an [Invocation] output, waiting on a previous step to complete.
+An `Await` MAY be used as a variable placeholder for a concrete value in a [Task] [Invocation] output, waiting on a previous step to complete.
 
 For example, consider the following invocation batch:
 
 ```json
 {
-  "blocks": {
-    "bafyreicxndtwegag3mmc6vos7xponkb2pkm7x5p5clbbgbheyuxssam6ka": {
-      "do": "crud/create",
-      "with": "https://example.com/blog/posts",
-      "input": {
-        "payload": {
-          "title": "How UCAN Tasks Changed My Life",
-          "body": "This is the story of how one spec changed everything..."
-        }
+  "bafyreiftw26kcrsf4tdijatgqxq6gtfhtrneetrcrp27ks6rvzsvzyanj4": {
+    "on": "https://example.com/blog/posts",
+    "call": "crud/create",
+    "input": {
+      "payload": {
+        "title": "How UCAN Tasks Changed My Life",
+        "body": "This is the story of how one spec changed everything..."
       }
-    },
-    "bafyreici7ms2diig6y3ju64f3y5q3rn4zezbmxoiv3hwxleaoia6sg5v2u": {
-      "v": "0.1.0",
-      "run": {
-        "/": "bafyreicxndtwegag3mmc6vos7xponkb2pkm7x5p5clbbgbheyuxssam6ka"
+    }
+  },
+  "bafyreifsvtyuiddvpsvurkwhyw3w55sp3nkw66gji6xxti5czol2q4hdqm": {
+    "on": "https://example.com/users/editors",
+    "call": "crud/read"
+  },
+  "bafyreiep7bzrz3irallgmsd43kipuh32khteq2dne4qc763txmvb2zmevu": {
+    "on": "mailto:akiko@example.com",
+    "call": "msg/send",
+    "input": {
+      "to": {
+        "await/ok": {
+          "/": "bafyreiftw26kcrsf4tdijatgqxq6gtfhtrneetrcrp27ks6rvzsvzyanj4"
+        }
       },
-      "prf": [
-        {
-          "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
-        }
-      ]
-    },
-    "bafyreibsgkiansdaty6eeuwtutmx6ztyp2wcmucoisyxzdlfeo74rhvuvi": {
-      "do": "crud/read",
-      "with": "https://example.com/users/editors"
-    },
-    "bafyreiamphjpf5bwht6le4v2fsbxa55omerv3lpoyhi3bzzimcrii7vfri": {
-      "v": "0.1.0",
-      "run": {
-        "/": "bafyreibsgkiansdaty6eeuwtutmx6ztyp2wcmucoisyxzdlfeo74rhvuvi"
-      },
-      "prf": [
-        {
-          "/": "bafyreie3ukg4h2kf7lnx7k62kjujlo2a5l66rh7e7vlj52fnsrj7tuc2ya"
-        }
-      ]
-    },
-    "bafyreiedbqqzfbo7kqdu3gjfcmfq7ffhzbs37qmu4q73mgtwm7h54jfbsm": {
-      "do": "msg/send",
-      "with": "mailto:akiko@example.com",
-      "input": {
-        "to": {
-          "await/ok": {
-            "/": "bafyreici7ms2diig6y3ju64f3y5q3rn4zezbmxoiv3hwxleaoia6sg5v2u"
-          }
-        },
-        "subject": "Coffee",
-        "body": {
-          "await/ok": {
-            "/": "bafyreiamphjpf5bwht6le4v2fsbxa55omerv3lpoyhi3bzzimcrii7vfri"
-          }
-        }
-      }
-    },
-    "bafyreic7ypuk4xd4kvintknoxfgy33ttkr3kv2vp2fenpylecofhuswiye": {
-      "v": "0.1.0",
-      "run": {
-        "/": "bafyreiedbqqzfbo7kqdu3gjfcmfq7ffhzbs37qmu4q73mgtwm7h54jfbsm"
-      },
-      "auth": {
-        "/": "bafyreifz5u3yzkophibkf4w23doou4pvhmqdje27cwihnl7obsbyeo3qym"
-      },
-      "prf": [
-        {
-          "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"
-        }
-      ]
-    },
-    "bafyreifz5u3yzkophibkf4w23doou4pvhmqdje27cwihnl7obsbyeo3qym": {
-      "scope": [
-        {
-          "/": "bafyreiedbqqzfbo7kqdu3gjfcmfq7ffhzbs37qmu4q73mgtwm7h54jfbsm"
-        },
-        {
-          "/": "bafyreicxndtwegag3mmc6vos7xponkb2pkm7x5p5clbbgbheyuxssam6ka"
-        },
-        {
-          "/": "bafyreibsgkiansdaty6eeuwtutmx6ztyp2wcmucoisyxzdlfeo74rhvuvi"
-        }
-      ],
-      "s": {
-        "/": {
-          "bytes": "7aEDQJb+yWxXmprXwpBSvvMtyGjG75QHA90UkQduagjS1DpQnqE4NB3Bm41j7q8ODIKBnPXtZAHBaX/VxGUJvD8DXAo"
+      "subject": "Coffee",
+      "body": {
+        "await/ok": {
+          "/": "bafyreifsvtyuiddvpsvurkwhyw3w55sp3nkw66gji6xxti5czol2q4hdqm"
         }
       }
     }
   },
-  "roots": [
-    {
-      "/": "bafyreic7ypuk4xd4kvintknoxfgy33ttkr3kv2vp2fenpylecofhuswiye"
+  "bafyreiau3ygtmtv4jfkl4dgg6j6vhw5kwty5undybijexm35wmazgbb2tq": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafyreiep7bzrz3irallgmsd43kipuh32khteq2dne4qc763txmvb2zmevu"
+    },
+    "auth": {
+      "/": "bafyreibvtceb6flhmazpufpro6fneaqn7de7wxju74l2kuptwhxjyuecja"
+    },
+    "prf": [
+      {
+        "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"
+      }
+    ]
+  },
+  "bafyreibvtceb6flhmazpufpro6fneaqn7de7wxju74l2kuptwhxjyuecja": {
+    "scope": [
+      {
+        "/": "bafyreiftw26kcrsf4tdijatgqxq6gtfhtrneetrcrp27ks6rvzsvzyanj4"
+      },
+      {
+        "/": "bafyreifsvtyuiddvpsvurkwhyw3w55sp3nkw66gji6xxti5czol2q4hdqm"
+      },
+      {
+        "/": "bafyreiep7bzrz3irallgmsd43kipuh32khteq2dne4qc763txmvb2zmevu"
+      }
+    ],
+    "s": {
+      "/": {
+        "bytes": "7aEDQDEGkezG7Bcpeknf2UJ7hpqeL1PZodrYYTSwRjqZPf67P4r1lRZvX+6+9gV+wDZUX0DZLMv64n2fPKnjvxrEugE"
+      }
     }
-  ]
+  }
 }
 ```
 
@@ -1166,89 +1108,53 @@ const notify = msg.send("mailto:akiko@example.com", {
 })
 ```
 
-While an [Await] MAY be substituted for any field in a [Task], substituting the `do` field is NOT RECOMMENDED. The `do` field is critical in understanding what kind of action will be performed, and schedulers SHOULD use this fields to grant atomicity, parallelize tasks, and so on.
+Any [Task] field other besides `do` MAY be substituted with `Await`. The `do` field is critical in understanding what kind of action will be performed and CAN NOT be substituded with `Await`.
 
-After resolution, the [Invocation] MUST be validated against the [Authorization] and linked UCAN proofs by the [Executor]. A Promise resolved to an [Invocation] that is not backed by a valid UCAN MUST NOT be executed, and SHOULD return an unauthorized error to the user. A Promise resolved to an [Invocation] with the [Authorization] that does not include invoked [Task] MUST NOT be executed, and SHOULD return an unauthorized error to the user.
+An [Await] MAY be used across [Invocation]s with a same [Authorization], or across [Invocation]s with different [Authorization] and MAY even be across multiple Invokers and Executors. As long as the invocation can be resolved, it MAY be promised. This is sometimes referred to as ["promise pipelining"](http://erights.org/elib/distrib/pipeline.html).
 
-Promises MAY be used across [Invocation]s with a same [Authorization], or across [Invocation]s with different [Authorization] and MAY even be across multiple Invokers and Executors. As long as the invocation can be resolved, it MAY be promised. This is sometimes referred to as ["promise pipelining"](http://erights.org/elib/distrib/pipeline.html).
+## Await
 
-## 9.2 Promise
+An `Await` describes the eventual output of the referenced [Task] invocation. An `Await` MUST resolve to an output [Result] with `await/*` variant. If unwrapping success or failure case is desired, corresponding `await/ok` or `await/error` variants MUST be used.
 
-A `Promise` has a same representation as [Invocation] with only difference being that `auth` field is OPTIONAL. Promise MAY be used by an [Invocation] to [Await] another [Invocation] authorized with the same [Authorization]. [Invocation] MAY be used directly everywhere else in place of the [Promise].
-
-### 9.2.1 Schema
-
-```ipldsch
-# Promise is an Invocation with optional 'auth' field which if omitted
-# is implicitly an 'auth' of the Invocation that contains Await.
-type Promise struct {
-  v       SemVer
-
-  run     &Task
-  # Receipt of the invocation that caused this invocation
-  cause   optional &Invocation
-  # Task authorization. If omitted can be interpreted as requires
-  # authorization 
-  auth    optional &Authorization
-
-  meta    {String : any}
-
-  prf     [&UCAN]
-}
-
-```
-
-## 9.3 Await
-
-An `Await` describes the eventual output of the referenced [Invocation]. An `Await` MUST resolve to an output [Result] with `await/*` variant. If unwrapping success or failure case is desired, corresponding `await/ok` or `await/error` variants MUST be used.
-
-An [Invocation] from the [Await] is resolved by:
-
-1. Creating a new [Invocation].
-1. Setting all of the fields, but `auth` to same values as an underlying [Promise].
-1. If OPTIONAL `auth` field of the underlying [Promise] is set:
-    - then set `auth` of the invocation to the same value
-    - else set `auth` of the invocation to the `auth` of the [Invocation] containing [Await] been resolved.
-
-### 9.3.1 Schema
+### 9.1 Schema
 
 ```ipldsch
 type Await union {
-  | &Promise "await/*"
-  | &Promise "await/ok"
-  | &Promise "await/error"
+  | &Task "await/*"
+  | &Task "await/ok"
+  | &Task "await/error"
 } representation keyed
 ```
 
-#### 9.3.2 Variants
+#### 9.2 Variants
 
-##### 9.3.2.1 Success
+##### 9.2.1 Success
 
-The successful output of the [Invocation] MAY be referenced by wrapping corresponding [Promise] in the `"await/ok"` tag.
+The successful output of the [Task] MAY be referenced by wrapping the [Task] in the `"await/ok"` tag.
 
-[Executor] MUST fail [Invocation] that `Await`s successful output of the failed [Invocation].
+[Executor] MUST fail [Task] that `Await`s successful output of the failed [Task].
 
-[Executor] MUST substitute [Task] field set to the [Await] of the successful [Invocation] with an (unwrapped) `ok` value of the output.
+[Executor] MUST substitute [Task] field set to the [Await] of the successful [Task] with an (unwrapped) `ok` value of the output.
 
-##### 9.3.2.1 Failure
+##### 9.2.2 Failure
 
-The failed output of the [Invocation] MAY be referenced by wrapping corresponding [Promise] in the `"await/error"` tag.
+The failed output of the [Task] MAY be referenced by wrapping the [Task] in the `"await/error"` tag.
 
-[Executor] MUST fail [Invocation] that `Await`s failed output of the successful [Invocation].
+[Executor] MUST fail [Task] that `Await`s failed output of the successful [Task].
 
-[Executor] MUST substitute [Task] field set to the [Await] of the failed [Invocation] with an (unwrapped) `error` value of the output.
+[Executor] MUST substitute [Task] field set to the [Await] of the failed [Task] with an (unwrapped) `error` value of the output.
 
-##### 9.3.2.1 Result
+##### 9.2.3 Result
 
-The [Result] output of the [Invocation] MAY be reference by wrapping corresponding [Promise] in the `"await/*"` tag.
+The [Result] output of the [Task] MAY be reference by wrapping the [Task] in the `"await/*"` tag.
 
-[Executor] MUST substitute [Task] field set to the [Await] of the [Invocation] with a `Result` value of the output.
+[Executor] MUST substitute [Task] field set to the [Await] of the [Task] with a `Result` value of the output.
 
-## 9.4 Dataflow
+## 9.3 Dataflow
 
 Pipelining uses [Await] as inputs to determine the required dataflow graph. The following examples both express the following dataflow graph:
 
-### 9.4.1 Batched
+### 9.3.1 Batched
 
 ```mermaid
 flowchart BR
@@ -1270,123 +1176,100 @@ flowchart BR
 
 ```json
 {
-  "blocks": {
-    "bafyreiesse5saoa5dj7f5mh7sffy57vfhnjm6tpgwmwxe3ncwin2hwqsoy": [
-      { "/": "bafyreigb54cv7jl4rt32nl5r7udzhbavd7c4ct5pkfkuept2ufrpig3zli" },
-      { "/": "bafyreier7y2snffy7x75y4ri6ahiflxmz7ksklizzwpphwgpfotc3omo2y" }
-    ],
-    "bafyreigb54cv7jl4rt32nl5r7udzhbavd7c4ct5pkfkuept2ufrpig3zli": {
-      "v": "0.1.0",
-      "with": "dns:example.com?TYPE=TXT",
-      "do": "crud/update",
-      "input": {
-        "value": "hello world"
-      },
-      "prf": [
-        { "/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau" }
-      ]
-    },
-    "bafyreieeipburgtzg4hr2ghxgspc53szrkstaz4syjat3tex75hjdrau3y": [
-      { "/": "bafyreieahqhc2dwrnucyljhpqqsskqak2tc4ehhd6lvxpzuztx72k4xidm" },
-      { "/": "bafyreier7y2snffy7x75y4ri6ahiflxmz7ksklizzwpphwgpfotc3omo2y" }
-    ],
-    "bafyreieahqhc2dwrnucyljhpqqsskqak2tc4ehhd6lvxpzuztx72k4xidm": {
-      "v": "0.1.0",
-      "with": "mailto://alice@example.com",
-      "do": "msg/send",
-      "input": {
-        "subject": "DNSLink for example.com",
-        "to": "bob@example.com",
-        "body": {
-          "await/ok": {
-            "ucan/task": {
-              "/": "bafyreigb54cv7jl4rt32nl5r7udzhbavd7c4ct5pkfkuept2ufrpig3zli"
-            }
-          }
-        }
-      },
-      "prf": [
-        { "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha" }
-      ]
-    },
-    "bafyreif7cskac7ongewanqahk2vljkk5rsiblm2vqqo57j2d6mgeuhtuxq": [
-      { "/": "bafyreifjjvdd6hoi7wjot7tjaubwztqldds332bgq6a4n37d6s5slxkbvy" },
-      { "/": "bafyreier7y2snffy7x75y4ri6ahiflxmz7ksklizzwpphwgpfotc3omo2y" }
-    ],
-    "bafyreifjjvdd6hoi7wjot7tjaubwztqldds332bgq6a4n37d6s5slxkbvy": {
-      "v": "0.1.0",
-      "with": "mailto://alice@example.com",
-      "do": "msg/send",
-      "input": {
-        "to": "carol@example.com",
-        "subject": "Hey Carol, DNSLink was updated!",
-        "body": {
-          "await/ok": {
-            "ucan/task": {
-              "/": "bafyreigb54cv7jl4rt32nl5r7udzhbavd7c4ct5pkfkuept2ufrpig3zli"
-            }
-          }
-        }
-      },
-      "prf": [
-        { "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha" }
-      ]
-    },
-    "bafyreid5bb7z7l4ti57gdep6tbsnam47555ivnh3znpylo2n7qqyiiggqm": [
-      { "/": "bafyreidxauqdrexpqw66zlo3q6cmr2vuuvb3vletnugkf33uuxwt2um4ry" },
-      { "/": "bafyreier7y2snffy7x75y4ri6ahiflxmz7ksklizzwpphwgpfotc3omo2y" }
-    ],
-    "bafyreidxauqdrexpqw66zlo3q6cmr2vuuvb3vletnugkf33uuxwt2um4ry": {
-      "v": "0.1.0",
-      "with": "https://example.com/report",
-      "do": "crud/update",
-      "input": {
-        "payload": {
-          "event": "email-notification",
-          "from": "mailto://alice@exmaple.com",
-          "to": ["bob@exmaple.com", "carol@example.com"]
-        },
-        "_": [
-          {
-            "await/ok": {
-              "ucan/task": {
-                "/": "bafyreieahqhc2dwrnucyljhpqqsskqak2tc4ehhd6lvxpzuztx72k4xidm"
-              }
-            }
-          },
-          {
-            "await/ok": {
-              "ucan/task": {
-                "/": "bafyreifjjvdd6hoi7wjot7tjaubwztqldds332bgq6a4n37d6s5slxkbvy"
-              }
-            }
-          }
-        ]
-      },
-      "prf": [
-        { "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i" }
-      ]
-    },
-    "bafyreier7y2snffy7x75y4ri6ahiflxmz7ksklizzwpphwgpfotc3omo2y": {
-      "scope": [
-        { "/": "bafyreigb54cv7jl4rt32nl5r7udzhbavd7c4ct5pkfkuept2ufrpig3zli" },
-        { "/": "bafyreifjjvdd6hoi7wjot7tjaubwztqldds332bgq6a4n37d6s5slxkbvy" },
-        { "/": "bafyreieahqhc2dwrnucyljhpqqsskqak2tc4ehhd6lvxpzuztx72k4xidm" },
-        { "/": "bafyreidxauqdrexpqw66zlo3q6cmr2vuuvb3vletnugkf33uuxwt2um4ry" }
-      ],
-      "s": {
-        "/": {
-          "bytes": "7aEDQPdMfJiaNTzmTVHiJhkcX6mlKOG2piEk0OtpLslJeaimx4uM4/hGcadQ3Z6qhu2j761PW4RKyC1+BiWB+jO7LwA"
+  "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny": {
+    "on": "dns:example.com?TYPE=TXT",
+    "call": "crud/update",
+    "input": {
+      "value": "hello world"
+    }
+  },
+  "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku": {
+    "on": "mailto://alice@example.com",
+    "call": "msg/send",
+    "input": {
+      "to": "bob@example.com",
+      "subject": "DNSLink for example.com",
+      "body": {
+        "await/ok": {
+          "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
         }
       }
     }
   },
-  "roots": [
-    { "/": "bafyreiesse5saoa5dj7f5mh7sffy57vfhnjm6tpgwmwxe3ncwin2hwqsoy" },
-    { "/": "bafyreif7cskac7ongewanqahk2vljkk5rsiblm2vqqo57j2d6mgeuhtuxq" },
-    { "/": "bafyreieeipburgtzg4hr2ghxgspc53szrkstaz4syjat3tex75hjdrau3y" },
-    { "/": "bafyreid5bb7z7l4ti57gdep6tbsnam47555ivnh3znpylo2n7qqyiiggqm" }
-  ]
+  "bafyreifiwxa2mnjvbihr45q56j6vyy4ksml7fh2tq2wnqtf5n55yveevja": {
+    "on": "mailto://alice@example.com",
+    "call": "msg/send",
+    "input": {
+      "to": "carol@example.com",
+      "subject": "Hey Carol, DNSLink was updated!",
+      "body": {
+        "await/ok": {
+          "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
+        }
+      }
+    }
+  },
+  "bafyreiail3bkoyow46d6gnisj4dttiitifiaodee3ixynbhyq6vzxnvj2q": {
+    "on": "https://example.com/report",
+    "call": "crud/update",
+    "input": {
+      "payload": {
+        "from": "mailto://alice@exmaple.com",
+        "to": [
+          "bob@exmaple.com",
+          "carol@example.com"
+        ],
+        "event": "email-notification"
+      },
+      "_": [
+        {
+          "await/ok": {
+            "/": "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku"
+          }
+        },
+        {
+          "await/ok": {
+            "/": "bafyreifiwxa2mnjvbihr45q56j6vyy4ksml7fh2tq2wnqtf5n55yveevja"
+          }
+        }
+      ]
+    }
+  },
+  "bafyreid2esrl52jp5rx6kh7opwlc2jnzhci7yd5jtlzwlqytujk6y6urza": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafyreiail3bkoyow46d6gnisj4dttiitifiaodee3ixynbhyq6vzxnvj2q"
+    },
+    "auth": {
+      "/": "bafyreigjddazpbxmomcl32ryjxaxqymdrvzpqzjq5xtctdncn65kszmsoi"
+    },
+    "prf": [
+      {
+        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+      }
+    ]
+  },
+  "bafyreigjddazpbxmomcl32ryjxaxqymdrvzpqzjq5xtctdncn65kszmsoi": {
+    "scope": [
+      {
+        "/": "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku"
+      },
+      {
+        "/": "bafyreifiwxa2mnjvbihr45q56j6vyy4ksml7fh2tq2wnqtf5n55yveevja"
+      },
+      {
+        "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
+      },
+      {
+        "/": "bafyreiail3bkoyow46d6gnisj4dttiitifiaodee3ixynbhyq6vzxnvj2q"
+      }
+    ],
+    "s": {
+      "/": {
+        "bytes": "7aEDQLbVVvN/RU8juyz+r36xMgCP1Eh1OknVckuCPrkTmvGS+ULTtCcvjF3gCqpqf6As7VLewoqTvWX1sswRudmOvAY"
+      }
+    }
+  }
 }
 ```
 
@@ -1424,164 +1307,128 @@ flowchart TB
 
 ```json
 {
-  "blocks": {
-    "bafyreifcerdvicarktlnif5uj25ultgpedwg63nxhmp7anoepaamqj4eji": {
-      "do": "crud/update",
-      "with": "dns:example.com?TYPE=TXT",
-      "input": {
-        "value": "hello world"
-      }
-    },
-    "bafyreieogoqh5rolyt4livorznwhg63ml4oon3vdxnkqvc7svya4gisppe": {
-      "v": "0.1.0",
-      "run": {
-        "/": "bafyreifcerdvicarktlnif5uj25ultgpedwg63nxhmp7anoepaamqj4eji"
-      },
-      "prf": [
-        {
-          "/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"
-        }
-      ]
-    },
-    "bafyreieqqhr7pznb77ffngpqnhmlcoi3666zc7qmhvdzs26oy6fclqp4dy": {
-      "do": "msg/send",
-      "with": "mailto://alice@example.com",
-      "input": {
-        "to": "bob@example.com",
-        "subject": "DNSLink for example.com",
-        "body": {
-          "await/ok": {
-            "/": "bafyreieogoqh5rolyt4livorznwhg63ml4oon3vdxnkqvc7svya4gisppe"
-          }
-        }
-      }
-    },
-    "bafyreid52dldaayikwgscn43o5gurlrujmlppdejductzdqnsvizvjplze": {
-      "v": "0.1.0",
-      "run": {
-        "/": "bafyreieqqhr7pznb77ffngpqnhmlcoi3666zc7qmhvdzs26oy6fclqp4dy"
-      },
-      "auth": {
-        "/": "bafyreifxyud6cnw26g3t54xsjcjilu6j7laqlge6fds6rgcezl2waivvdi"
-      },
-      "prf": [
-        {
-          "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha"
-        }
-      ]
-    },
-    "bafyreifxyud6cnw26g3t54xsjcjilu6j7laqlge6fds6rgcezl2waivvdi": {
-      "scope": [
-        {
-          "/": "bafyreifcerdvicarktlnif5uj25ultgpedwg63nxhmp7anoepaamqj4eji"
-        },
-        {
-          "/": "bafyreieqqhr7pznb77ffngpqnhmlcoi3666zc7qmhvdzs26oy6fclqp4dy"
-        }
-      ],
-      "s": {
-        "/": {
-          "bytes": "7aEDQFftPMepLGONVlthmxHaa7UbPnwVwJnDdIPrV/WcBTb1lot7OrEblJShcnrHrtcDNe8CRXQK9N58fPjYt4OQfQM"
+  "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny": {
+    "on": "dns:example.com?TYPE=TXT",
+    "call": "crud/update",
+    "input": {
+      "value": "hello world"
+    }
+  },
+  "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku": {
+    "on": "mailto://alice@example.com",
+    "call": "msg/send",
+    "input": {
+      "to": "bob@example.com",
+      "subject": "DNSLink for example.com",
+      "body": {
+        "await/ok": {
+          "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
         }
       }
     }
   },
-  "roots": [
-    {
-      "/": "bafyreid52dldaayikwgscn43o5gurlrujmlppdejductzdqnsvizvjplze"
+  "bafyreieeq5rf6uolaitbam2v56xmoz466eri3xcfwfawphon644cbgbkra": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku"
+    },
+    "auth": {
+      "/": "bafyreif343mg6uhtqa7qbuvd3glu3vjaya5q757dqyobwt5wysbh4h5rnq"
+    },
+    "prf": [
+      {
+        "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha"
+      }
+    ]
+  },
+  "bafyreif343mg6uhtqa7qbuvd3glu3vjaya5q757dqyobwt5wysbh4h5rnq": {
+    "scope": [
+      {
+        "/": "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku"
+      },
+      {
+        "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
+      }
+    ],
+    "s": {
+      "/": {
+        "bytes": "7aEDQG2GvLnr2gVEfMDrEUV8S3fw8JuFGVKAGIhSZCqCmHGyQ8cdU2A/Vp97yAsZQ+tqBaMWN3Q6YJLfPpAdgaXf2gY"
+      }
     }
-  ]
+  }
 }
 ```
 
 ```json
 {
-  "blocks": {
-    "bafyreif2l5ykv6pbdxd636o2iyhr7evorygjczhbfrlhkr5t65t5xjjdm4": {
-      "do": "msg/send",
-      "with": "mailto://alice@example.com",
-      "input": {
-        "to": "carol@example.com",
-        "subject": "Hey Carol, DNSLink was updated!",
-        "body": {
-          "await/ok": {
-            "/": "bafyreieogoqh5rolyt4livorznwhg63ml4oon3vdxnkqvc7svya4gisppe"
-          }
-        }
-      }
-    },
-    "bafyreifwe7q42d54pxmdszzdcayagrkb4btsto5zcfwn434n7yq57v3mxe": {
-      "v": "0.1.0",
-      "run": {
-        "/": "bafyreif2l5ykv6pbdxd636o2iyhr7evorygjczhbfrlhkr5t65t5xjjdm4"
-      },
-      "prf": [
-        {
-          "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha"
-        }
-      ]
-    },
-    "bafyreieym67mo7s5wjgwcnxrnn75vn4nn5w33snicuc34ppp4t5dshphya": {
-      "do": "crud/update",
-      "with": "https://example.com/report",
-      "input": {
-        "payload": {
-          "from": "mailto://alice@exmaple.com",
-          "to": [
-            "bob@exmaple.com",
-            "carol@example.com"
-          ],
-          "event": "email-notification"
-        },
-        "_": [
-          {
-            "await/ok": {
-              "/": "bafyreid52dldaayikwgscn43o5gurlrujmlppdejductzdqnsvizvjplze"
-            }
-          },
-          {
-            "await/ok": {
-              "/": "bafyreifwe7q42d54pxmdszzdcayagrkb4btsto5zcfwn434n7yq57v3mxe"
-            }
-          }
-        ]
-      }
-    },
-    "bafyreiahe6v4vsr3gzqn6s6wxcuauyoqvuzh524tkxiwr4lzcskywsc6p4": {
-      "v": "0.1.0",
-      "run": {
-        "/": "bafyreieym67mo7s5wjgwcnxrnn75vn4nn5w33snicuc34ppp4t5dshphya"
-      },
-      "auth": {
-        "/": "bafyreih6b5uc3xzhh6xnta7iqbwhe5t62kekzcjpssx5adyh5pky7m5j2e"
-      },
-      "prf": [
-        {
-          "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-        }
-      ]
-    },
-    "bafyreih6b5uc3xzhh6xnta7iqbwhe5t62kekzcjpssx5adyh5pky7m5j2e": {
-      "scope": [
-        {
-          "/": "bafyreif2l5ykv6pbdxd636o2iyhr7evorygjczhbfrlhkr5t65t5xjjdm4"
-        },
-        {
-          "/": "bafyreieym67mo7s5wjgwcnxrnn75vn4nn5w33snicuc34ppp4t5dshphya"
-        }
-      ],
-      "s": {
-        "/": {
-          "bytes": "7aEDQKkxnSFpFpj51Q715C7FWemiXgSKXdHZyN0XBsOym+/yBaF46iX98XYF789cdkRBQACUfzM5cRhFYvwZpljitA8"
+  "bafyreifiwxa2mnjvbihr45q56j6vyy4ksml7fh2tq2wnqtf5n55yveevja": {
+    "on": "mailto://alice@example.com",
+    "call": "msg/send",
+    "input": {
+      "to": "carol@example.com",
+      "subject": "Hey Carol, DNSLink was updated!",
+      "body": {
+        "await/ok": {
+          "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
         }
       }
     }
   },
-  "roots": [
-    {
-      "/": "bafyreiahe6v4vsr3gzqn6s6wxcuauyoqvuzh524tkxiwr4lzcskywsc6p4"
+  "bafyreiail3bkoyow46d6gnisj4dttiitifiaodee3ixynbhyq6vzxnvj2q": {
+    "on": "https://example.com/report",
+    "call": "crud/update",
+    "input": {
+      "payload": {
+        "from": "mailto://alice@exmaple.com",
+        "to": [
+          "bob@exmaple.com",
+          "carol@example.com"
+        ],
+        "event": "email-notification"
+      },
+      "_": [
+        {
+          "await/ok": {
+            "/": "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku"
+          }
+        },
+        {
+          "await/ok": {
+            "/": "bafyreifiwxa2mnjvbihr45q56j6vyy4ksml7fh2tq2wnqtf5n55yveevja"
+          }
+        }
+      ]
     }
-  ]
+  },
+  "bafyreih6wl2uvxuvpeicddv7exg5nixvc7kydbj3wlq24z37q5rd6vo5ky": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafyreiail3bkoyow46d6gnisj4dttiitifiaodee3ixynbhyq6vzxnvj2q"
+    },
+    "auth": {
+      "/": "bafyreiersek7u2lvzyolszwm5j5iy74qshc4oekszao7dmbwnnx4623du4"
+    },
+    "prf": [
+      {
+        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+      }
+    ]
+  },
+  "bafyreiersek7u2lvzyolszwm5j5iy74qshc4oekszao7dmbwnnx4623du4": {
+    "scope": [
+      {
+        "/": "bafyreifiwxa2mnjvbihr45q56j6vyy4ksml7fh2tq2wnqtf5n55yveevja"
+      },
+      {
+        "/": "bafyreiail3bkoyow46d6gnisj4dttiitifiaodee3ixynbhyq6vzxnvj2q"
+      }
+    ],
+    "s": {
+      "/": {
+        "bytes": "7aEDQM1yNTEO/+TF69wUwteH+ftAjD0ik5tXDa+sheAiuOZobSco/+vU882/Nf3LtMRF1EDoP/H38PX2bD5nJzkHAAU"
+      }
+    }
+  }
 }
 ```
 
@@ -1633,5 +1480,4 @@ Thanks to [Rod Vagg](https://github.com/rvagg/) for the clarifications on IPLD S
 [effect]: #7-effect
 [receipt]: #8-receipt
 [pipelines]: #9-pipelines
-[promise]: #92-promise
-[await]: #93-await
+[await]: #await
