@@ -762,7 +762,7 @@ The result of an [Invocation] MAY include a request for further actions to be pe
 
 Effects describe requests for future work to be performed. All [Invocation]s in an [Effect] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipelines]. The `fx` block contains two fields: `fork` and `join`.
 
-[Task]s listed in the `fork` field are first-class and only ordered by promises; they otherwise SHOULD be considered independent and equal. As such, atomic guarintees such as failure of one effect impling failure of other effects if left undefined.
+[Task]s listed in the `fork` field are first-class and only ordered by promises; they otherwise SHOULD be considered independent and equal. As such, atomic guarantees such as failure of one effect implying failure of other effects if left undefined.
 
 The `join` field describes an OPTIONAL "special" [Invocation] which instruct the [Executor] that the [Task] [Invocation] is a continuation of the previous Invocation. This roughly emulates a virtual thread which terminates in an Invocation that produces Effect without a `join` field.
 
@@ -1108,7 +1108,7 @@ const notify = msg.send("mailto:akiko@example.com", {
 })
 ```
 
-Any [Task] field other besides `do` MAY be substituted with `Await`. The `do` field is critical in understanding what kind of action will be performed and CAN NOT be substituded with `Await`.
+Any [Task] field other besides `do` MAY be substituted with `Await`. The `do` field is critical in understanding what kind of action will be performed and CAN NOT be substituted with `Await`.
 
 An [Await] MAY be used across [Invocation]s with a same [Authorization], or across [Invocation]s with different [Authorization] and MAY even be across multiple Invokers and Executors. As long as the invocation can be resolved, it MAY be promised. This is sometimes referred to as ["promise pipelining"](http://erights.org/elib/distrib/pipeline.html).
 
