@@ -758,7 +758,7 @@ If no information is available, this field SHOULD be set to `{}`.
 
 ## 7 Effect
 
-The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from reuqesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
+The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
 
 Effects describe requests for future work to be performed. All [Invocation]s in an [Effect] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipelines]. The `fx` block contains two fields: `fork` and `join`.
 
@@ -900,7 +900,7 @@ If `iss` field is omitted, Receipt MUST be signed by the [Executor].
 
 ### 8.2.6 Proofs
 
-If OPTIONAL `prf` field is present, MUST contain link to UCAN delegatation authorizing Receipt Issuer (`iss`) to carry [Task] execution.
+If OPTIONAL `prf` field is present, MUST contain link to UCAN delegation authorizing Receipt Issuer (`iss`) to carry [Task] execution.
 
 ### 8.2.7 Signature
 
