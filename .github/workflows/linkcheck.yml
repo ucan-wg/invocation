@@ -1,14 +1,22 @@
 name: Check Markdown links
 
-on: push
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - uses: gaurav-nelson/github-action-markdown-link-check@v1
-      with:
-        use-quiet-mode: 'yes'
-        check-modified-files-only: 'yes'
-        base-branch: 'main'
+      - uses: actions/checkout@master
+      - uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: "yes"
+          check-modified-files-only: "yes"
+          base-branch: "main"
+          config-file: "./.github/workflows/linkcheck.cfg.json"
+      - uses: DavidAnson/markdownlint-cli2-action@v9
+        with:
+          globs: "README.md"

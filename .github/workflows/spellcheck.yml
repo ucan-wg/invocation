@@ -1,5 +1,8 @@
-name: 'spellcheck'
+name: "spellcheck"
 on:
+  push:
+    branches:
+      - main
   pull_request:
 
 jobs:
@@ -7,12 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: matheus23/md-spellcheck-action@v4.1.0
+      - uses: matheus23/md-spellcheck-action@v4.2.2
         with:
-          files-to-check: "**/*.md"
-          files-to-exclude: |
-            CODE_OF_CONDUCT.md
-            CONTRIBUTING.md
-            Community_Specification_License-v1.md
-            Notices.md
-          words-to-ignore-file: ./.github/workflows/words-to-ignore.txt
+          files-to-check: "README.md"
+          files-to-exclude: "LICENSE.md" # optional
+          words-to-ignore-file: ".github/workflows/words-to-ignore.txt"
