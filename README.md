@@ -1,4 +1,4 @@
-# UCAN Invocation Specification v0.1.0
+# UCAN Invocation Specification v0.1.1
 
 ## Editors
 
@@ -216,8 +216,10 @@ type Invocation struct {
   v       SemVer
 
   run     &Task
+
   # Receipt of the invocation that caused this invocation
   cause   optional &Invocation
+
   # Task authorization.
   auth    &Authorization
 
@@ -236,9 +238,8 @@ type Receipt struct {
   out     Result
 
   # Effects to be performed
-  fx      Effect
-
-  # All the other metadata
+  fx      Effects
+ 
   # All the other metadata
   meta    {String : Any}
 
@@ -247,8 +248,8 @@ type Receipt struct {
   iss     optional Principal
 
   # When issuer is different from executor this MUST hold a UCAN
-  # delegation chain from executor to the issuer. Should be omitted when
-  # executor is an issuer.
+  # delegation chain from executor to the issuer. This should be 
+  # omitted when the executor is the issuer.
   prf     [&UCAN]
 
   # Signature from the "iss".
@@ -261,7 +262,7 @@ type Result union {
 } representation kinded
 
 # Represents a request to invoke enclosed set of tasks concurrently
-type Effect struct {
+type Effects struct {
   # Primary set of tasks to be invoked
   fork      [&Task]
   
@@ -312,17 +313,17 @@ Later, when we explore promise [pipelines], this also includes capturing the pro
 
 ```json
 {
-  "bafyreieuo63r3y2nuycaq4b3q2xvco3nprlxiwzcfp4cuupgaywat3z6mq": {
+  "bafy...getMailingList": {
     "on": "https://exmaple.com/mailinglist",
     "call": "crud/read"
   },
-  "bafyreihtmwju3okftpeuqe3x3ux5e7c2jescakwnoiyv45vnicke4kdxy4": {
+  "bafy...sendEmail": {
     "on": "mailto://alice@example.com",
     "call": "msg/send",
     "input": {
       "to": {
         "await/ok": {
-          "/": "bafyreieuo63r3y2nuycaq4b3q2xvco3nprlxiwzcfp4cuupgaywat3z6mq"
+          "/": "bafy...getMailingList"
         }
       },
       "subject": "hello",
@@ -346,10 +347,10 @@ const sendEmail = msg.send("mailto://alice@example.com", {
 
 ```ipldsch
 type Task struct {
-  on URI
-  call Ability
-  input {String:Any}
-  nnc string
+  on    URI
+  call  Ability
+  input {String : Any}
+  nnc   string
 }
 ```
 
@@ -449,6 +450,7 @@ An [Authorization] is cryptographically signed data set. It represents an author
 type Authorization struct {
   # Authorization is denoted by the set of links been authorized
   scope   [&Any] (implicit [])
+
   # Scope signed by the invoker
   s       VarSig
 }
@@ -503,6 +505,7 @@ type Invocation struct {
   run     &Task
   # Receipt of the invocation that caused this invocation
   cause   optional &Invocation
+
   # Task authorization.
   auth    &Authorization
 
@@ -510,6 +513,7 @@ type Invocation struct {
 
   prf     [&UCAN]
 }
+
 type SemVer string
 ```
 
@@ -547,7 +551,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 
 ```json
 {
-  "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e": {
+  "bafy...createBlogPost": {
     "on": "https://example.com/blog/posts",
     "call": "crud/create",
     "input": {
@@ -565,24 +569,10 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
       }
     }
   },
-  "bafyreic52he5oyk5qje3rscieok5ucdgl2maibx7mecumjtsf7cosx2fum": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e"
-    },
-    "auth": {
-      "/": "bafyreiftkrpdnijison6ttacz4s3qorklp7a3653hq4uaoyznsn6al4rke"
-    },
-    "prf": [
-      {
-        "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
-      }
-    ]
-  },
-  "bafyreiftkrpdnijison6ttacz4s3qorklp7a3653hq4uaoyznsn6al4rke": {
+  "bafy...auth": {
     "scope": [
       {
-        "/": "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e"
+        "/": "bafy...createBlogPost"
       }
     ],
     "s": {
@@ -590,6 +580,20 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
         "bytes": "7aEDQPPhXNvtVb5/T+O40xXU6TSgJZDFnlVaV3GMlaEo/dvxtyaCLm8uUsFK4xzQsQd82QQUYA6fK506XqjghRlucAQ"
       }
     }
+  },
+  "bafy...invocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...createBlogPost"
+    },
+    "auth": {
+      "/": "bafy...auth"
+    },
+    "prf": [
+      {
+        "/": "bafy...ucanProof"
+      }
+    ]
   }
 }
 ```
@@ -598,7 +602,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 
 ```json
 {
-  "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e": {
+  "bafy...createBlogPostTask": {
     "on": "https://example.com/blog/posts",
     "call": "crud/create",
     "input": {
@@ -616,7 +620,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
       }
     }
   },
-  "bafyreie5rfou2tubwot7laoicmm6qkbqltbae6uqsh3wo6zmhwjpjdwhii": {
+  "bafy...sendEmailTask": {
     "on": "mailto:akiko@example.com",
     "call": "msg/send",
     "input": {
@@ -628,41 +632,13 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
       "subject": "Coffee"
     }
   },
-  "bafyreiei3dbiv5mu5zymm6socbcfafg4d43lstizd6eomz2hv6y4o6nkpm": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e"
-    },
-    "auth": {
-      "/": "bafyreiaey7rgkvgegx2ylrtfgfl7lwfoagpessjxoxppeu4gkn2cgdbh7y"
-    },
-    "prf": [
-      {
-        "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
-      }
-    ]
-  },
-  "bafyreihoo7w6jpo43lqulfc3orcvutbsizjoja7uch65h74gf5rbtn5gdy": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafyreie5rfou2tubwot7laoicmm6qkbqltbae6uqsh3wo6zmhwjpjdwhii"
-    },
-    "auth": {
-      "/": "bafyreiaey7rgkvgegx2ylrtfgfl7lwfoagpessjxoxppeu4gkn2cgdbh7y"
-    },
-    "prf": [
-      {
-        "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"
-      }
-    ]
-  },
-  "bafyreiaey7rgkvgegx2ylrtfgfl7lwfoagpessjxoxppeu4gkn2cgdbh7y": {
+  "bafy...multipleAuth": {
     "scope": [
       {
-        "/": "bafyreie5rfou2tubwot7laoicmm6qkbqltbae6uqsh3wo6zmhwjpjdwhii"
+        "/": "bafy...sendEmailTask"
       },
       {
-        "/": "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e"
+        "/": "bafy...createBlogPostTask"
       }
     ],
     "s": {
@@ -670,6 +646,34 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
         "bytes": "7aEDQMyGqYw2iwP7uIn+Kav5AWe9l5VnL72Gpkzs1Azp+zs6vnixQPa1aCSrok4XwKkhSlFRmRN8YbyohB6iDFl4CQ8"
       }
     }
+  },
+  "bafy...createBlogPostInvocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...createBlogPostTask"
+    },
+    "auth": {
+      "/": "bafy...multipleAuth"
+    },
+    "prf": [
+      {
+        "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
+      }
+    ]
+  },
+  "bafy...sendEmailInvocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...sendEmailTask"
+    },
+    "auth": {
+      "/": "bafy...multipleAuth"
+    },
+    "prf": [
+      {
+        "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"
+      }
+    ]
   }
 }
 ```
@@ -678,31 +682,14 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 
 ```json
 {
-  "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny": {
+  "bafy...updateDnsTask": {
     "on": "dns:example.com?TYPE=TXT",
     "call": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
-  "bafyreiemzjyz5sxmeatnlykpzr2feribz6yyxjlvvufsrbodx43t4wfi5m": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
-    },
-    "auth": {
-      "/": "bafyreia6tgroy43hkzywlg4ks7zxyvzgc62wifdvqjyy6uo3hrrrehgb3u"
-    },
-    "cause": {
-      "/": "bafyreibytdkxnyy4zzkiznz4psosqdhazizjrllzmu373ej4r6bckcvwju"
-    },
-    "prf": [
-      {
-        "/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"
-      }
-    ]
-  },
-  "bafyreia6tgroy43hkzywlg4ks7zxyvzgc62wifdvqjyy6uo3hrrrehgb3u": {
+  "bafy...auth": {
     "scope": [
       {
         "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
@@ -713,6 +700,23 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
         "bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"
       }
     }
+  },
+  "bafy...updateDnsInvocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...updateDnsTask"
+    },
+    "auth": {
+      "/": "bafy...auth"
+    },
+    "cause": {
+      "/": "bafy...somePriorInvocation"
+    },
+    "prf": [
+      {
+        "/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"
+      }
+    ]
   }
 }
 ```
@@ -728,7 +732,6 @@ type Result union {
   | any "ok"
   | any "error"
 } representation keyed
-}
 ```
 
 ## 6.2 Variants
@@ -853,8 +856,9 @@ type Receipt struct {
 
   # output of the invocation
   out     Result
+
   # Effects to be performed
-  fx      Effect
+  fx      Effects
 
   # All the other metadata
   meta    {String: any}
