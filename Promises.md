@@ -1,7 +1,44 @@
-# Document Title
+# UCAN Promise Pipelines
+
+
+Later, when we explore promise [pipelines], this also includes capturing the promise:
+
+```json
+{
+  "bafy...getMailingList": {
+    "on": "https://exmaple.com/mailinglist",
+    "call": "crud/read"
+  },
+  "bafy...sendEmail": {
+    "on": "mailto://alice@example.com",
+    "call": "msg/send",
+    "input": {
+      "to": {
+        "await/ok": {
+          "/": "bafy...getMailingList"
+        }
+      },
+      "subject": "hello",
+      "body": "world"
+    }
+  }
+}
+```
+
+```js
+// Pseudocode
+const mailingList = crud.read("https://exmaple.com/mailinglist");
+const sendEmail = msg.send("mailto://alice@example.com", {
+  to: mailingList.await().ok,
+  subject: "hello",
+  body: "world"
+});
+```
 
 
 ```ipldsch
+type Closure = Task # Allows promises
+
 # Way to reference result of the Task
 type Await union {
   | &Task    "await/*"

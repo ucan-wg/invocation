@@ -239,7 +239,7 @@ type Receipt struct {
 
   # Effects to be performed
   fx      Effects
- 
+  
   # All the other metadata
   meta    {String : Any}
 
@@ -300,40 +300,6 @@ Using the JavaScript analogy from the introduction, a Task is similar to wrappin
     subject: "hello",
     body: "world"
   })
-```
-
-Later, when we explore promise [pipelines], this also includes capturing the promise:
-
-```json
-{
-  "bafy...getMailingList": {
-    "on": "https://exmaple.com/mailinglist",
-    "call": "crud/read"
-  },
-  "bafy...sendEmail": {
-    "on": "mailto://alice@example.com",
-    "call": "msg/send",
-    "input": {
-      "to": {
-        "await/ok": {
-          "/": "bafy...getMailingList"
-        }
-      },
-      "subject": "hello",
-      "body": "world"
-    }
-  }
-}
-```
-
-```js
-// Pseudocode
-const mailingList = crud.read("https://exmaple.com/mailinglist");
-const sendEmail = msg.send("mailto://alice@example.com", {
-  to: mailingList.await().ok,
-  subject: "hello",
-  body: "world"
-});
 ```
 
 ## 3.1 Schema
