@@ -212,47 +212,15 @@ type Authorization struct {
   s       VarSig
 }
 
-type Context struct {
+type Invocation struct {
   v       SemVer
   run     &Task
   meta    {String : Any}
   prf     [&UCAN]
+  auth    &Authorization
 
   # Receipt of the invocation that caused this invocation
   cause   optional &Invocation
-}
-
-type Invocation struct {
-  ctx     &Context
-
-  # Task authorization.
-  auth    &Authorization
-} 
-
-{
-  "ctx": &{
-    "v": "0.1.0",
-    "run": &{
-      "obj" "mailto://alice@example.com",
-      "call": "msg/send",
-      "input": {
-        "to": {
-          "await/ok": {"/": "bafy...getMailingList"}
-        },
-        "subject": "hello",
-        "body": "world"
-      }
-    },
-    "meta": {
-      "gas": 1000,
-      "timeout": 5000
-    },
-    "prf": [...]
-  },
-  "auth": &{
-    "scope": [...],
-    "s": "0xabcdef"
-  }
 }
 
 type SemVer string
