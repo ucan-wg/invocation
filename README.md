@@ -281,7 +281,7 @@ Using the JavaScript analogy from the introduction, a Task is similar to wrappin
 
 ```json
 {
-  "obj" "mailto:alice@example.com",
+  "obj": "mailto:alice@example.com",
   "call": "msg/send",
   "args": {
     "to": [
@@ -309,11 +309,11 @@ Later, when we explore promise [pipelines], this also includes capturing the pro
 ```json
 {
   "bafy...getMailingList": {
-    "obj" "https://exmaple.com/mailinglist",
+    "obj": "https://exmaple.com/mailinglist",
     "call": "crud/read"
   },
   "bafy...sendEmail": {
-    "obj" "mailto://alice@example.com",
+    "obj": "mailto://alice@example.com",
     "call": "msg/send",
     "args": {
       "to": {
@@ -384,7 +384,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "obj" "https://example.com/blog/posts",
+  "obj": "https://example.com/blog/posts",
   "call": "crud/create",
   "args": {
     "headers": {
@@ -407,7 +407,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "obj" "mailto:akiko@example.com",
+  "obj": "mailto:akiko@example.com",
   "call": "msg/send",
   "args": {
     "to": [
@@ -424,7 +424,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "obj" "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+  "obj": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
   "call": "wasm/run",
   "args": {
     "func": "add_one",
@@ -548,7 +548,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 ```json
 {
   "bafy...createBlogPost": {
-    "obj" "https://example.com/blog/posts",
+    "obj": "https://example.com/blog/posts",
     "call": "crud/create",
     "args": {
       "headers": {
@@ -599,7 +599,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 ```json
 {
   "bafy...createBlogPostTask": {
-    "obj" "https://example.com/blog/posts",
+    "obj": "https://example.com/blog/posts",
     "call": "crud/create",
     "args": {
       "headers": {
@@ -617,7 +617,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
     }
   },
   "bafy...sendEmailTask": {
-    "obj" "mailto:akiko@example.com",
+    "obj": "mailto:akiko@example.com",
     "call": "msg/send",
     "args": {
       "to": [
@@ -679,7 +679,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 ```json
 {
   "bafy...updateDnsTask": {
-    "obj" "dns:example.com?TYPE=TXT",
+    "obj": "dns:example.com?TYPE=TXT",
     "call": "crud/update",
     "args": {
       "value": "hello world"
@@ -1027,7 +1027,7 @@ For example, consider the following invocation batch:
 ```json
 {
   "bafy...createBlogPostTask": {
-    "obj" "https://example.com/blog/posts",
+    "obj": "https://example.com/blog/posts",
     "call": "crud/create",
     "args": {
       "payload": {
@@ -1037,11 +1037,11 @@ For example, consider the following invocation batch:
     }
   },
   "bafy...getBlogEditorsTask": {
-    "obj" "https://example.com/users/editors",
+    "obj": "https://example.com/users/editors",
     "call": "crud/read"
   },
   "bafy...sendEmailTask": {
-    "obj" "mailto:akiko@example.com",
+    "obj": "mailto:akiko@example.com",
     "call": "msg/send",
     "args": {
       "to": {
@@ -1180,14 +1180,14 @@ flowchart BR
 ```json
 {
   "bafy...updateDnsTask": {
-    "obj" "dns:example.com?TYPE=TXT",
+    "obj": "dns:example.com?TYPE=TXT",
     "call": "crud/update",
     "args": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
-    "obj" "mailto://alice@example.com",
+    "obj": "mailto://alice@example.com",
     "call": "msg/send",
     "args": {
       "to": "bob@example.com",
@@ -1200,7 +1200,7 @@ flowchart BR
     }
   },
   "bafy...sendCarolEmailTask": {
-    "obj" "mailto://alice@example.com",
+    "obj": "mailto://alice@example.com",
     "call": "msg/send",
     "args": {
       "to": "carol@example.com",
@@ -1213,7 +1213,7 @@ flowchart BR
     }
   },
   "bafy...updateReportTask": {
-    "obj" "https://example.com/report",
+    "obj": "https://example.com/report",
     "call": "crud/update",
     "args": {
       "payload": {
@@ -1353,14 +1353,14 @@ flowchart TB
 ```json
 {
   "bafy...updateDnsTask": {
-    "obj" "dns:example.com?TYPE=TXT",
+    "obj": "dns:example.com?TYPE=TXT",
     "call": "crud/update",
     "args": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
-    "obj" "mailto://alice@example.com",
+    "obj": "mailto://alice@example.com",
     "call": "msg/send",
     "args": {
       "to": "bob@example.com",
@@ -1421,7 +1421,7 @@ flowchart TB
 ```json
 {
   "bafy...emailCarolTask": {
-    "obj" "mailto://alice@example.com",
+    "obj": "mailto://alice@example.com",
     "call": "msg/send",
     "args": {
       "to": "carol@example.com",
@@ -1434,7 +1434,7 @@ flowchart TB
     }
   },
   "bafy...updateReportTask": {
-    "obj" "https://example.com/report",
+    "obj": "https://example.com/report",
     "call": "crud/update",
     "args": {
       "payload": {
