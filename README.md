@@ -212,15 +212,19 @@ type Authorization struct {
   s       VarSig
 }
 
-type Invocation struct {
+type Context struct {
   v       SemVer
   run     &Task
   meta    {String : Any}
   prf     [&UCAN]
-  auth    &Authorization
 
   # Receipt of the invocation that caused this invocation
   cause   optional &Invocation
+}
+
+type Invocation struct {
+  ctx     Context
+  auth    &Authorization
 }
 
 type SemVer string
