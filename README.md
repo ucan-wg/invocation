@@ -1,4 +1,4 @@
-# UCAN Invocation Specification v0.1.0
+# UCAN Invocation Specification v0.1.1
 
 ## Editors
 
@@ -216,8 +216,10 @@ type Invocation struct {
   v       SemVer
 
   run     &Task
+
   # Receipt of the invocation that caused this invocation
   cause   optional &Invocation
+
   # Task authorization.
   auth    &Authorization
 
@@ -236,9 +238,8 @@ type Receipt struct {
   out     Result
 
   # Effects to be performed
-  fx      Effect
-
-  # All the other metadata
+  fx      Effects
+ 
   # All the other metadata
   meta    {String : Any}
 
@@ -247,8 +248,8 @@ type Receipt struct {
   iss     optional Principal
 
   # When issuer is different from executor this MUST hold a UCAN
-  # delegation chain from executor to the issuer. Should be omitted when
-  # executor is an issuer.
+  # delegation chain from executor to the issuer. This should be 
+  # omitted when the executor is the issuer.
   prf     [&UCAN]
 
   # Signature from the "iss".
@@ -261,7 +262,7 @@ type Result union {
 } representation kinded
 
 # Represents a request to invoke enclosed set of tasks concurrently
-type Effect struct {
+type Effects struct {
   # Primary set of tasks to be invoked
   fork      [&Task]
   
@@ -312,17 +313,17 @@ Later, when we explore promise [pipelines], this also includes capturing the pro
 
 ```json
 {
-  "bafyreieuo63r3y2nuycaq4b3q2xvco3nprlxiwzcfp4cuupgaywat3z6mq": {
+  "bafy...getMailingList": {
     "on": "https://exmaple.com/mailinglist",
     "call": "crud/read"
   },
-  "bafyreihtmwju3okftpeuqe3x3ux5e7c2jescakwnoiyv45vnicke4kdxy4": {
+  "bafy...sendEmail": {
     "on": "mailto://alice@example.com",
     "call": "msg/send",
     "input": {
       "to": {
         "await/ok": {
-          "/": "bafyreieuo63r3y2nuycaq4b3q2xvco3nprlxiwzcfp4cuupgaywat3z6mq"
+          "/": "bafy...getMailingList"
         }
       },
       "subject": "hello",
@@ -346,10 +347,10 @@ const sendEmail = msg.send("mailto://alice@example.com", {
 
 ```ipldsch
 type Task struct {
-  on URI
-  call Ability
-  input {String:Any}
-  nnc string
+  on    URI
+  call  Ability
+  input {String : Any}
+  nnc   string
 }
 ```
 
@@ -449,6 +450,7 @@ An [Authorization] is cryptographically signed data set. It represents an author
 type Authorization struct {
   # Authorization is denoted by the set of links been authorized
   scope   [&Any] (implicit [])
+
   # Scope signed by the invoker
   s       VarSig
 }
@@ -503,6 +505,7 @@ type Invocation struct {
   run     &Task
   # Receipt of the invocation that caused this invocation
   cause   optional &Invocation
+
   # Task authorization.
   auth    &Authorization
 
@@ -510,6 +513,7 @@ type Invocation struct {
 
   prf     [&UCAN]
 }
+
 type SemVer string
 ```
 
@@ -547,7 +551,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 
 ```json
 {
-  "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e": {
+  "bafy...createBlogPost": {
     "on": "https://example.com/blog/posts",
     "call": "crud/create",
     "input": {
@@ -565,24 +569,10 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
       }
     }
   },
-  "bafyreic52he5oyk5qje3rscieok5ucdgl2maibx7mecumjtsf7cosx2fum": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e"
-    },
-    "auth": {
-      "/": "bafyreiftkrpdnijison6ttacz4s3qorklp7a3653hq4uaoyznsn6al4rke"
-    },
-    "prf": [
-      {
-        "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
-      }
-    ]
-  },
-  "bafyreiftkrpdnijison6ttacz4s3qorklp7a3653hq4uaoyznsn6al4rke": {
+  "bafy...auth": {
     "scope": [
       {
-        "/": "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e"
+        "/": "bafy...createBlogPost"
       }
     ],
     "s": {
@@ -590,6 +580,20 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
         "bytes": "7aEDQPPhXNvtVb5/T+O40xXU6TSgJZDFnlVaV3GMlaEo/dvxtyaCLm8uUsFK4xzQsQd82QQUYA6fK506XqjghRlucAQ"
       }
     }
+  },
+  "bafy...invocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...createBlogPost"
+    },
+    "auth": {
+      "/": "bafy...auth"
+    },
+    "prf": [
+      {
+        "/": "bafy...ucanProof"
+      }
+    ]
   }
 }
 ```
@@ -598,7 +602,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 
 ```json
 {
-  "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e": {
+  "bafy...createBlogPostTask": {
     "on": "https://example.com/blog/posts",
     "call": "crud/create",
     "input": {
@@ -616,7 +620,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
       }
     }
   },
-  "bafyreie5rfou2tubwot7laoicmm6qkbqltbae6uqsh3wo6zmhwjpjdwhii": {
+  "bafy...sendEmailTask": {
     "on": "mailto:akiko@example.com",
     "call": "msg/send",
     "input": {
@@ -628,41 +632,13 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
       "subject": "Coffee"
     }
   },
-  "bafyreiei3dbiv5mu5zymm6socbcfafg4d43lstizd6eomz2hv6y4o6nkpm": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e"
-    },
-    "auth": {
-      "/": "bafyreiaey7rgkvgegx2ylrtfgfl7lwfoagpessjxoxppeu4gkn2cgdbh7y"
-    },
-    "prf": [
-      {
-        "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
-      }
-    ]
-  },
-  "bafyreihoo7w6jpo43lqulfc3orcvutbsizjoja7uch65h74gf5rbtn5gdy": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafyreie5rfou2tubwot7laoicmm6qkbqltbae6uqsh3wo6zmhwjpjdwhii"
-    },
-    "auth": {
-      "/": "bafyreiaey7rgkvgegx2ylrtfgfl7lwfoagpessjxoxppeu4gkn2cgdbh7y"
-    },
-    "prf": [
-      {
-        "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"
-      }
-    ]
-  },
-  "bafyreiaey7rgkvgegx2ylrtfgfl7lwfoagpessjxoxppeu4gkn2cgdbh7y": {
+  "bafy...multipleAuth": {
     "scope": [
       {
-        "/": "bafyreie5rfou2tubwot7laoicmm6qkbqltbae6uqsh3wo6zmhwjpjdwhii"
+        "/": "bafy...sendEmailTask"
       },
       {
-        "/": "bafyreia5gmhblitl6bmggheh4yh5z3uws3anlpr3ieexd44p74fq56746e"
+        "/": "bafy...createBlogPostTask"
       }
     ],
     "s": {
@@ -670,6 +646,34 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
         "bytes": "7aEDQMyGqYw2iwP7uIn+Kav5AWe9l5VnL72Gpkzs1Azp+zs6vnixQPa1aCSrok4XwKkhSlFRmRN8YbyohB6iDFl4CQ8"
       }
     }
+  },
+  "bafy...createBlogPostInvocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...createBlogPostTask"
+    },
+    "auth": {
+      "/": "bafy...multipleAuth"
+    },
+    "prf": [
+      {
+        "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
+      }
+    ]
+  },
+  "bafy...sendEmailInvocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...sendEmailTask"
+    },
+    "auth": {
+      "/": "bafy...multipleAuth"
+    },
+    "prf": [
+      {
+        "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"
+      }
+    ]
   }
 }
 ```
@@ -678,31 +682,14 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 
 ```json
 {
-  "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny": {
+  "bafy...updateDnsTask": {
     "on": "dns:example.com?TYPE=TXT",
     "call": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
-  "bafyreiemzjyz5sxmeatnlykpzr2feribz6yyxjlvvufsrbodx43t4wfi5m": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
-    },
-    "auth": {
-      "/": "bafyreia6tgroy43hkzywlg4ks7zxyvzgc62wifdvqjyy6uo3hrrrehgb3u"
-    },
-    "cause": {
-      "/": "bafyreibytdkxnyy4zzkiznz4psosqdhazizjrllzmu373ej4r6bckcvwju"
-    },
-    "prf": [
-      {
-        "/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"
-      }
-    ]
-  },
-  "bafyreia6tgroy43hkzywlg4ks7zxyvzgc62wifdvqjyy6uo3hrrrehgb3u": {
+  "bafy...auth": {
     "scope": [
       {
         "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
@@ -713,6 +700,23 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
         "bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"
       }
     }
+  },
+  "bafy...updateDnsInvocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...updateDnsTask"
+    },
+    "auth": {
+      "/": "bafy...auth"
+    },
+    "cause": {
+      "/": "bafy...somePriorInvocation"
+    },
+    "prf": [
+      {
+        "/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"
+      }
+    ]
   }
 }
 ```
@@ -728,7 +732,6 @@ type Result union {
   | any "ok"
   | any "error"
 } representation keyed
-}
 ```
 
 ## 6.2 Variants
@@ -772,13 +775,13 @@ Tasks in the `fork` field MAY be related to the Task in the `join` field if ther
 
 ```ipldsch
 # Represents a request to invoke enclosed set of tasks concurrently
-type Effect {
+type Effects {
   # Primary set of tasks to be invoked
   fork      [&Invocation]
   
   # Additional task to be invoked with added semantics
   # of representing a workflow execution continuation.
-  join       optional &Invocation
+  join      optional &Invocation
 }
 ```
 
@@ -853,18 +856,22 @@ type Receipt struct {
 
   # output of the invocation
   out     Result
+
   # Effects to be performed
-  fx      Effect
+  fx      Effects
 
   # All the other metadata
   meta    {String: any}
 
-  # Principal that issued this receipt. If omitted issuer is
-  # inferred from the invocation task audience.
+  # Principal that issued this receipt.
+  # If omitted issuer is inferred from 
+  # the invocation task audience.
   iss     optional Principal
 
-  # When issuer is different from executor this MUST hold a UCAN
-  # delegation chain from executor to the issuer. Should be omitted executor is an issuer.
+  # When issuer is different from executor
+  # this MUST hold a UCAN delegation chain 
+  # from executor to the issuer.
+  # This field SHOULD be omitted executor is an issuer.
   prf     [&UCAN]
 
   # Signature from the `iss`.
@@ -1023,7 +1030,7 @@ For example, consider the following invocation batch:
 
 ```json
 {
-  "bafyreiftw26kcrsf4tdijatgqxq6gtfhtrneetrcrp27ks6rvzsvzyanj4": {
+  "bafy...createBlogPostTask": {
     "on": "https://example.com/blog/posts",
     "call": "crud/create",
     "input": {
@@ -1033,51 +1040,51 @@ For example, consider the following invocation batch:
       }
     }
   },
-  "bafyreifsvtyuiddvpsvurkwhyw3w55sp3nkw66gji6xxti5czol2q4hdqm": {
+  "bafy...getBlogEditorsTask": {
     "on": "https://example.com/users/editors",
     "call": "crud/read"
   },
-  "bafyreiep7bzrz3irallgmsd43kipuh32khteq2dne4qc763txmvb2zmevu": {
+  "bafy...sendEmailTask": {
     "on": "mailto:akiko@example.com",
     "call": "msg/send",
     "input": {
       "to": {
         "await/ok": {
-          "/": "bafyreiftw26kcrsf4tdijatgqxq6gtfhtrneetrcrp27ks6rvzsvzyanj4"
+          "/": "bafy...getBlogPostEditorsTask"
         }
       },
       "subject": "Coffee",
       "body": {
         "await/ok": {
-          "/": "bafyreifsvtyuiddvpsvurkwhyw3w55sp3nkw66gji6xxti5czol2q4hdqm"
+          "/": "bafy...createBlogPostTask"
         }
       }
     }
   },
-  "bafyreiau3ygtmtv4jfkl4dgg6j6vhw5kwty5undybijexm35wmazgbb2tq": {
+  "bafy...sendEmailInvoctaion": {
     "v": "0.1.0",
     "run": {
-      "/": "bafyreiep7bzrz3irallgmsd43kipuh32khteq2dne4qc763txmvb2zmevu"
+      "/": "bafy...sendEmailTask"
     },
     "auth": {
-      "/": "bafyreibvtceb6flhmazpufpro6fneaqn7de7wxju74l2kuptwhxjyuecja"
+      "/": "bafy...auth"
     },
     "prf": [
       {
-        "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"
+        "/": "bafy...proofUcanOutsideExample"
       }
     ]
   },
-  "bafyreibvtceb6flhmazpufpro6fneaqn7de7wxju74l2kuptwhxjyuecja": {
+  "bafy...auth": {
     "scope": [
       {
-        "/": "bafyreiftw26kcrsf4tdijatgqxq6gtfhtrneetrcrp27ks6rvzsvzyanj4"
+        "/": "bafy...sendEmailTask"
       },
       {
-        "/": "bafyreifsvtyuiddvpsvurkwhyw3w55sp3nkw66gji6xxti5czol2q4hdqm"
+        "/": "bafy...getBlogPostEditorsTask"
       },
       {
-        "/": "bafyreiep7bzrz3irallgmsd43kipuh32khteq2dne4qc763txmvb2zmevu"
+        "/": "bafy...createBlogPostTask"
       }
     ],
     "s": {
@@ -1176,14 +1183,14 @@ flowchart BR
 
 ```json
 {
-  "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny": {
+  "bafy...updateDnsTask": {
     "on": "dns:example.com?TYPE=TXT",
     "call": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
-  "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku": {
+  "bafy...sendBobEmailTask": {
     "on": "mailto://alice@example.com",
     "call": "msg/send",
     "input": {
@@ -1191,12 +1198,12 @@ flowchart BR
       "subject": "DNSLink for example.com",
       "body": {
         "await/ok": {
-          "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
+          "/": "bafy...updateDnsTask"
         }
       }
     }
   },
-  "bafyreifiwxa2mnjvbihr45q56j6vyy4ksml7fh2tq2wnqtf5n55yveevja": {
+  "bafy...sendCarolEmailTask": {
     "on": "mailto://alice@example.com",
     "call": "msg/send",
     "input": {
@@ -1204,12 +1211,12 @@ flowchart BR
       "subject": "Hey Carol, DNSLink was updated!",
       "body": {
         "await/ok": {
-          "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
+          "/": "bafy...updateDnsTask"
         }
       }
     }
   },
-  "bafyreiail3bkoyow46d6gnisj4dttiitifiaodee3ixynbhyq6vzxnvj2q": {
+  "bafy...updateReportTask": {
     "on": "https://example.com/report",
     "call": "crud/update",
     "input": {
@@ -1224,44 +1231,30 @@ flowchart BR
       "_": [
         {
           "await/ok": {
-            "/": "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku"
+            "/": "bafy...sendBobEmailTask"
           }
         },
         {
           "await/ok": {
-            "/": "bafyreifiwxa2mnjvbihr45q56j6vyy4ksml7fh2tq2wnqtf5n55yveevja"
+            "/": "bafy...sendCarolEmailTask"
           }
         }
       ]
     }
   },
-  "bafyreid2esrl52jp5rx6kh7opwlc2jnzhci7yd5jtlzwlqytujk6y6urza": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafyreiail3bkoyow46d6gnisj4dttiitifiaodee3ixynbhyq6vzxnvj2q"
-    },
-    "auth": {
-      "/": "bafyreigjddazpbxmomcl32ryjxaxqymdrvzpqzjq5xtctdncn65kszmsoi"
-    },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
-  },
-  "bafyreigjddazpbxmomcl32ryjxaxqymdrvzpqzjq5xtctdncn65kszmsoi": {
+  "bafy...auth": {
     "scope": [
       {
-        "/": "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku"
+        "/": "bafy...updateDnsTask"
       },
       {
-        "/": "bafyreifiwxa2mnjvbihr45q56j6vyy4ksml7fh2tq2wnqtf5n55yveevja"
+        "/": "bafy...sendBobEmailTask"
       },
       {
-        "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
+        "/": "bafy...sendCarolEmailTask"
       },
       {
-        "/": "bafyreiail3bkoyow46d6gnisj4dttiitifiaodee3ixynbhyq6vzxnvj2q"
+        "/": "bafy...updateReportTask"
       }
     ],
     "s": {
@@ -1269,6 +1262,62 @@ flowchart BR
         "bytes": "7aEDQLbVVvN/RU8juyz+r36xMgCP1Eh1OknVckuCPrkTmvGS+ULTtCcvjF3gCqpqf6As7VLewoqTvWX1sswRudmOvAY"
       }
     }
+  },
+  "bafy...updateDnsInvocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...updateDnsTask"
+    },
+    "auth": {
+      "/": "bafy...auth"
+    },
+    "prf": [
+      {
+        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+      }
+    ]
+  },
+  "bafy...sendBobEmailInvocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...sendBobEmailTask"
+    },
+    "auth": {
+      "/": "bafy...auth"
+    },
+    "prf": [
+      {
+        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+      }
+    ]
+  },
+  "bafy...sendCarolEmailInvocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...sendCarolEmailTask"
+    },
+    "auth": {
+      "/": "bafy...auth"
+    },
+    "prf": [
+      {
+        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+      }
+    ]
+  },
+  "bafy...updateReportInvocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...updateReportTask"
+    },
+    "auth": {
+      "/": "bafy...auth"
+    },
+    "prf": [
+      {
+        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+      }
+    ]
   }
 }
 ```
@@ -1307,14 +1356,14 @@ flowchart TB
 
 ```json
 {
-  "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny": {
+  "bafy...updateDnsTask": {
     "on": "dns:example.com?TYPE=TXT",
     "call": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
-  "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku": {
+  "bafy...sendBobEmailTask": {
     "on": "mailto://alice@example.com",
     "call": "msg/send",
     "input": {
@@ -1322,18 +1371,18 @@ flowchart TB
       "subject": "DNSLink for example.com",
       "body": {
         "await/ok": {
-          "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
+          "/": "bafy...updateDnsTask"
         }
       }
     }
   },
-  "bafyreieeq5rf6uolaitbam2v56xmoz466eri3xcfwfawphon644cbgbkra": {
+  "bafy...updateDnsInvocation": {
     "v": "0.1.0",
     "run": {
-      "/": "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku"
+      "/": "bafy...updateDnsInvocation"
     },
     "auth": {
-      "/": "bafyreif343mg6uhtqa7qbuvd3glu3vjaya5q757dqyobwt5wysbh4h5rnq"
+      "/": "bafy...authForBatchOne"
     },
     "prf": [
       {
@@ -1341,13 +1390,27 @@ flowchart TB
       }
     ]
   },
-  "bafyreif343mg6uhtqa7qbuvd3glu3vjaya5q757dqyobwt5wysbh4h5rnq": {
+  "bafy...sendBobEmailInvocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...sendBobEmailTask"
+    },
+    "auth": {
+      "/": "bafy...authForBatchOne"
+    },
+    "prf": [
+      {
+        "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha"
+      }
+    ]
+  },
+  "bafy...authForBatchOne": {
     "scope": [
       {
-        "/": "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku"
+        "/": "bafy...updateDnsTask"
       },
       {
-        "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
+        "/": "bafy...sendBobEmailTask"
       }
     ],
     "s": {
@@ -1361,7 +1424,7 @@ flowchart TB
 
 ```json
 {
-  "bafyreifiwxa2mnjvbihr45q56j6vyy4ksml7fh2tq2wnqtf5n55yveevja": {
+  "bafy...emailCarolTask": {
     "on": "mailto://alice@example.com",
     "call": "msg/send",
     "input": {
@@ -1369,12 +1432,12 @@ flowchart TB
       "subject": "Hey Carol, DNSLink was updated!",
       "body": {
         "await/ok": {
-          "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
+          "/": "bafy...updateDnsTask"
         }
       }
     }
   },
-  "bafyreiail3bkoyow46d6gnisj4dttiitifiaodee3ixynbhyq6vzxnvj2q": {
+  "bafy...updateReportTask": {
     "on": "https://example.com/report",
     "call": "crud/update",
     "input": {
@@ -1389,38 +1452,24 @@ flowchart TB
       "_": [
         {
           "await/ok": {
-            "/": "bafyreihbli7vcw2n42xqv43ushojh7nvto6zpb3rd5ekoo6mim6bfkkqku"
+            "/": "bafy...emailBobTask"
           }
         },
         {
           "await/ok": {
-            "/": "bafyreifiwxa2mnjvbihr45q56j6vyy4ksml7fh2tq2wnqtf5n55yveevja"
+            "/": "bafy...emailCarolTask"
           }
         }
       ]
     }
   },
-  "bafyreih6wl2uvxuvpeicddv7exg5nixvc7kydbj3wlq24z37q5rd6vo5ky": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafyreiail3bkoyow46d6gnisj4dttiitifiaodee3ixynbhyq6vzxnvj2q"
-    },
-    "auth": {
-      "/": "bafyreiersek7u2lvzyolszwm5j5iy74qshc4oekszao7dmbwnnx4623du4"
-    },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
-  },
-  "bafyreiersek7u2lvzyolszwm5j5iy74qshc4oekszao7dmbwnnx4623du4": {
+  "bafy...authForSecondBatch": {
     "scope": [
       {
-        "/": "bafyreifiwxa2mnjvbihr45q56j6vyy4ksml7fh2tq2wnqtf5n55yveevja"
+        "/": "bafy...emailCarolTask"
       },
       {
-        "/": "bafyreiail3bkoyow46d6gnisj4dttiitifiaodee3ixynbhyq6vzxnvj2q"
+        "/": "bafy...updateReportInvocation"
       }
     ],
     "s": {
@@ -1428,6 +1477,34 @@ flowchart TB
         "bytes": "7aEDQM1yNTEO/+TF69wUwteH+ftAjD0ik5tXDa+sheAiuOZobSco/+vU882/Nf3LtMRF1EDoP/H38PX2bD5nJzkHAAU"
       }
     }
+  },
+  "bafy...emailCarolInvocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...emailCarolTask"
+    },
+    "auth": {
+      "/": "bafy...authForSecondBatch"
+    },
+    "prf": [
+      {
+        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+      }
+    ]
+  },
+  "bafy...updateReportInvocation": {
+    "v": "0.1.0",
+    "run": {
+      "/": "bafy...updateReporttask"
+    },
+    "auth": {
+      "/": "bafy...authForSecondBatch"
+    },
+    "prf": [
+      {
+        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+      }
+    ]
   }
 }
 ```
