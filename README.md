@@ -275,7 +275,7 @@ type Await union {
 
 # 3 Task
 
-A Task is the smallest unit of work that can be requested from a UCAN. It describes one `(resource, ability, input)` triple. The `input` field is free form, and depend on the specific resource and ability being interacted with, and is not described in this specification.
+A Task is the smallest unit of work that can be requested from a UCAN. It describes one `(resource, ability, arguments)` triple. The `args` field is free form, and depend on the specific resource and ability being interacted with, and is not described in this specification.
 
 Using the JavaScript analogy from the introduction, a Task is similar to wrapping a call in an anonymous function:
 
@@ -283,7 +283,7 @@ Using the JavaScript analogy from the introduction, a Task is similar to wrappin
 {
   "obj" "mailto:alice@example.com",
   "call": "msg/send",
-  "input": {
+  "args": {
     "to": [
       "bob@example.com",
       "carol@example.com"
@@ -315,7 +315,7 @@ Later, when we explore promise [pipelines], this also includes capturing the pro
   "bafy...sendEmail": {
     "obj" "mailto://alice@example.com",
     "call": "msg/send",
-    "input": {
+    "args": {
       "to": {
         "await/ok": {
           "/": "bafy...getMailingList"
@@ -342,10 +342,10 @@ const sendEmail = msg.send("mailto://alice@example.com", {
 
 ```ipldsch
 type Task struct {
-  obj   URI
-  call  Ability
-  input {String : Any}
-  nnc   string
+  obj  URI
+  call Ability
+  args {String : Any}
+  nnc  string
 }
 ```
 
@@ -359,20 +359,20 @@ The `on` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Reso
 
 The `call` field MUST contain a [UCAN Ability](https://github.com/ucan-wg/spec/#23-ability). This field can be thought of as the message or trait being sent to the resource.
 
-### 3.2.4 Input
+### 3.2.4 Arguments
 
-The OPTIONAL `input` field, MAY contain any parameters expected by the URI/Ability pair, which MAY be different between different URIs and Abilities, and is thus left to the executor to define the shape of this data.
+The OPTIONAL `args` field, MAY contain any parameters expected by the URI/Ability pair, which MAY be different between different URIs and Abilities, and is thus left to the executor to define the shape of this data.
 
-If present, `input` field MUST have an IPLD [map representation][ipld representation], and thus MAY be a:
+If present, `args` MUST have an IPLD [map representation][ipld representation], and thus MUST be one of the following:
 
 1. [struct](https://ipld.io/docs/schemas/features/representation-strategies/#struct-map-representation) in map representation.
 2. [keyed](https://ipld.io/docs/schemas/features/representation-strategies/#union-keyed-representation), [enveloped](https://ipld.io/docs/schemas/features/representation-strategies/#union-envelope-representation) or [inline](https://ipld.io/docs/schemas/features/representation-strategies/#union-inline-representation) union.
 3. [unit](https://github.com/ipld/ipld/blob/353baf885adebb93191cbe1f7be34f0517e20bbd/specs/schemas/schema-schema.ipldsch#L753-L789) in empty map representation.
 4. [map](https://ipld.io/docs/schemas/features/representation-strategies/#map-map-representation) in map representation.
 
-UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type of `input` allowed.
+UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type of `args` allowed.
 
-If `input` field is not present, it is implicitly a `unit` represented as empty map.
+If the `args` field is not present, it is implicitly a `unit` represented as empty map.
 
 ### 3.2.6 Nonce
 
@@ -409,7 +409,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 {
   "obj" "mailto:akiko@example.com",
   "call": "msg/send",
-  "input": {
+  "args": {
     "to": [
       "boris@example.com",
       "carol@example.com"
@@ -426,7 +426,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 {
   "obj" "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
   "call": "wasm/run",
-  "input": {
+  "args": {
     "func": "add_one",
     "args": [
       42
@@ -550,7 +550,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
   "bafy...createBlogPost": {
     "obj" "https://example.com/blog/posts",
     "call": "crud/create",
-    "input": {
+    "args": {
       "headers": {
         "content-type": "application/json"
       },
@@ -601,7 +601,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
   "bafy...createBlogPostTask": {
     "obj" "https://example.com/blog/posts",
     "call": "crud/create",
-    "input": {
+    "args": {
       "headers": {
         "content-type": "application/json"
       },
@@ -619,7 +619,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
   "bafy...sendEmailTask": {
     "obj" "mailto:akiko@example.com",
     "call": "msg/send",
-    "input": {
+    "args": {
       "to": [
         "boris@example.com",
         "carol@example.com"
@@ -681,7 +681,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
   "bafy...updateDnsTask": {
     "obj" "dns:example.com?TYPE=TXT",
     "call": "crud/update",
-    "input": {
+    "args": {
       "value": "hello world"
     }
   },
@@ -1018,7 +1018,7 @@ The `s` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without 
 
 There MAY not be enough information to described an Invocation at creation time. However, all of the information required to construct the next request in a sequence MAY be available in the same Batch, or in a previous (but not yet complete) Invocation.
 
-Some invocations MAY require input from set of other invocations. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of one invocations into the input of the other. This liberates the invoker from waiting for each step.
+Invocations MAY require arguments from the output of other invocations. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of one invocations into the input of the other. This liberates the invoker from waiting for each step.
 
 An `Await` MAY be used as a variable placeholder for a concrete value in a [Task] [Invocation] output, waiting on a previous step to complete.
 
@@ -1029,7 +1029,7 @@ For example, consider the following invocation batch:
   "bafy...createBlogPostTask": {
     "obj" "https://example.com/blog/posts",
     "call": "crud/create",
-    "input": {
+    "args": {
       "payload": {
         "title": "How UCAN Tasks Changed My Life",
         "body": "This is the story of how one spec changed everything..."
@@ -1043,7 +1043,7 @@ For example, consider the following invocation batch:
   "bafy...sendEmailTask": {
     "obj" "mailto:akiko@example.com",
     "call": "msg/send",
-    "input": {
+    "args": {
       "to": {
         "await/ok": {
           "/": "bafy...getBlogPostEditorsTask"
@@ -1155,7 +1155,7 @@ The [Result] output of the [Task] MAY be reference by wrapping the [Task] in the
 
 ## 9.3 Dataflow
 
-Pipelining uses [Await] as inputs to determine the required dataflow graph. The following examples both express the following dataflow graph:
+Pipelining uses [Await] as arguments to determine the required dataflow graph. The following examples both express the following dataflow graph:
 
 ### 9.3.1 Batched
 
@@ -1182,14 +1182,14 @@ flowchart BR
   "bafy...updateDnsTask": {
     "obj" "dns:example.com?TYPE=TXT",
     "call": "crud/update",
-    "input": {
+    "args": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
     "obj" "mailto://alice@example.com",
     "call": "msg/send",
-    "input": {
+    "args": {
       "to": "bob@example.com",
       "subject": "DNSLink for example.com",
       "body": {
@@ -1202,7 +1202,7 @@ flowchart BR
   "bafy...sendCarolEmailTask": {
     "obj" "mailto://alice@example.com",
     "call": "msg/send",
-    "input": {
+    "args": {
       "to": "carol@example.com",
       "subject": "Hey Carol, DNSLink was updated!",
       "body": {
@@ -1215,7 +1215,7 @@ flowchart BR
   "bafy...updateReportTask": {
     "obj" "https://example.com/report",
     "call": "crud/update",
-    "input": {
+    "args": {
       "payload": {
         "from": "mailto://alice@exmaple.com",
         "to": [
@@ -1355,14 +1355,14 @@ flowchart TB
   "bafy...updateDnsTask": {
     "obj" "dns:example.com?TYPE=TXT",
     "call": "crud/update",
-    "input": {
+    "args": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
     "obj" "mailto://alice@example.com",
     "call": "msg/send",
-    "input": {
+    "args": {
       "to": "bob@example.com",
       "subject": "DNSLink for example.com",
       "body": {
@@ -1423,7 +1423,7 @@ flowchart TB
   "bafy...emailCarolTask": {
     "obj" "mailto://alice@example.com",
     "call": "msg/send",
-    "input": {
+    "args": {
       "to": "carol@example.com",
       "subject": "Hey Carol, DNSLink was updated!",
       "body": {
@@ -1436,7 +1436,7 @@ flowchart TB
   "bafy...updateReportTask": {
     "obj" "https://example.com/report",
     "call": "crud/update",
-    "input": {
+    "args": {
       "payload": {
         "from": "mailto://alice@exmaple.com",
         "to": [
