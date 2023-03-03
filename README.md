@@ -1,4 +1,4 @@
-# UCAN Invocation Specification v0.1.1
+# UCAN Invocation Specification v0.2.0
 
 ## Editors
 
@@ -195,11 +195,10 @@ An [Effect] are the instruction to the [Executor] to run set of [Task]s concurre
 
 ```ipldsch
 type Task struct {
-  on      URI
-  call    Ability
-  input   {String : Any}
-
-  nnc     string
+  obj    URI
+  call   Ability
+  args   {String : Any}
+  nnc    string
 }
 
 type URI string
@@ -208,24 +207,52 @@ type Ability string
 type Authorization struct {
   # Authorization is denoted by the set of links been authorized
   scope   [&Any]
+
   # Scope signed by the invoker
   s       VarSig
 }
 
-type Invocation struct {
+type Context struct {
   v       SemVer
-
   run     &Task
+  meta    {String : Any}
+  prf     [&UCAN]
 
   # Receipt of the invocation that caused this invocation
   cause   optional &Invocation
+}
+
+type Invocation struct {
+  ctx     &Context
 
   # Task authorization.
   auth    &Authorization
+} 
 
-  meta    {String : Any}
-
-  prf     [&UCAN]
+{
+  "ctx": &{
+    "v": "0.1.0",
+    "run": &{
+      "obj" "mailto://alice@example.com",
+      "call": "msg/send",
+      "input": {
+        "to": {
+          "await/ok": {"/": "bafy...getMailingList"}
+        },
+        "subject": "hello",
+        "body": "world"
+      }
+    },
+    "meta": {
+      "gas": 1000,
+      "timeout": 5000
+    },
+    "prf": [...]
+  },
+  "auth": &{
+    "scope": [...],
+    "s": "0xabcdef"
+  }
 }
 
 type SemVer string
@@ -286,7 +313,7 @@ Using the JavaScript analogy from the introduction, a Task is similar to wrappin
 
 ```json
 {
-  "on": "mailto:alice@example.com",
+  "obj" "mailto:alice@example.com",
   "call": "msg/send",
   "input": {
     "to": [
@@ -314,11 +341,11 @@ Later, when we explore promise [pipelines], this also includes capturing the pro
 ```json
 {
   "bafy...getMailingList": {
-    "on": "https://exmaple.com/mailinglist",
+    "obj" "https://exmaple.com/mailinglist",
     "call": "crud/read"
   },
   "bafy...sendEmail": {
-    "on": "mailto://alice@example.com",
+    "obj" "mailto://alice@example.com",
     "call": "msg/send",
     "input": {
       "to": {
@@ -347,7 +374,7 @@ const sendEmail = msg.send("mailto://alice@example.com", {
 
 ```ipldsch
 type Task struct {
-  on    URI
+  obj   URI
   call  Ability
   input {String : Any}
   nnc   string
@@ -389,9 +416,9 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "on": "https://example.com/blog/posts",
+  "obj" "https://example.com/blog/posts",
   "call": "crud/create",
-  "input": {
+  "args": {
     "headers": {
       "content-type": "application/json"
     },
@@ -412,7 +439,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "on": "mailto:akiko@example.com",
+  "obj" "mailto:akiko@example.com",
   "call": "msg/send",
   "input": {
     "to": [
@@ -429,7 +456,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "on": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+  "obj" "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
   "call": "wasm/run",
   "input": {
     "func": "add_one",
@@ -503,6 +530,7 @@ type Invocation struct {
   v       SemVer
 
   run     &Task
+
   # Receipt of the invocation that caused this invocation
   cause   optional &Invocation
 
@@ -552,7 +580,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 ```json
 {
   "bafy...createBlogPost": {
-    "on": "https://example.com/blog/posts",
+    "obj" "https://example.com/blog/posts",
     "call": "crud/create",
     "input": {
       "headers": {
@@ -603,7 +631,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 ```json
 {
   "bafy...createBlogPostTask": {
-    "on": "https://example.com/blog/posts",
+    "obj" "https://example.com/blog/posts",
     "call": "crud/create",
     "input": {
       "headers": {
@@ -621,7 +649,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
     }
   },
   "bafy...sendEmailTask": {
-    "on": "mailto:akiko@example.com",
+    "obj" "mailto:akiko@example.com",
     "call": "msg/send",
     "input": {
       "to": [
@@ -683,7 +711,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 ```json
 {
   "bafy...updateDnsTask": {
-    "on": "dns:example.com?TYPE=TXT",
+    "obj" "dns:example.com?TYPE=TXT",
     "call": "crud/update",
     "input": {
       "value": "hello world"
@@ -1031,7 +1059,7 @@ For example, consider the following invocation batch:
 ```json
 {
   "bafy...createBlogPostTask": {
-    "on": "https://example.com/blog/posts",
+    "obj" "https://example.com/blog/posts",
     "call": "crud/create",
     "input": {
       "payload": {
@@ -1041,11 +1069,11 @@ For example, consider the following invocation batch:
     }
   },
   "bafy...getBlogEditorsTask": {
-    "on": "https://example.com/users/editors",
+    "obj" "https://example.com/users/editors",
     "call": "crud/read"
   },
   "bafy...sendEmailTask": {
-    "on": "mailto:akiko@example.com",
+    "obj" "mailto:akiko@example.com",
     "call": "msg/send",
     "input": {
       "to": {
@@ -1184,14 +1212,14 @@ flowchart BR
 ```json
 {
   "bafy...updateDnsTask": {
-    "on": "dns:example.com?TYPE=TXT",
+    "obj" "dns:example.com?TYPE=TXT",
     "call": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
-    "on": "mailto://alice@example.com",
+    "obj" "mailto://alice@example.com",
     "call": "msg/send",
     "input": {
       "to": "bob@example.com",
@@ -1204,7 +1232,7 @@ flowchart BR
     }
   },
   "bafy...sendCarolEmailTask": {
-    "on": "mailto://alice@example.com",
+    "obj" "mailto://alice@example.com",
     "call": "msg/send",
     "input": {
       "to": "carol@example.com",
@@ -1217,7 +1245,7 @@ flowchart BR
     }
   },
   "bafy...updateReportTask": {
-    "on": "https://example.com/report",
+    "obj" "https://example.com/report",
     "call": "crud/update",
     "input": {
       "payload": {
@@ -1357,14 +1385,14 @@ flowchart TB
 ```json
 {
   "bafy...updateDnsTask": {
-    "on": "dns:example.com?TYPE=TXT",
+    "obj" "dns:example.com?TYPE=TXT",
     "call": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
-    "on": "mailto://alice@example.com",
+    "obj" "mailto://alice@example.com",
     "call": "msg/send",
     "input": {
       "to": "bob@example.com",
@@ -1425,7 +1453,7 @@ flowchart TB
 ```json
 {
   "bafy...emailCarolTask": {
-    "on": "mailto://alice@example.com",
+    "obj" "mailto://alice@example.com",
     "call": "msg/send",
     "input": {
       "to": "carol@example.com",
@@ -1438,7 +1466,7 @@ flowchart TB
     }
   },
   "bafy...updateReportTask": {
-    "on": "https://example.com/report",
+    "obj" "https://example.com/report",
     "call": "crud/update",
     "input": {
       "payload": {
