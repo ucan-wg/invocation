@@ -582,18 +582,20 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
     }
   },
   "bafy...invocation": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafy...createBlogPost"
+    "ctx": {
+      "v": "0.1.0",
+      "run": {
+        "/": "bafy...createBlogPost"
+      },
+      "prf": [
+        {
+          "/": "bafy...ucanProof"
+        }
+      ]
     },
     "auth": {
       "/": "bafy...auth"
     },
-    "prf": [
-      {
-        "/": "bafy...ucanProof"
-      }
-    ]
   }
 }
 ```
