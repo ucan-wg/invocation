@@ -195,10 +195,10 @@ An [Effect] are the instruction to the [Executor] to run set of [Task]s concurre
 
 ```ipldsch
 type Task struct {
-  obj    URI
+  uri    URI
   call   Ability
-  args   {String : Any}
-  nnc    string
+  input  {String : Any}
+  nnc    string (implicit "")
 }
 
 type URI string
@@ -281,9 +281,9 @@ Using the JavaScript analogy from the introduction, a Task is similar to wrappin
 
 ```json
 {
-  "obj": "mailto:alice@example.com",
+  "uri" "mailto:alice@example.com",
   "call": "msg/send",
-  "args": {
+  "input": {
     "to": [
       "bob@example.com",
       "carol@example.com"
@@ -309,13 +309,13 @@ Later, when we explore promise [pipelines], this also includes capturing the pro
 ```json
 {
   "bafy...getMailingList": {
-    "obj": "https://exmaple.com/mailinglist",
+    "uri" "https://exmaple.com/mailinglist",
     "call": "crud/read"
   },
   "bafy...sendEmail": {
-    "obj": "mailto://alice@example.com",
+    "uri" "mailto://alice@example.com",
     "call": "msg/send",
-    "args": {
+    "input": {
       "to": {
         "await/ok": {
           "/": "bafy...getMailingList"
@@ -342,10 +342,10 @@ const sendEmail = msg.send("mailto://alice@example.com", {
 
 ```ipldsch
 type Task struct {
-  obj  URI
-  call Ability
-  args {String : Any}
-  nnc  string
+  uri   URI
+  call  Ability
+  input {String : Any}
+  nnc   string (implicit "")
 }
 ```
 
@@ -370,9 +370,9 @@ If present, `args` MUST have an IPLD [map representation][ipld representation], 
 3. [unit](https://github.com/ipld/ipld/blob/353baf885adebb93191cbe1f7be34f0517e20bbd/specs/schemas/schema-schema.ipldsch#L753-L789) in empty map representation.
 4. [map](https://ipld.io/docs/schemas/features/representation-strategies/#map-map-representation) in map representation.
 
-UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type of `args` allowed.
+UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type of `input`s allowed.
 
-If the `args` field is not present, it is implicitly a `unit` represented as empty map.
+If the `input` field is not present, it is implicitly a `unit` represented as empty map.
 
 ### 3.2.6 Nonce
 
@@ -384,9 +384,9 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "obj": "https://example.com/blog/posts",
+  "uri" "https://example.com/blog/posts",
   "call": "crud/create",
-  "args": {
+  "input": {
     "headers": {
       "content-type": "application/json"
     },
@@ -407,9 +407,9 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "obj": "mailto:akiko@example.com",
+  "uri" "mailto:akiko@example.com",
   "call": "msg/send",
-  "args": {
+  "input": {
     "to": [
       "boris@example.com",
       "carol@example.com"
@@ -424,11 +424,11 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "obj": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+  "uri" "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
   "call": "wasm/run",
-  "args": {
+  "input": {
     "func": "add_one",
-    "args": [
+    "input": [
       42
     ]
   }
@@ -548,9 +548,9 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 ```json
 {
   "bafy...createBlogPost": {
-    "obj": "https://example.com/blog/posts",
+    "uri" "https://example.com/blog/posts",
     "call": "crud/create",
-    "args": {
+    "input": {
       "headers": {
         "content-type": "application/json"
       },
@@ -599,9 +599,9 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 ```json
 {
   "bafy...createBlogPostTask": {
-    "obj": "https://example.com/blog/posts",
+    "uri" "https://example.com/blog/posts",
     "call": "crud/create",
-    "args": {
+    "input": {
       "headers": {
         "content-type": "application/json"
       },
@@ -617,9 +617,9 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
     }
   },
   "bafy...sendEmailTask": {
-    "obj": "mailto:akiko@example.com",
+    "uri" "mailto:akiko@example.com",
     "call": "msg/send",
-    "args": {
+    "input": {
       "to": [
         "boris@example.com",
         "carol@example.com"
@@ -679,9 +679,9 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 ```json
 {
   "bafy...updateDnsTask": {
-    "obj": "dns:example.com?TYPE=TXT",
+    "uri" "dns:example.com?TYPE=TXT",
     "call": "crud/update",
-    "args": {
+    "input": {
       "value": "hello world"
     }
   },
@@ -1027,9 +1027,9 @@ For example, consider the following invocation batch:
 ```json
 {
   "bafy...createBlogPostTask": {
-    "obj": "https://example.com/blog/posts",
+    "uri" "https://example.com/blog/posts",
     "call": "crud/create",
-    "args": {
+    "input": {
       "payload": {
         "title": "How UCAN Tasks Changed My Life",
         "body": "This is the story of how one spec changed everything..."
@@ -1037,13 +1037,13 @@ For example, consider the following invocation batch:
     }
   },
   "bafy...getBlogEditorsTask": {
-    "obj": "https://example.com/users/editors",
+    "uri" "https://example.com/users/editors",
     "call": "crud/read"
   },
   "bafy...sendEmailTask": {
-    "obj": "mailto:akiko@example.com",
+    "uri" "mailto:akiko@example.com",
     "call": "msg/send",
-    "args": {
+    "input": {
       "to": {
         "await/ok": {
           "/": "bafy...getBlogPostEditorsTask"
@@ -1180,16 +1180,16 @@ flowchart BR
 ```json
 {
   "bafy...updateDnsTask": {
-    "obj": "dns:example.com?TYPE=TXT",
+    "uri" "dns:example.com?TYPE=TXT",
     "call": "crud/update",
-    "args": {
+    "input": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
-    "obj": "mailto://alice@example.com",
+    "uri" "mailto://alice@example.com",
     "call": "msg/send",
-    "args": {
+    "input": {
       "to": "bob@example.com",
       "subject": "DNSLink for example.com",
       "body": {
@@ -1200,9 +1200,9 @@ flowchart BR
     }
   },
   "bafy...sendCarolEmailTask": {
-    "obj": "mailto://alice@example.com",
+    "uri" "mailto://alice@example.com",
     "call": "msg/send",
-    "args": {
+    "input": {
       "to": "carol@example.com",
       "subject": "Hey Carol, DNSLink was updated!",
       "body": {
@@ -1213,9 +1213,9 @@ flowchart BR
     }
   },
   "bafy...updateReportTask": {
-    "obj": "https://example.com/report",
+    "uri" "https://example.com/report",
     "call": "crud/update",
-    "args": {
+    "input": {
       "payload": {
         "from": "mailto://alice@exmaple.com",
         "to": [
@@ -1353,16 +1353,16 @@ flowchart TB
 ```json
 {
   "bafy...updateDnsTask": {
-    "obj": "dns:example.com?TYPE=TXT",
+    "uri" "dns:example.com?TYPE=TXT",
     "call": "crud/update",
-    "args": {
+    "input": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
-    "obj": "mailto://alice@example.com",
+    "uri" "mailto://alice@example.com",
     "call": "msg/send",
-    "args": {
+    "input": {
       "to": "bob@example.com",
       "subject": "DNSLink for example.com",
       "body": {
@@ -1421,9 +1421,9 @@ flowchart TB
 ```json
 {
   "bafy...emailCarolTask": {
-    "obj": "mailto://alice@example.com",
+    "uri" "mailto://alice@example.com",
     "call": "msg/send",
-    "args": {
+    "input": {
       "to": "carol@example.com",
       "subject": "Hey Carol, DNSLink was updated!",
       "body": {
@@ -1434,9 +1434,9 @@ flowchart TB
     }
   },
   "bafy...updateReportTask": {
-    "obj": "https://example.com/report",
+    "uri" "https://example.com/report",
     "call": "crud/update",
-    "args": {
+    "input": {
       "payload": {
         "from": "mailto://alice@exmaple.com",
         "to": [
