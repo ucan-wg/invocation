@@ -198,7 +198,7 @@ type Task struct {
   uri    URI
   call   Ability
   input  {String : Any}
-  nnc    string (implicit "")
+  nnc    String
 }
 
 type URI string
@@ -345,7 +345,7 @@ type Task struct {
   uri   URI
   call  Ability
   input {String : Any}
-  nnc   string (implicit "")
+  nnc   String 
 }
 ```
 
