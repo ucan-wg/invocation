@@ -273,7 +273,7 @@ type Await union {
 
 # 3 Task
 
-A Task is the smallest unit of work that can be requested from a UCAN. It describes one `(resource, ability, arguments)` triple. The `args` field is free form, and depend on the specific resource and ability being interacted with, and is not described in this specification.
+A Task is the smallest unit of work that can be requested from a UCAN. It describes one `(resource, ability, input)` triple. The `input` field is free form, and depend on the specific resource and ability being interacted with, and is not described in this specification.
 
 Using the JavaScript analogy from the introduction, a Task is similar to wrapping a call in an anonymous function:
 
@@ -357,16 +357,16 @@ The `on` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Reso
 
 The `call` field MUST contain a [UCAN Ability](https://github.com/ucan-wg/spec/#23-ability). This field can be thought of as the message or trait being sent to the resource.
 
-### 3.2.4 Arguments
+### 3.2.4 Input
 
-The OPTIONAL `args` field, MAY contain any parameters expected by the URI/Ability pair, which MAY be different between different URIs and Abilities, and is thus left to the executor to define the shape of this data.
+The `input` field, MAY contain any parameters expected by the URI/Ability pair, which MAY be different between different URIs and Abilities, and is thus left to the executor to define the shape of this data.
 
-If present, `args` MUST have an IPLD [map representation][ipld representation], and thus MUST be one of the following:
+The `input` field MUST have an IPLD [map representation][ipld representation], and thus MUST be one of the following:
 
-1. [struct](https://ipld.io/docs/schemas/features/representation-strategies/#struct-map-representation) in map representation.
-2. [keyed](https://ipld.io/docs/schemas/features/representation-strategies/#union-keyed-representation), [enveloped](https://ipld.io/docs/schemas/features/representation-strategies/#union-envelope-representation) or [inline](https://ipld.io/docs/schemas/features/representation-strategies/#union-inline-representation) union.
-3. [unit](https://github.com/ipld/ipld/blob/353baf885adebb93191cbe1f7be34f0517e20bbd/specs/schemas/schema-schema.ipldsch#L753-L789) in empty map representation.
-4. [map](https://ipld.io/docs/schemas/features/representation-strategies/#map-map-representation) in map representation.
+1. [Struct](https://ipld.io/docs/schemas/features/representation-strategies/#struct-map-representation) in map representation.
+2. [Keyed](https://ipld.io/docs/schemas/features/representation-strategies/#union-keyed-representation), [enveloped](https://ipld.io/docs/schemas/features/representation-strategies/#union-envelope-representation) or [inline](https://ipld.io/docs/schemas/features/representation-strategies/#union-inline-representation) union.
+3. [Unit](https://github.com/ipld/ipld/blob/353baf885adebb93191cbe1f7be34f0517e20bbd/specs/schemas/schema-schema.ipldsch#L753-L789) in empty map representation.
+4. [Map](https://ipld.io/docs/schemas/features/representation-strategies/#map-map-representation) in map representation.
 
 UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type of `input`s allowed.
 
