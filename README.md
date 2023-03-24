@@ -435,6 +435,8 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 # 4 Authorization
 
+// FIXME?
+
 An [Authorization] is cryptographically signed data set. It represents an authorization to run [Task]s that are included in `scope` data set.
 
 ## 4.1 Schema
@@ -442,7 +444,7 @@ An [Authorization] is cryptographically signed data set. It represents an author
 ```ipldsch
 type Authorization struct {
   # Authorization is denoted by the set of links been authorized
-  scope   [&Any] (implicit [])
+  scope   [&Any]
 
   # Scope signed by the invoker
   s       VarSig
@@ -648,48 +650,19 @@ type InvocationCapsule struct {
       "subject": "Coffee"
     }
   },
-  "bafy...multipleAuth": {
-    "scope": [
-      {
-        "/": "bafy...sendEmailTask"
-      },
-      {
-        "/": "bafy...createBlogPostTask"
-      }
-    ],
-    "s": {
-      "/": {
-        "bytes": "7aEDQMyGqYw2iwP7uIn+Kav5AWe9l5VnL72Gpkzs1Azp+zs6vnixQPa1aCSrok4XwKkhSlFRmRN8YbyohB6iDFl4CQ8"
-      }
-    }
-  },
   "bafy...createBlogPostInvocation": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafy...createBlogPostTask"
+    "ctx": {
+      "run": {"/": "bafy...createBlogPostTask"},
+      "prf": [{"/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"}]
     },
-    "auth": {
-      "/": "bafy...multipleAuth"
-    },
-    "prf": [
-      {
-        "/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"
-      }
-    ]
+    "sig": {"/": "bafy...multipleAuth"}
   },
   "bafy...sendEmailInvocation": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafy...sendEmailTask"
+    "ctx": {
+      "run": {"/": "bafy...sendEmailTask"},
+      "prf": [{"/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"}]
     },
-    "auth": {
-      "/": "bafy...multipleAuth"
-    },
-    "prf": [
-      {
-        "/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"
-      }
-    ]
+    "sig": {"/": "bafy...multipleAuth"},
   }
 }
 ```
@@ -1089,33 +1062,18 @@ For example, consider the following invocation batch:
       }
     }
   },
-  "bafy...sendEmailInvoctaion": {
-    "v": "0.1.0",
-    "run": {
-      "/": "bafy...sendEmailTask"
-    },
-    "auth": {
-      "/": "bafy...auth"
-    },
-    "prf": [
-      {
-        "/": "bafy...proofUcanOutsideExample"
-      }
-    ]
-  },
-  "bafy...auth": {
-    "scope": [
-      {
+  "bafy...sendEmailInvocation": {
+    "ctx": {
+      "run": {
         "/": "bafy...sendEmailTask"
       },
-      {
-        "/": "bafy...getBlogPostEditorsTask"
-      },
-      {
-        "/": "bafy...createBlogPostTask"
-      }
-    ],
-    "s": {
+      "prf": [
+        {
+          "/": "bafy...proofUcanOutsideExample"
+        }
+      ]
+    },
+    "sig": {
       "/": {
         "bytes": "7aEDQDEGkezG7Bcpeknf2UJ7hpqeL1PZodrYYTSwRjqZPf67P4r1lRZvX+6+9gV+wDZUX0DZLMv64n2fPKnjvxrEugE"
       }
