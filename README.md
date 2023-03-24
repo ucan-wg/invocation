@@ -246,7 +246,7 @@ type Receipt struct {
 }
  
 type ReceiptCapsule struct {
-  rct     &Receipt (rename "ucan/receipt@0.2.0")
+  rct     Receipt (rename "ucan/receipt@0.2.0")
 }
 
 type Result union {
