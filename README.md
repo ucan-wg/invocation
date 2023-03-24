@@ -489,59 +489,81 @@ The `auth` field MUST be contain an [Authorization] which signs over the `&Task`
 
 Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. An `Invocation` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
 
-## 5.1 Schema
+## 5.1 Context
 
 ```ipldsch
-type Invocation struct {
-  v       SemVer
-
+type Context struct {
   run     &Task
+  meta    {String : Any}
+  prf     [&UCAN]
 
   # Receipt of the invocation that caused this invocation
   cause   optional &Invocation
-
-  # Task authorization.
-  auth    &Authorization
-
-  meta    {String : any}
-
-  prf     [&UCAN]
 }
-
-type SemVer string
 ```
 
-## 5.2 Fields
-
-### 5.2.1 UCAN Task Version
-
-The `v` field MUST contain the SemVer-formatted version of the UCAN Invocation Specification that this struct conforms to.
-
-### 5.2.2 Task
+### 5.1.1 Task
 
 The `run` field MUST contain a link to the [Task] to be run.
 
-### 5.2.3 Cause
-
-[Task]s MAY be invoked as an effect caused by a prior [Invocation]. Such [Invocation]s SHOULD have a `cause` field set to the [Receipt] link of the [Invocation] that caused it. The linked [Receipt] MUST have an `Effect` (the `fx` field) containing invoked [Task] in the `run` field.
-
-### 5.2.4 Authorization
-
-The `auth` field MUST contain a link to the [Authorization] that authorizes invoked [Task] in the `run` field. The linked [Authorization] MUST contain `run` in its `scope`.
-
-### 5.2.4 Proofs
-
-The `prf` field MUST contain links to any UCANs that provide the authority to perform this task. All of the outermost proofs MUST have `aud` field set to the [Executor]'s DID. All of the outmost proofs MUST have `iss` field set to the [Invoker]'s DID.
-
-### 5.2.6 Metadata
+### 5.1.2 Metadata
 
 The OPTIONAL `meta` field MAY be used to include human-readable descriptions, tags, execution hints, resource limits, and so on. If present, the `meta` field MUST contain a map with string keys. The contents of the map are left undefined to encourage extensible use.
 
 If `meta` field is not present, it is implicitly a `unit` represented as an empty map.
 
-## 5.3 DAG-JSON Example
+### 5.1.3 Proofs
 
-### 5.3.1 Single Invocation
+The `prf` field MUST contain links to any UCANs that provide the authority to perform this task. All of the outermost proofs MUST have `aud` field set to the [Executor]'s DID. All of the outmost proofs MUST have `iss` field set to the [Invoker]'s DID.
+
+### 5.1.4 Cause
+
+[Task]s MAY be invoked as an effect caused by a prior [Invocation]. Such [Invocation]s SHOULD have a `cause` field set to the [Receipt] link of the [Invocation] that caused it. The linked [Receipt] MUST have an `Effect` (the `fx` field) containing invoked [Task] in the `run` field.
+
+## 5.2 (Signed) Invocation
+
+An `Invocation` is a signed `Context`.
+
+```ipldsch
+type Invocation struct {
+  ctx     Context
+  sig     Varsig
+}
+```
+
+### 5.2.1 Context
+
+The `Context` containing the `Task` and any configuration.
+
+### 5.2.2 Signature
+
+The `sig` field MUST contain a [varsig] of the `Context`, signed by the issuer of the proofs.
+
+## 5.3 Capsule
+
+An invocation capsule associates the `Invocation` with a versioned schema. This MAY be omitted in contexts where the schema and version are clear from context (for example, when nested in another structure that defines the version)
+
+```ipldsch
+type InvocationCapsule struct {
+  inv     Invocation (rename "ucan/invoke@0.2.0")
+}
+```
+
+## 5.4 DAG-JSON Example
+
+### 5.4.1 Single Invocation
+
+
+
+
+
+
+// FIXME
+
+
+
+
+
 
 ```json
 {
@@ -592,7 +614,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 }
 ```
 
-### 5.3.1 Multiple Invocations
+### 5.4.2 Multiple Invocations
 
 ```json
 {
@@ -672,7 +694,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 }
 ```
 
-### 5.3.3 Causal Invocations
+### 5.4.3 Causal Invocations
 
 ```json
 {
@@ -842,74 +864,86 @@ A `Receipt` is an attestation of the [Result] and requested [Effect]s by a [Task
 
 Receipts MUST use the same version as the invocation that they contain.
 
-## 8.1 Schema
+## 8.1 Trace
 
 ```ipldsch
-type Receipt struct {
-  ran     &Invocation
+type Trace struct {
+  ran     &Invocation # Invocation this is a receipt for
 
-  # output of the invocation
-  out     Result
+  out     Result # Output of the invocation
+  fx      Effects # Effects to be enqueued
 
-  # Effects to be performed
-  fx      Effects
+  meta    {String : Any} # All the other metadata
 
-  # All the other metadata
-  meta    {String: any}
-
-  # Principal that issued this receipt.
-  # If omitted issuer is inferred from 
-  # the invocation task audience.
+  # Principal that issued this receipt. If omitted issuer is
+  # inferred from the invocation task audience.
   iss     optional Principal
 
-  # When issuer is different from executor
-  # this MUST hold a UCAN delegation chain 
-  # from executor to the issuer.
-  # This field SHOULD be omitted executor is an issuer.
+  # When issuer is different from executor this MUST hold a UCAN
+  # delegation chain from executor to the issuer. This should be 
+  # omitted when the executor is the issuer.
   prf     [&UCAN]
-
-  # Signature from the `iss`.
-  s       Varsig
 }
 ```
 
-## 8.2 Fields
-
-### 8.2.1 Ran Invocation
+### 8.1.1 Ran Invocation
 
 The `ran` field MUST include a link to the [Invocation] that the Receipt is for.
 
-### 8.2.2 Output
+### 8.1.2 Output
 
 The `out` field MUST contain the value output of the invocation in [Result] format.
 
-### 8.2.3 Effect
+### 8.1.3 Effect
 
 The OPTIONAL `fx` field, if present MUST be set to the caused [Effect]. The [Executor] SHOULD invoke contained [Task] to progress a workflow execution.
 
 If `fx` does not contain OPTIONAL `join` field, it denotes completion of the current execution thread.
 
-### 8.2.4 Metadata Fields
+### 8.1.4 Metadata Fields
 
 The OPTIONAL metadata field MAY be omitted or used to contain additional data about the receipt. This field MAY be used for tags, commentary, trace information, and so on.
 
-### 8.2.5 Receipt Issuer
+### 8.1.5 Receipt Issuer
 
 The OPTIONAL `iss` field, if present MUST contain the DID of the [Executor] delegate that signed it. If field is present, delegation from [Executor] MUST be included in the `prf` field.
 
 If `iss` field is omitted, Receipt MUST be signed by the [Executor].
 
-### 8.2.6 Proofs
+### 8.1.6 Proofs
 
 If OPTIONAL `prf` field is present, MUST contain link to UCAN delegation authorizing Receipt Issuer (`iss`) to carry [Task] execution.
 
-### 8.2.7 Signature
+## 8.2 Receipt
 
-The `s` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without `s` field. The signature MUST be generated by the [Executor] or a delegate if OPTIONAL `iss` field is set.
+```ipldsch
+type Receipt struct {
+  trc     Trace
+  sig     Varsig
+}
+```
 
-## 8.3 DAG-JSON Examples
+### 8.2.1 Trace
 
-### 8.3.1 Issued by Executor
+The `trc` field MUST contain the `Trace` of the `Invocation` that the recept is for.
+
+### 8.2.2 Signature
+
+The `sig` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without `s` field. The signature MUST be generated by the [Executor] or a delegate if OPTIONAL `iss` field is set.
+
+## 8.3 Capsule
+
+```ipldsch
+type ReceiptCapsule struct {
+  rct     Receipt (rename "ucan/receipt@0.2.0")
+}
+```
+
+A receipt capsule associates the `Receipt` with a versioned schema. This MAY be omitted in contexts where the schema and version are clear from context (for example, when nested in another structure that defines the version).
+
+## 8.4 DAG-JSON Examples
+
+### 8.4.1 Issued by Executor
 
 ```json
 {
@@ -939,7 +973,7 @@ The `s` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without 
 }
 ```
 
-### 8.3.2 Issued by Delegate
+### 8.4.2 Issued by Delegate
 
 ```json
 {
@@ -975,7 +1009,7 @@ The `s` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without 
 }
 ```
 
-### 7.3.3 Receipt with effects
+### 8.4.3 Receipt with effects
 
 ```json
 {
@@ -1535,20 +1569,20 @@ Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many con
 
 Thanks to [Rod Vagg](https://github.com/rvagg/) for the clarifications on IPLD Schema implicits and the general IPLD worldview.
 
-[dag-json]: https://ipld.io/docs/codecs/known/dag-json/
-[varsig]: https://github.com/ChainAgnostic/varsig/
-[ucan-ipld]: https://github.com/ucan-wg/ucan-ipld/
-[ucan]: https://github.com/ucan-wg/spec/
+[authorization]: #4-authorization
+[await]: #await
 [dag-cbor]: https://ipld.io/specs/codecs/dag-cbor/spec/
+[dag-json]: https://ipld.io/docs/codecs/known/dag-json/
+[effect]: #7-effect
+[executor]: #212-executor
+[invocation]: #5-invocation
+[invoker]: #211-invoker
 [ipld representation]: https://ipld.io/docs/schemas/features/representation-strategies/
 [lazy-vs-eager]: #112-lazy-vs-eager-evaluation
-[invoker]: #211-invoker
-[executor]: #212-executor
-[task]: #3-task
-[authorization]: #4-authorization
-[invocation]: #5-invocation
-[result]: #6-result
-[effect]: #7-effect
-[receipt]: #8-receipt
 [pipelines]: #9-pipelines
-[await]: #await
+[receipt]: #8-receipt
+[result]: #6-result
+[task]: #3-task
+[ucan-ipld]: https://github.com/ucan-wg/ucan-ipld/
+[ucan]: https://github.com/ucan-wg/spec/
+[varsig]: https://github.com/ChainAgnostic/varsig/
