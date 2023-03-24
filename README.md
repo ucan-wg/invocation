@@ -204,39 +204,31 @@ type Task struct {
 type URI string
 type Ability string
 
-type Authorization struct {
-  # Authorization is denoted by the set of links been authorized
-  scope   [&Any]
-
-  # Scope signed by the invoker
-  s       VarSig
-}
-
-type Invocation struct {
-  v       SemVer
+type Context struct {
   run     &Task
   meta    {String : Any}
   prf     [&UCAN]
-  auth    &Authorization
 
   # Receipt of the invocation that caused this invocation
   cause   optional &Invocation
 }
 
-type SemVer string
+type Invocation struct {
+  ctx     Context
+  sig     Varsig
+}
 
-type Receipt struct {
-  # Invocation this is a receipt for
-  ran     &Invocation
+type InvocationCapsule struct {
+  inv     Invocation (rename "ucan/invoke@0.2.0")
+}
 
-  # Output of the invocation
-  out     Result
+type Trace struct {
+  ran     &Invocation # Invocation this is a receipt for
 
-  # Effects to be performed
-  fx      Effects
- 
-  # All the other metadata
-  meta    {String : Any}
+  out     Result # Output of the invocation
+  fx      Effects # Effects to be enqueued
+
+  meta    {String : Any} # All the other metadata
 
   # Principal that issued this receipt. If omitted issuer is
   # inferred from the invocation task audience.
@@ -246,9 +238,15 @@ type Receipt struct {
   # delegation chain from executor to the issuer. This should be 
   # omitted when the executor is the issuer.
   prf     [&UCAN]
+}
 
-  # Signature from the "iss".
-  s       Varsig
+type Receipt struct {
+  trc     Trace
+  sig     Varsig
+}
+ 
+type ReceiptCapsule struct {
+  rct     &Receipt (rename "ucan/receipt@0.2.0")
 }
 
 type Result union {
