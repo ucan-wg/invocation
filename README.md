@@ -45,7 +45,7 @@ Akiko is going away for the weekend. Her good friend Boris is going to borrow he
 
 ## 1.1.2 Lazy vs Eager Evaluation
 
-In a referentially transparent setting, the description of a task is equivalent to having done so: a function and its results are interchangeable. [Programming languages with call-by-need semantics](https://en.wikipedia.org/wiki/Haskell) have shown that this can be an elegant programming model, especially for pure functions. However, _when_ something will run can sometimes be unclear.
+In a referentially transparent setting, the description of a task is equivalent to having done so: a function and its results are interchangeable. [Programming languages with call-by-need semantics][Haskell] have shown that this can be an elegant programming model, especially for pure functions. However, _when_ something will run can sometimes be unclear.
 
 Most languages use eager evaluation. Eager languages must contend directly with the distinction between a reference to a function and a command to run it. For instance, in JavaScript, adding parentheses to a function will run it. Omitting them lets the program pass around a reference to the function without immediately invoking it.
 
@@ -194,9 +194,9 @@ An [Effect] are the instruction to the [Executor] to run set of [Task]s concurre
 ## 2.3 IPLD Schema
 
 ```ipldsch
-type Task struct {
-  uri    URI
-  call   Ability
+type Instruction struct {
+  rsc    URI
+  op     Ability
   input  {String : Any}
   nnc    String
 }
@@ -204,8 +204,8 @@ type Task struct {
 type URI string
 type Ability string
 
-type Context struct {
-  run     &Task
+type Task struct {
+  run     &Instruction
   meta    {String : Any}
   prf     [&UCAN]
 
@@ -213,16 +213,21 @@ type Context struct {
   cause   optional &Invocation
 }
 
+type Authorization struct {
+  scope   [&Any] # The set of authorized links
+  s       Varsig # Scope signed by the invoker
+}
+
 type Invocation struct {
-  ctx     Context
-  sig     Varsig
+  task    &Task
+  auth    &Authorization
 }
 
-type InvocationCapsule struct {
-  inv     Invocation (rename "ucan/invoke@0.2.0")
-}
+type InvocationCapsule union {
+  | Invocation   ucan/invoke@0.2.0"
+} representation keyed
 
-type Trace struct {
+type Outcome struct {
   ran     &Invocation # Invocation this is a receipt for
 
   out     Result # Output of the invocation
@@ -241,7 +246,7 @@ type Trace struct {
 }
 
 type Receipt struct {
-  trc     Trace
+  ocm     &Outcome
   sig     Varsig
 }
  
@@ -280,7 +285,7 @@ Using the JavaScript analogy from the introduction, a Task is similar to wrappin
 ```json
 {
   "uri" "mailto:alice@example.com",
-  "call": "msg/send",
+  "op": "msg/send",
   "input": {
     "to": [
       "bob@example.com",
@@ -308,11 +313,11 @@ Later, when we explore promise [pipelines], this also includes capturing the pro
 {
   "bafy...getMailingList": {
     "uri" "https://exmaple.com/mailinglist",
-    "call": "crud/read"
+    "op": "crud/read"
   },
   "bafy...sendEmail": {
     "uri" "mailto://alice@example.com",
-    "call": "msg/send",
+    "op": "msg/send",
     "input": {
       "to": {
         "await/ok": {
@@ -341,7 +346,7 @@ const sendEmail = msg.send("mailto://alice@example.com", {
 ```ipldsch
 type Task struct {
   uri   URI
-  call  Ability
+  op    Ability
   input {String : Any}
   nnc   String 
 }
@@ -351,11 +356,13 @@ type Task struct {
 
 ### 3.2.1 Resource
 
-The `on` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`](https://en.wikipedia.org/wiki/Data_URI_scheme), [`ipfs`](https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls), or [`magnet`](https://en.wikipedia.org/wiki/Magnet_URI_scheme) URI schemes.
+FIXME
+
+The `uri` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`](https://en.wikipedia.org/wiki/Data_URI_scheme), [`ipfs`](https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls), or [`magnet`](https://en.wikipedia.org/wiki/Magnet_URI_scheme) URI schemes.
 
 ### 3.2.3 Ability
 
-The `call` field MUST contain a [UCAN Ability](https://github.com/ucan-wg/spec/#23-ability). This field can be thought of as the message or trait being sent to the resource.
+The `op` field MUST contain a [UCAN Ability](https://github.com/ucan-wg/spec/#23-ability). This field can be thought of as the message or trait being sent to the resource.
 
 ### 3.2.4 Input
 
@@ -383,7 +390,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 ```json
 {
   "uri" "https://example.com/blog/posts",
-  "call": "crud/create",
+  "op": "crud/create",
   "input": {
     "headers": {
       "content-type": "application/json"
@@ -406,7 +413,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 ```json
 {
   "uri" "mailto:akiko@example.com",
-  "call": "msg/send",
+  "op": "msg/send",
   "input": {
     "to": [
       "boris@example.com",
@@ -423,7 +430,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 ```json
 {
   "uri" "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
-  "call": "wasm/run",
+  "op": "wasm/run",
   "input": {
     "func": "add_one",
     "input": [
@@ -571,7 +578,7 @@ type InvocationCapsule struct {
 {
   "bafy...createBlogPost": {
     "uri" "https://example.com/blog/posts",
-    "call": "crud/create",
+    "op": "crud/create",
     "input": {
       "headers": {
         "content-type": "application/json"
@@ -622,7 +629,7 @@ type InvocationCapsule struct {
 {
   "bafy...createBlogPostTask": {
     "uri" "https://example.com/blog/posts",
-    "call": "crud/create",
+    "op": "crud/create",
     "input": {
       "headers": {
         "content-type": "application/json"
@@ -640,7 +647,7 @@ type InvocationCapsule struct {
   },
   "bafy...sendEmailTask": {
     "uri" "mailto:akiko@example.com",
-    "call": "msg/send",
+    "op": "msg/send",
     "input": {
       "to": [
         "boris@example.com",
@@ -673,7 +680,7 @@ type InvocationCapsule struct {
 {
   "bafy...updateDnsTask": {
     "uri" "dns:example.com?TYPE=TXT",
-    "call": "crud/update",
+    "op": "crud/update",
     "input": {
       "value": "hello world"
     }
@@ -837,10 +844,10 @@ A `Receipt` is an attestation of the [Result] and requested [Effect]s by a [Task
 
 Receipts MUST use the same version as the invocation that they contain.
 
-## 8.1 Trace
+## 8.1 Response
 
 ```ipldsch
-type Trace struct {
+type Outcome struct {
   ran     &Invocation # Invocation this is a receipt for
 
   out     Result # Output of the invocation
@@ -891,14 +898,14 @@ If OPTIONAL `prf` field is present, MUST contain link to UCAN delegation authori
 
 ```ipldsch
 type Receipt struct {
-  trc     Trace
+  ocm     Outcome
   sig     Varsig
 }
 ```
 
-### 8.2.1 Trace
+### 8.2.1 Outcome
 
-The `trc` field MUST contain the `Trace` of the `Invocation` that the recept is for.
+The `ocm` field MUST contain the `Outcome` of the `Invocation` that the recept is for.
 
 ### 8.2.2 Signature
 
@@ -1033,7 +1040,7 @@ For example, consider the following invocation batch:
 {
   "bafy...createBlogPostTask": {
     "uri" "https://example.com/blog/posts",
-    "call": "crud/create",
+    "op": "crud/create",
     "input": {
       "payload": {
         "title": "How UCAN Tasks Changed My Life",
@@ -1043,11 +1050,11 @@ For example, consider the following invocation batch:
   },
   "bafy...getBlogEditorsTask": {
     "uri" "https://example.com/users/editors",
-    "call": "crud/read"
+    "op": "crud/read"
   },
   "bafy...sendEmailTask": {
     "uri" "mailto:akiko@example.com",
-    "call": "msg/send",
+    "op": "msg/send",
     "input": {
       "to": {
         "await/ok": {
@@ -1171,14 +1178,14 @@ flowchart BR
 {
   "bafy...updateDnsTask": {
     "uri" "dns:example.com?TYPE=TXT",
-    "call": "crud/update",
+    "op": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
     "uri" "mailto://alice@example.com",
-    "call": "msg/send",
+    "op": "msg/send",
     "input": {
       "to": "bob@example.com",
       "subject": "DNSLink for example.com",
@@ -1191,7 +1198,7 @@ flowchart BR
   },
   "bafy...sendCarolEmailTask": {
     "uri" "mailto://alice@example.com",
-    "call": "msg/send",
+    "op": "msg/send",
     "input": {
       "to": "carol@example.com",
       "subject": "Hey Carol, DNSLink was updated!",
@@ -1204,7 +1211,7 @@ flowchart BR
   },
   "bafy...updateReportTask": {
     "uri" "https://example.com/report",
-    "call": "crud/update",
+    "op": "crud/update",
     "input": {
       "payload": {
         "from": "mailto://alice@exmaple.com",
@@ -1344,14 +1351,14 @@ flowchart TB
 {
   "bafy...updateDnsTask": {
     "uri" "dns:example.com?TYPE=TXT",
-    "call": "crud/update",
+    "op": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
     "uri" "mailto://alice@example.com",
-    "call": "msg/send",
+    "op": "msg/send",
     "input": {
       "to": "bob@example.com",
       "subject": "DNSLink for example.com",
@@ -1412,7 +1419,7 @@ flowchart TB
 {
   "bafy...emailCarolTask": {
     "uri" "mailto://alice@example.com",
-    "call": "msg/send",
+    "op": "msg/send",
     "input": {
       "to": "carol@example.com",
       "subject": "Hey Carol, DNSLink was updated!",
@@ -1425,7 +1432,7 @@ flowchart TB
   },
   "bafy...updateReportTask": {
     "uri" "https://example.com/report",
-    "call": "crud/update",
+    "op": "crud/update",
     "input": {
       "payload": {
         "from": "mailto://alice@exmaple.com",
@@ -1544,3 +1551,4 @@ Thanks to [Rod Vagg](https://github.com/rvagg/) for the clarifications on IPLD S
 [ucan-ipld]: https://github.com/ucan-wg/ucan-ipld/
 [ucan]: https://github.com/ucan-wg/spec/
 [varsig]: https://github.com/ChainAgnostic/varsig/
+[Haskell]: https://en.wikipedia.org/wiki/Haskell
