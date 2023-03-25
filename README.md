@@ -224,7 +224,7 @@ type Invocation struct {
 }
 
 type InvocationCapsule union {
-  | Invocation   ucan/invoke@0.2.0"
+  | Invocation   "ucan/invoke@0.2.0"
 } representation keyed
 
 type Outcome struct {
