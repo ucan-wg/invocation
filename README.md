@@ -215,7 +215,7 @@ type Task struct {
 
 type Authorization struct {
   scope   [&Any] # The set of authorized links
-  s       Varsig # Scope signed by the invoker
+  auth    Authorization # Scope signed by the invoker
 }
 
 type Invocation struct {
@@ -247,7 +247,7 @@ type Outcome struct {
 
 type Receipt struct {
   ocm     &Outcome
-  sig     Varsig
+  auth    &Authorization
 }
  
 type ReceiptCapsule struct {
@@ -844,7 +844,7 @@ A `Receipt` is an attestation of the [Result] and requested [Effect]s by a [Task
 
 Receipts MUST use the same version as the invocation that they contain.
 
-## 8.1 Response
+## 8.1 Outcome
 
 ```ipldsch
 type Outcome struct {
@@ -905,7 +905,7 @@ type Receipt struct {
 
 ### 8.2.1 Outcome
 
-The `ocm` field MUST contain the `Outcome` of the `Invocation` that the recept is for.
+The `ocm` field MUST contain the `Outcome` of the `Invocation` that the receipt is for.
 
 ### 8.2.2 Signature
 
