@@ -209,17 +209,17 @@ type Task struct {
   meta    {String : Any}
   prf     [&UCAN]
 
-  # Receipt of the invocation that caused this invocation
-  cause   optional &Invocation
+  # Receipt of the invocation that caused this Task to be run
+  cause   optional &Instruction
 }
 
 type Authorization struct {
   scope   [&Any] # The set of authorized links
-  auth    Authorization # Scope signed by the invoker
+  s       Varsig # Scope signed by the invoker
 }
 
 type Invocation struct {
-  task    &Task
+  task    Task
   auth    &Authorization
 }
 
@@ -246,8 +246,8 @@ type Outcome struct {
 }
 
 type Receipt struct {
-  ocm     &Outcome
-  auth    &Authorization
+  ocm     Outcome
+  sig     Varsig
 }
  
 type ReceiptCapsule struct {
@@ -358,7 +358,7 @@ type Task struct {
 
 FIXME
 
-The `uri` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`](https://en.wikipedia.org/wiki/Data_URI_scheme), [`ipfs`](https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls), or [`magnet`](https://en.wikipedia.org/wiki/Magnet_URI_scheme) URI schemes.
+The `rsc` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`](https://en.wikipedia.org/wiki/Data_URI_scheme), [`ipfs`](https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls), or [`magnet`](https://en.wikipedia.org/wiki/Magnet_URI_scheme) URI schemes.
 
 ### 3.2.3 Ability
 
@@ -450,11 +450,8 @@ An [Authorization] is cryptographically signed data set. It represents an author
 
 ```ipldsch
 type Authorization struct {
-  # Authorization is denoted by the set of links been authorized
-  scope   [&Any]
-
-  # Scope signed by the invoker
-  s       VarSig
+  sc ope   [&Any] # Authorization is denoted by the set of links been authorized
+  s       Varsig # Scope signed by the invoker
 }
 ```
 
@@ -475,18 +472,10 @@ The `s` field MUST contain a [Varsig] of the [CBOR] encoded `scope` field.
 ```json
 {
   "scope": [
-    {
-      "/": "bafyreihtmwju3okftpeuqe3x3ux5e7c2jescakwnoiyv45vnicke4kdxy4"
-    },
-    {
-      "/": "bafyreieuo63r3y2nuycaq4b3q2xvco3nprlxiwzcfp4cuupgaywat3z6mq"
-    }
+    {"/": "bafyreihtmwju3okftpeuqe3x3ux5e7c2jescakwnoiyv45vnicke4kdxy4"},
+    {"/": "bafyreieuo63r3y2nuycaq4b3q2xvco3nprlxiwzcfp4cuupgaywat3z6mq"}
   ],
-  "s": {
-    "/": {
-      "bytes": "7aEDQIJB8XXJ6hWbwu40fN4bq8+Zq8BxyybSWXatMVU3VsL+yzVYpeJqsEBQE5rNtUJefR5rRCNimKNZMJjA9/udZQQ"
-    }
-  }
+  "s": {"/": {"bytes": "7aEDQIJB8XXJ6hWbwu40fN4bq8+Zq8BxyybSWXatMVU3VsL+yzVYpeJqsEBQE5rNtUJefR5rRCNimKNZMJjA9/udZQQ"}}
 }
 ```
 
