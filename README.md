@@ -284,7 +284,7 @@ Using the JavaScript analogy from the introduction, a Task is similar to wrappin
 
 ```json
 {
-  "uri" "mailto:alice@example.com",
+  "rsc" "mailto:alice@example.com",
   "op": "msg/send",
   "input": {
     "to": [
@@ -312,11 +312,11 @@ Later, when we explore promise [pipelines], this also includes capturing the pro
 ```json
 {
   "bafy...getMailingList": {
-    "uri" "https://exmaple.com/mailinglist",
+    "rsc" "https://exmaple.com/mailinglist",
     "op": "crud/read"
   },
   "bafy...sendEmail": {
-    "uri" "mailto://alice@example.com",
+    "rsc" "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": {
@@ -389,7 +389,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "uri" "https://example.com/blog/posts",
+  "rsc" "https://example.com/blog/posts",
   "op": "crud/create",
   "input": {
     "headers": {
@@ -412,7 +412,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "uri" "mailto:akiko@example.com",
+  "rsc" "mailto:akiko@example.com",
   "op": "msg/send",
   "input": {
     "to": [
@@ -429,7 +429,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "uri" "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+  "rsc" "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
   "op": "wasm/run",
   "input": {
     "func": "add_one",
@@ -577,7 +577,7 @@ type InvocationCapsule struct {
 ```json
 {
   "bafy...createBlogPost": {
-    "uri" "https://example.com/blog/posts",
+    "rsc" "https://example.com/blog/posts",
     "op": "crud/create",
     "input": {
       "headers": {
@@ -628,7 +628,7 @@ type InvocationCapsule struct {
 ```json
 {
   "bafy...createBlogPostTask": {
-    "uri" "https://example.com/blog/posts",
+    "rsc" "https://example.com/blog/posts",
     "op": "crud/create",
     "input": {
       "headers": {
@@ -646,7 +646,7 @@ type InvocationCapsule struct {
     }
   },
   "bafy...sendEmailTask": {
-    "uri" "mailto:akiko@example.com",
+    "rsc" "mailto:akiko@example.com",
     "op": "msg/send",
     "input": {
       "to": [
@@ -679,7 +679,7 @@ type InvocationCapsule struct {
 ```json
 {
   "bafy...updateDnsTask": {
-    "uri" "dns:example.com?TYPE=TXT",
+    "rsc" "dns:example.com?TYPE=TXT",
     "op": "crud/update",
     "input": {
       "value": "hello world"
@@ -1039,7 +1039,7 @@ For example, consider the following invocation batch:
 ```json
 {
   "bafy...createBlogPostTask": {
-    "uri" "https://example.com/blog/posts",
+    "rsc" "https://example.com/blog/posts",
     "op": "crud/create",
     "input": {
       "payload": {
@@ -1049,11 +1049,11 @@ For example, consider the following invocation batch:
     }
   },
   "bafy...getBlogEditorsTask": {
-    "uri" "https://example.com/users/editors",
+    "rsc" "https://example.com/users/editors",
     "op": "crud/read"
   },
   "bafy...sendEmailTask": {
-    "uri" "mailto:akiko@example.com",
+    "rsc" "mailto:akiko@example.com",
     "op": "msg/send",
     "input": {
       "to": {
@@ -1177,14 +1177,14 @@ flowchart BR
 ```json
 {
   "bafy...updateDnsTask": {
-    "uri" "dns:example.com?TYPE=TXT",
+    "rsc" "dns:example.com?TYPE=TXT",
     "op": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
-    "uri" "mailto://alice@example.com",
+    "rsc" "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": "bob@example.com",
@@ -1197,7 +1197,7 @@ flowchart BR
     }
   },
   "bafy...sendCarolEmailTask": {
-    "uri" "mailto://alice@example.com",
+    "rsc" "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": "carol@example.com",
@@ -1210,7 +1210,7 @@ flowchart BR
     }
   },
   "bafy...updateReportTask": {
-    "uri" "https://example.com/report",
+    "rsc" "https://example.com/report",
     "op": "crud/update",
     "input": {
       "payload": {
@@ -1350,14 +1350,14 @@ flowchart TB
 ```json
 {
   "bafy...updateDnsTask": {
-    "uri" "dns:example.com?TYPE=TXT",
+    "rsc" "dns:example.com?TYPE=TXT",
     "op": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
-    "uri" "mailto://alice@example.com",
+    "rsc" "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": "bob@example.com",
@@ -1418,7 +1418,7 @@ flowchart TB
 ```json
 {
   "bafy...emailCarolTask": {
-    "uri" "mailto://alice@example.com",
+    "rsc" "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": "carol@example.com",
@@ -1431,7 +1431,7 @@ flowchart TB
     }
   },
   "bafy...updateReportTask": {
-    "uri" "https://example.com/report",
+    "rsc" "https://example.com/report",
     "op": "crud/update",
     "input": {
       "payload": {
