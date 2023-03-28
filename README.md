@@ -262,17 +262,17 @@ type Result union {
 # Represents a request to invoke enclosed set of tasks concurrently
 type Effects struct {
   # Primary set of tasks to be invoked
-  fork      [&Task]
+  fork      [&Instruction]
   
   # Continuation for straight-line programs
-  join       optional &Task
+  join       optional &Instruction
 }
 
 # Way to reference result of the Task
 type Await union {
-  | &Task    "await/*"
-  | &Task    "await/ok"
-  | &Task    "await/error"
+  | &Instruction "await/*"
+  | &Instruction "await/ok"
+  | &Instruction "await/error"
 } representation keyed
 ```
 
