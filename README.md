@@ -210,7 +210,7 @@ type Task struct {
   prf     [&UCAN]
 
   # Receipt of the invocation that caused this Task to be run
-  cause   optional &Instruction
+  cause   optional &Receipt
 }
 
 type Authorization struct {
