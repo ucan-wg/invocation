@@ -345,7 +345,7 @@ const sendEmail = msg.send("mailto://alice@example.com", {
 
 ```ipldsch
 type Task struct {
-  uri   URI
+  rsc   URI
   op    Ability
   input {String : Any}
   nnc   String 
@@ -487,11 +487,11 @@ The `auth` field MUST be contain an [Authorization] which signs over the `&Task`
 
 Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. An `Invocation` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
 
-## 5.1 Context
+## 5.1 Task
 
-```ipldsch
+```Task
 type Context struct {
-  run     &Task
+  run     &Instruction
   meta    {String : Any}
   prf     [&UCAN]
 
@@ -500,7 +500,7 @@ type Context struct {
 }
 ```
 
-### 5.1.1 Task
+### 5.1.1 Instruction
 
 The `run` field MUST contain a link to the [Task] to be run.
 
@@ -514,7 +514,7 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 
 The `prf` field MUST contain links to any UCANs that provide the authority to perform this task. All of the outermost proofs MUST have `aud` field set to the [Executor]'s DID. All of the outmost proofs MUST have `iss` field set to the [Invoker]'s DID.
 
-### 5.1.4 Cause
+### 5.1.4 Optional Cause
 
 [Task]s MAY be invoked as an effect caused by a prior [Invocation]. Such [Invocation]s SHOULD have a `cause` field set to the [Receipt] link of the [Invocation] that caused it. The linked [Receipt] MUST have an `Effect` (the `fx` field) containing invoked [Task] in the `run` field.
 
@@ -524,27 +524,27 @@ An `Invocation` is a signed `Context`.
 
 ```ipldsch
 type Invocation struct {
-  ctx     Context
-  sig     Varsig
+  task     Task
+  auth     &Authorization
 }
 ```
 
-### 5.2.1 Context
+### 5.2.1 Task
 
-The `Context` containing the `Task` and any configuration.
+The `Task` containing the `Instruction` and any configuration.
 
-### 5.2.2 Signature
+### 5.2.2 Authorization
 
-The `sig` field MUST contain a [varsig] of the `Context`, signed by the issuer of the proofs.
+The `auth` field MUST contain a [varsig] signing over an array of CIDs that includes the `Task`'s CID, signed by the issuer of the proofs.
 
 ## 5.3 Capsule
 
 An invocation capsule associates the `Invocation` with a versioned schema. This MAY be omitted in contexts where the schema and version are clear from context (for example, when nested in another structure that defines the version)
 
 ```ipldsch
-type InvocationCapsule struct {
-  inv     Invocation (rename "ucan/invoke@0.2.0")
-}
+type InvocationCapsule union {
+  | Invocation   "ucan/invoke@0.2.0"
+} representation keyed
 ```
 
 ## 5.4 DAG-JSON Example
