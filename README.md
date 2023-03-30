@@ -596,7 +596,6 @@ type InvocationCapsule union {
     }
   },
   "bafy...invocation": {
-    "v": "0.1.0",
     "run": {
       "/": "bafy...createBlogPost"
     },
@@ -687,7 +686,6 @@ type InvocationCapsule union {
     }
   },
   "bafy...updateDnsInvocation": {
-    "v": "0.1.0",
     "run": {
       "/": "bafy...updateDnsTask"
     },
@@ -1246,7 +1244,6 @@ flowchart BR
     }
   },
   "bafy...updateDnsInvocation": {
-    "v": "0.1.0",
     "run": {
       "/": "bafy...updateDnsTask"
     },
@@ -1260,7 +1257,6 @@ flowchart BR
     ]
   },
   "bafy...sendBobEmailInvocation": {
-    "v": "0.1.0",
     "run": {
       "/": "bafy...sendBobEmailTask"
     },
@@ -1274,7 +1270,6 @@ flowchart BR
     ]
   },
   "bafy...sendCarolEmailInvocation": {
-    "v": "0.1.0",
     "run": {
       "/": "bafy...sendCarolEmailTask"
     },
@@ -1288,7 +1283,6 @@ flowchart BR
     ]
   },
   "bafy...updateReportInvocation": {
-    "v": "0.1.0",
     "run": {
       "/": "bafy...updateReportTask"
     },
@@ -1359,7 +1353,6 @@ flowchart TB
     }
   },
   "bafy...updateDnsInvocation": {
-    "v": "0.1.0",
     "run": {
       "/": "bafy...updateDnsInvocation"
     },
@@ -1373,7 +1366,6 @@ flowchart TB
     ]
   },
   "bafy...sendBobEmailInvocation": {
-    "v": "0.1.0",
     "run": {
       "/": "bafy...sendBobEmailTask"
     },
@@ -1461,7 +1453,6 @@ flowchart TB
     }
   },
   "bafy...emailCarolInvocation": {
-    "v": "0.1.0",
     "run": {
       "/": "bafy...emailCarolTask"
     },
@@ -1475,7 +1466,6 @@ flowchart TB
     ]
   },
   "bafy...updateReportInvocation": {
-    "v": "0.1.0",
     "run": {
       "/": "bafy...updateReporttask"
     },
