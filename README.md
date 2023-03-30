@@ -250,9 +250,9 @@ type Receipt struct {
   sig     Varsig
 }
  
-type ReceiptCapsule struct {
-  rct     Receipt (rename "ucan/receipt@0.2.0")
-}
+type ReceiptCapsule union {
+  | Receipt     "ucan/receipt@0.2.0"
+} representation keyed
 
 type Result union {
   | any    "ok"    # Success
