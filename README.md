@@ -450,7 +450,7 @@ An [Authorization] is cryptographically signed data set. It represents an author
 
 ```ipldsch
 type Authorization struct {
-  sc ope   [&Any] # Authorization is denoted by the set of links been authorized
+  scope   [&Any] # Authorization is denoted by the set of links been authorized
   s       Varsig # Scope signed by the invoker
 }
 ```
@@ -584,29 +584,15 @@ type InvocationCapsule union {
     }
   },
   "bafy...auth": {
-    "scope": [
-      {
-        "/": "bafy...createBlogPost"
-      }
-    ],
-    "s": {
-      "/": {
-        "bytes": "7aEDQPPhXNvtVb5/T+O40xXU6TSgJZDFnlVaV3GMlaEo/dvxtyaCLm8uUsFK4xzQsQd82QQUYA6fK506XqjghRlucAQ"
-      }
-    }
+    "scope": [{"/": "bafy...createBlogPostTask"}],
+    "s": {"/": {"bytes": "7aEDQPPhXNvtVb5/T+O40xXU6TSgJZDFnlVaV3GMlaEo/dvxtyaCLm8uUsFK4xzQsQd82QQUYA6fK506XqjghRlucAQ"}}
   },
   "bafy...invocation": {
-    "run": {
-      "/": "bafy...createBlogPost"
+    "task": {
+      "run": {"/": "bafy...createBlogPost"},
+      "prf": [{"/": "bafy...ucanProof"}]
     },
-    "auth": {
-      "/": "bafy...auth"
-    },
-    "prf": [
-      {
-        "/": "bafy...ucanProof"
-      }
-    ]
+    "auth": {"/": "bafy...auth"}
   }
 }
 ```
@@ -646,16 +632,18 @@ type InvocationCapsule union {
     }
   },
   "bafy...createBlogPostInvocation": {
-    "ctx": {
+    "task": {
       "run": {"/": "bafy...createBlogPostTask"},
       "prf": [{"/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"}]
     },
     "sig": {"/": "bafy...multipleAuth"}
   },
   "bafy...sendEmailInvocation": {
-    "ctx": {
+    "task": {
       "run": {"/": "bafy...sendEmailTask"},
-      "prf": [{"/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"}]
+      "prf": [
+        {"/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"}
+      ]
     },
     "sig": {"/": "bafy...multipleAuth"},
   }
@@ -675,30 +663,16 @@ type InvocationCapsule union {
   },
   "bafy...auth": {
     "scope": [
-      {
-        "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
-      }
+      {"/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"}
     ],
-    "s": {
-      "/": {
-        "bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"
-      }
-    }
+    "s": {"/": { "bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}}
   },
   "bafy...updateDnsInvocation": {
-    "run": {
-      "/": "bafy...updateDnsTask"
-    },
-    "auth": {
-      "/": "bafy...auth"
-    },
-    "cause": {
-      "/": "bafy...somePriorInvocation"
-    },
+    "run": {"/": "bafy...updateDnsTask"},
+    "auth": {"/": "bafy...auth"},
+    "cause": {"/": "bafy...somePriorInvocation"},
     "prf": [
-      {
-        "/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"
-      }
+      {"/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"}
     ]
   }
 }
@@ -1107,9 +1081,9 @@ An `Await` describes the eventual output of the referenced [Task] invocation. An
 
 ```ipldsch
 type Await union {
-  | &Task "await/*"
-  | &Task "await/ok"
-  | &Task "await/error"
+  | &Instruction "await/*"
+  | &Instruction "await/ok"
+  | &Instruction "await/error"
 } representation keyed
 ```
 
