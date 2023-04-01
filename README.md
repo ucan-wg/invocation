@@ -251,7 +251,7 @@ type Receipt struct {
 }
  
 type ReceiptCapsule union {
-  | Receipt     "ucan/receipt@0.2.0"
+  | &Receipt     "ucan/receipt@0.2.0"
 } representation keyed
 
 type Result union {
