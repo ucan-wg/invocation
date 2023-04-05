@@ -250,7 +250,7 @@ type Receipt struct {
   sig     Varsig
 }
  
-type ReceiptCapsule union {
+type ReceiptTag union {
   | &Receipt     "ucan/receipt@0.2.0"
 } representation keyed
 
@@ -276,11 +276,11 @@ type Await union {
 } representation keyed
 ```
 
-# 3 Task
+# 3 Instruction
 
-A Task is the smallest unit of work that can be requested from a UCAN. It describes one `(resource, ability, input)` triple. The `input` field is free form, and depend on the specific resource and ability being interacted with, and is not described in this specification.
+An Instruction is the smallest unit of work that can be requested from a UCAN. It describes one `(resource, operation, input)` triple. The `input` field is free form, and depend on the specific resource and ability being interacted with, and is not described in this specification.
 
-Using the JavaScript analogy from the introduction, a Task is similar to wrapping a call in an anonymous function:
+Using the JavaScript analogy from the introduction, an Instructon is similar to wrapping a call in a closure:
 
 ```json
 {
@@ -307,7 +307,7 @@ Using the JavaScript analogy from the introduction, a Task is similar to wrappin
   })
 ```
 
-Later, when we explore promise [pipelines], this also includes capturing the promise:
+Later, when we explore promise [pipelines], this also includes capturing the promise, also with a natural analogy to closures:
 
 ```json
 {
@@ -355,8 +355,6 @@ type Task struct {
 ## 3.2 Fields
 
 ### 3.2.1 Resource
-
-FIXME
 
 The `rsc` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`](https://en.wikipedia.org/wiki/Data_URI_scheme), [`ipfs`](https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls), or [`magnet`](https://en.wikipedia.org/wiki/Magnet_URI_scheme) URI schemes.
 
@@ -442,8 +440,6 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 # 4 Authorization
 
-// FIXME?
-
 An [Authorization] is cryptographically signed data set. It represents an authorization to run [Task]s that are included in `scope` data set.
 
 ## 4.1 Schema
@@ -479,24 +475,24 @@ The `s` field MUST contain a [Varsig] of the [CBOR] encoded `scope` field.
 }
 ```
 
-# 5 Invocation
+# 5 Task
 
 As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation]s are not executable until they have been provided provable authority (in form of UCANs in the `prf` field) and an [Authorization] (in the `auth` field) from the [Invoker].
 
 The `auth` field MUST be contain an [Authorization] which signs over the `&Task` in `run`.
 
-Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. An `Invocation` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
+Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. A `Receipt` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
 
 ## 5.1 Task
 
-```Task
-type Context struct {
+```ipldsch
+type Task struct {
   run     &Instruction
   meta    {String : Any}
   prf     [&UCAN]
 
   # Receipt of the invocation that caused this invocation
-  cause   optional &Invocation
+  cause   optional &Receipt
 }
 ```
 
@@ -542,7 +538,7 @@ The `auth` field MUST contain a [varsig] signing over an array of CIDs that incl
 An invocation capsule associates the `Invocation` with a versioned schema. This MAY be omitted in contexts where the schema and version are clear from context (for example, when nested in another structure that defines the version)
 
 ```ipldsch
-type InvocationCapsule union {
+type InvocationTag union {
   | Invocation   "ucan/invoke@0.2.0"
 } representation keyed
 ```
@@ -875,7 +871,7 @@ The `sig` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt withou
 ## 8.3 Capsule
 
 ```ipldsch
-type ReceiptCapsule struct {
+type ReceiptTag struct {
   rct     Receipt (rename "ucan/receipt@0.2.0")
 }
 ```
