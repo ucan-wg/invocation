@@ -168,9 +168,13 @@ The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field
 
 ## 2.2 Components
 
-### 2.2.1 Task
+### 2.2.1 Instruction
 
-A [Task] is like a deferred function application: a request to perform some action on a resource with specific input.
+An [Instruction] is like a deferred function application: a request to perform some action on a resource with specific input.
+
+### 2.2.2 Task
+
+A [Task] wraps an [Instruction] with runtime configuration, including timeouts, fuel, trace metadata, and so on.
 
 ### 2.2.2 Authorization
 
@@ -178,11 +182,11 @@ An [Authorization] is a cryptographically signed proof permitting execution of r
 
 ### 2.2.3 Invocation
 
-An [Invocation] is a command to the [Executor] to run the [Task], authorized by the [Invoker].
+An [Invocation] is an [Authorized] [Task].
 
 ### 2.2.4 Result
 
-A [Result] is the output of a [Task].
+A [Result] is the output of an [Instruction].
 
 ### 2.2.5 Receipt
 
@@ -1489,21 +1493,22 @@ Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many con
 
 Thanks to [Rod Vagg](https://github.com/rvagg/) for the clarifications on IPLD Schema implicits and the general IPLD worldview.
 
-[authorization]: #4-authorization
-[await]: #await
+[Authorization]: #4-authorization
+[Await]: #await
+[Effect]: #7-effect
+[Executor]: #212-executor
+[Haskell]: https://en.wikipedia.org/wiki/Haskell
+[Instruction]: #3-instruction
+[Invocation]: #5-invocation
+[Invoker]: #211-invoker
+[Pipeline]: #9-pipelines
+[Receipt]: #8-receipt
+[Result]: #6-result
+[Task]: #5-task
+[UCAN]: https://github.com/ucan-wg/spec/
+[Varsig]: https://github.com/ChainAgnostic/varsig/
 [dag-cbor]: https://ipld.io/specs/codecs/dag-cbor/spec/
 [dag-json]: https://ipld.io/docs/codecs/known/dag-json/
-[effect]: #7-effect
-[executor]: #212-executor
-[invocation]: #5-invocation
-[invoker]: #211-invoker
 [ipld representation]: https://ipld.io/docs/schemas/features/representation-strategies/
 [lazy-vs-eager]: #112-lazy-vs-eager-evaluation
-[pipelines]: #9-pipelines
-[receipt]: #8-receipt
-[result]: #6-result
-[task]: #3-task
 [ucan-ipld]: https://github.com/ucan-wg/ucan-ipld/
-[ucan]: https://github.com/ucan-wg/spec/
-[varsig]: https://github.com/ChainAgnostic/varsig/
-[Haskell]: https://en.wikipedia.org/wiki/Haskell
