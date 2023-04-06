@@ -518,7 +518,7 @@ The `prf` field MUST contain links to any UCANs that provide the authority to pe
 
 ## 5.2 (Signed) Invocation
 
-An `Invocation` is a signed `Context`.
+An [Invocation] is a signed [Task].
 
 ```ipldsch
 type Invocation struct {
@@ -529,15 +529,15 @@ type Invocation struct {
 
 ### 5.2.1 Task
 
-The `Task` containing the `Instruction` and any configuration.
+The [Task] containing the [Instruction] and any configuration.
 
 ### 5.2.2 Authorization
 
-The `auth` field MUST contain a [Varsig] signing over an array of CIDs that includes the `Task`'s CID, signed by the issuer of the proofs.
+The `auth` field MUST contain a [Varsig] signing over an array of CIDs that includes the [Task]'s CID, signed by the issuer of the proofs.
 
 ## 5.3 Invocation Tag
 
-An invocation capsule associates the `Invocation` with a versioned schema. This field is NOT REQUIRED. Wrapping an `Invocation` in an `InvocationTag` is RECOMMENDED in contexts where the schema and version are not clear from context, such as when it is being stores or passed around without being nested in another structure that defines the version in its schema.
+An invocation capsule associates the [Invocation] with a versioned schema. This field is NOT REQUIRED. Wrapping an [Invocation] in an Invocation Tag is RECOMMENDED in contexts where the schema and version are not clear from context, such as when it is being stores or passed around without being nested in another structure that defines the version in its schema.
 
 ```ipldsch
 type InvocationTag union {
@@ -687,7 +687,7 @@ type InvocationTag union {
 
 # 6 Result
 
-A `Result` records the output of the [Task], as well as its success or failure state.
+A Result records the output of the [Task], as well as its success or failure state.
 
 ## 6.1 Schema
 
