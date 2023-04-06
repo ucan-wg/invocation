@@ -559,6 +559,20 @@ type InvocationTag union {
 
 ```json
 {
+  "_": {
+    "ucan/invocation@0.2.0": "bafy...invocation"
+  },
+  "bafy...invocation": {
+    "task": {
+      "run": {"/": "bafy...createBlogPost"},
+      "prf": [{"/": "bafy...ucanProof"}]
+    },
+    "auth": {"/": "bafy...auth"}
+  },
+  "bafy...auth": {
+    "scope": [{"/": "bafy...createBlogPostTask"}],
+    "s": {"/": {"bytes": "7aEDQPPhXNvtVb5/T+O40xXU6TSgJZDFnlVaV3GMlaEo/dvxtyaCLm8uUsFK4xzQsQd82QQUYA6fK506XqjghRlucAQ"}}
+  },
   "bafy...createBlogPost": {
     "rsc" "https://example.com/blog/posts",
     "op": "crud/create",
@@ -576,17 +590,6 @@ type InvocationTag union {
         "draft": true
       }
     }
-  },
-  "bafy...auth": {
-    "scope": [{"/": "bafy...createBlogPostTask"}],
-    "s": {"/": {"bytes": "7aEDQPPhXNvtVb5/T+O40xXU6TSgJZDFnlVaV3GMlaEo/dvxtyaCLm8uUsFK4xzQsQd82QQUYA6fK506XqjghRlucAQ"}}
-  },
-  "bafy...invocation": {
-    "task": {
-      "run": {"/": "bafy...createBlogPost"},
-      "prf": [{"/": "bafy...ucanProof"}]
-    },
-    "auth": {"/": "bafy...auth"}
   }
 }
 ```
@@ -595,7 +598,7 @@ type InvocationTag union {
 
 ```json
 {
-  "bafy...createBlogPostTask": {
+  "bafy...createBlogPostInstruction": {
     "rsc" "https://example.com/blog/posts",
     "op": "crud/create",
     "input": {
@@ -613,7 +616,7 @@ type InvocationTag union {
       }
     }
   },
-  "bafy...sendEmailTask": {
+  "bafy...sendEmailInstruction": {
     "rsc" "mailto:akiko@example.com",
     "op": "msg/send",
     "input": {
@@ -625,14 +628,14 @@ type InvocationTag union {
       "subject": "Coffee"
     }
   },
-  "bafy...createBlogPostInvocation": {
+  "bafy...createBlogPostTask": {
     "task": {
       "run": {"/": "bafy...createBlogPostTask"},
       "prf": [{"/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"}]
     },
     "sig": {"/": "bafy...multipleAuth"}
   },
-  "bafy...sendEmailInvocation": {
+  "bafy...sendEmailTask": {
     "task": {
       "run": {"/": "bafy...sendEmailTask"},
       "prf": [
@@ -640,7 +643,21 @@ type InvocationTag union {
       ]
     },
     "sig": {"/": "bafy...multipleAuth"},
-  }
+  },
+  "bafy...sendEmailInvocation": {
+    "task": {"/": "bafy...sendEmailTask"},
+    "auth": {"/": "bafy...multipleAuth"}
+  },
+  "bafy...createBlogPostInvocation": {
+    "task": {"/": "bafy...createBlogPostTask"},
+    "auth": {"/": "bafy...multipleAuth"}
+  },
+  "bafy...multipleAuth": {
+    "scope": [
+      {"/": "bafy...createBlogPostTask"},
+      {"/": "bafy...sendEmailTask"}
+    ],
+    "s": {"/": {"bytes": "7aEDQKxIrga+88HNDd69Ho4Ggz8zkf+GxWC6dAGYua6l85YgiL3NqGxyGAygiSZtWrWUo6SokgOys2wYE7N+novtcwo"}}
 }
 ```
 
@@ -648,12 +665,24 @@ type InvocationTag union {
 
 ```json
 {
-  "bafy...updateDnsTask": {
+  "bafy...updateDnsInstruction": {
     "rsc" "dns:example.com?TYPE=TXT",
     "op": "crud/update",
     "input": {
       "value": "hello world"
     }
+  },
+  "bafy...updateDnsTask": {
+    "run": {"/": "bafy...updateDnsTask"},
+    "auth": {"/": "bafy...auth"},
+    "cause": {"/": "bafy...somePriorInvocation"},
+    "prf": [
+      {"/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"}
+    ]
+  },
+  "bafy...updateDnsInvocation": {
+    "task": {"/": "bafy...updateDnsTask"},
+    "auth": {"/": "bafy...auth"}
   },
   "bafy...auth": {
     "scope": [
@@ -661,14 +690,6 @@ type InvocationTag union {
     ],
     "s": {"/": { "bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}}
   },
-  "bafy...updateDnsInvocation": {
-    "run": {"/": "bafy...updateDnsTask"},
-    "auth": {"/": "bafy...auth"},
-    "cause": {"/": "bafy...somePriorInvocation"},
-    "prf": [
-      {"/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"}
-    ]
-  }
 }
 ```
 
