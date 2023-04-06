@@ -282,7 +282,7 @@ type Await union {
 
 An Instruction is the smallest unit of work that can be requested from a UCAN. It describes one `(resource, operation, input)` triple. The `input` field is free form, and depend on the specific resource and ability being interacted with, and is not described in this specification.
 
-Using the JavaScript analogy from the introduction, an Instructon is similar to wrapping a call in a closure:
+Using the JavaScript analogy from the introduction, an Instruction is similar to wrapping a call in a closure:
 
 ```json
 {
@@ -533,7 +533,7 @@ The `Task` containing the `Instruction` and any configuration.
 
 ### 5.2.2 Authorization
 
-The `auth` field MUST contain a [varsig] signing over an array of CIDs that includes the `Task`'s CID, signed by the issuer of the proofs.
+The `auth` field MUST contain a [Varsig] signing over an array of CIDs that includes the `Task`'s CID, signed by the issuer of the proofs.
 
 ## 5.3 Invocation Tag
 
@@ -548,18 +548,6 @@ type InvocationTag union {
 ## 5.4 DAG-JSON Example
 
 ### 5.4.1 Single Invocation
-
-
-
-
-
-
-// FIXME
-
-
-
-
-
 
 ```json
 {
