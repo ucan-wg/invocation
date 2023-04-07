@@ -1487,7 +1487,7 @@ Thanks to [Rod Vagg](https://github.com/rvagg/) for the clarifications on IPLD S
 [Executor]: #212-executor
 [Haskell]: https://en.wikipedia.org/wiki/Haskell
 [Instruction]: #3-instruction
-[Invocation]: #5-invocation
+[Invocation]: #52-signed-invocation
 [Invoker]: #211-invoker
 [Pipeline]: #9-pipelines
 [Receipt]: #8-receipt
