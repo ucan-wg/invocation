@@ -309,7 +309,7 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
   })
 ```
 
-Later, when we explore promise [pipelines], this also includes capturing the promise, also with a natural analogy to closures:
+Later, when we explore promise [pipelines][Pipeline], this also includes capturing the promise, also with a natural analogy to closures:
 
 ```json
 {
@@ -727,7 +727,7 @@ If no information is available, this field SHOULD be set to `{}`.
 
 The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
 
-Effects describe requests for future work to be performed. All [Invocation]s in an [Effect] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipelines]. The `fx` block contains two fields: `fork` and `join`.
+Effects describe requests for future work to be performed. All [Invocation]s in an [Effect] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s. The `fx` block contains two fields: `fork` and `join`.
 
 [Task]s listed in the `fork` field are first-class and only ordered by promises; they otherwise SHOULD be considered independent and equal. As such, atomic guarantees such as failure of one effect implying failure of other effects if left undefined.
 
