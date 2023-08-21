@@ -13,10 +13,7 @@
 
 ## Depends On
 
-- [DAG-CBOR]
 - [UCAN]
-- [UCAN-IPLD]
-- [Varsig]
 
 # 0 Abstract
 
@@ -24,7 +21,7 @@ UCAN Invocation defines a format for expressing the intention to execute delegat
 
 ## Language
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [BCP 14] when, and only when, they appear in all capitals, as shown here.
 
 # 1 Introduction
 
@@ -198,85 +195,6 @@ An [Effect] are the instruction to the [Executor] to run set of [Task]s concurre
 
 ## 2.3 IPLD Schema
 
-```ipldsch
-type Instruction struct {
-  rsc    URI
-  op     Ability
-  input  {String : Any}
-  nnc    String
-}
-
-type URI string
-type Ability string
-
-type Task struct {
-  run     &Instruction
-  meta    {String : Any}
-  prf     [&UCAN]
-
-  # Receipt of the invocation that caused this Task to be run
-  cause   optional &Receipt
-}
-
-type Authorization struct {
-  scope   [&Any] # The set of authorized links
-  s       Varsig # Scope signed by the invoker
-}
-
-type Invocation struct {
-  task    Task
-  auth    &Authorization
-}
-
-type InvocationTag union {
-  | Invocation   "ucan/invoke@0.2.0"
-} representation keyed
-
-type Receipt struct {
-  ran     &Invocation # Invocation this is a receipt for
-
-  out     Result # Output of the invocation
-  fx      Effects # Effects to be enqueued
-
-  meta    {String : Any} # All the other metadata
-
-  # Principal that issued this receipt. If omitted issuer is
-  # inferred from the invocation task audience.
-  iss     optional Principal
-
-  # When issuer is different from executor this MUST hold a UCAN
-  # delegation chain from executor to the issuer. This should be 
-  # omitted when the executor is the issuer.
-  prf     [&UCAN]
-
-  sig     Varsig
-}
-
-type ReceiptTag union {
-  | &Receipt     "ucan/receipt@0.2.0"
-} representation keyed
-
-type Result union {
-  | any    "ok"    # Success
-  | any    "error" # Error
-} representation kinded
-
-# Represents a request to invoke enclosed set of tasks concurrently
-type Effects struct {
-  # Primary set of tasks to be invoked
-  fork      [&Instruction]
-  
-  # Continuation for straight-line programs
-  join       optional &Instruction
-}
-
-# Way to reference result of the Task
-type Await union {
-  | &Instruction "await/*"
-  | &Instruction "await/ok"
-  | &Instruction "await/error"
-} representation keyed
-```
 
 # 3 Instruction
 
@@ -345,7 +263,7 @@ const sendEmail = msg.send("mailto://alice@example.com", {
 
 ## 3.1 Schema
 
-```ipldsch
+```
 type Task struct {
   rsc   URI
   op    Ability
@@ -358,11 +276,11 @@ type Task struct {
 
 ### 3.2.1 Resource
 
-The `rsc` field MUST contain the [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier) of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`](https://en.wikipedia.org/wiki/Data_URI_scheme), [`ipfs`](https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls), or [`magnet`](https://en.wikipedia.org/wiki/Magnet_URI_scheme) URI schemes.
+The `rsc` field MUST contain the [URI] of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`], [`ipfs`], or [`magnet`] URI schemes.
 
 ### 3.2.3 Ability
 
-The `op` field MUST contain a [UCAN Ability](https://github.com/ucan-wg/spec/#23-ability). This field can be thought of as the message or trait being sent to the resource.
+The `op` field MUST contain a [UCAN Ability]. This field can be thought of as the message or trait being sent to the resource.
 
 ### 3.2.4 Input
 
@@ -370,10 +288,10 @@ The `input` field, MAY contain any parameters expected by the URI/Ability pair, 
 
 The `input` field MUST have an IPLD [map representation][ipld representation], and thus MUST be one of the following:
 
-1. [Struct](https://ipld.io/docs/schemas/features/representation-strategies/#struct-map-representation) in map representation.
-2. [Keyed](https://ipld.io/docs/schemas/features/representation-strategies/#union-keyed-representation), [enveloped](https://ipld.io/docs/schemas/features/representation-strategies/#union-envelope-representation) or [inline](https://ipld.io/docs/schemas/features/representation-strategies/#union-inline-representation) union.
-3. [Unit](https://github.com/ipld/ipld/blob/353baf885adebb93191cbe1f7be34f0517e20bbd/specs/schemas/schema-schema.ipldsch#L753-L789) in empty map representation.
-4. [Map](https://ipld.io/docs/schemas/features/representation-strategies/#map-map-representation) in map representation.
+1. [Struct] in map representation.
+2. [Keyed], [enveloped] or [inline] union.
+3. [Unit] in empty map representation.
+4. [Map] in map representation.
 
 UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type of `input`s allowed.
 
@@ -446,7 +364,7 @@ An [Authorization] is cryptographically signed data set. It represents an author
 
 ## 4.1 Schema
 
-```ipldsch
+```
 type Authorization struct {
   scope   [&Any] # Authorization is denoted by the set of links been authorized
   s       Varsig # Scope signed by the invoker
@@ -487,7 +405,7 @@ Concretely, this means that the `&Task` MUST be present in the associated `auth`
 
 ## 5.1 Task
 
-```ipldsch
+```
 type Task struct {
   run     &Instruction
   meta    {String : Any}
@@ -520,7 +438,7 @@ The `prf` field MUST contain links to any UCANs that provide the authority to pe
 
 An [Invocation] is a signed [Task].
 
-```ipldsch
+```
 type Invocation struct {
   task     Task
   auth     &Authorization
@@ -539,7 +457,7 @@ The `auth` field MUST contain a [Varsig] signing over an array of CIDs that incl
 
 An invocation capsule associates the [Invocation] with a versioned schema. This field is NOT REQUIRED. Wrapping an [Invocation] in an Invocation Tag is RECOMMENDED in contexts where the schema and version are not clear from context, such as when it is being stores or passed around without being nested in another structure that defines the version in its schema.
 
-```ipldsch
+```
 type InvocationTag union {
   | Invocation   "ucan/invoke@0.2.0"
 } representation keyed
@@ -691,7 +609,7 @@ A Result records the output of the [Task], as well as its success or failure sta
 
 ## 6.1 Schema
 
-```ipldsch
+```
 type Result union {
   | any "ok"
   | any "error"
@@ -737,7 +655,7 @@ Tasks in the `fork` field MAY be related to the Task in the `join` field if ther
 
 ## 7.1 Schema
 
-```ipldsch
+```
 # Represents a request to invoke enclosed set of tasks concurrently
 type Effects {
   # Primary set of tasks to be invoked
@@ -814,7 +732,7 @@ Receipts MUST use the same version as the invocation that they contain.
 
 ## 8.1 Receipt
 
-```ipldsch
+```
 type Outcome struct {
   ran     &Invocation # Invocation this is a receipt for
 
@@ -870,7 +788,7 @@ The `sig` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt withou
 
 ## 8.2 Receipt Tag
 
-```ipldsch
+```
 type ReceiptTag union {
   | &Receipt     "ucan/receipt@0.2.0"
 } representation keyed
@@ -983,11 +901,11 @@ A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omit
 
 > Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
 >
-> — [Mark Miller](https://github.com/erights), [Robust Composition](http://www.erights.org/talks/thesis/markm-thesis.pdf)
+> — [Mark Miller], [Robust Composition]
 
 There MAY not be enough information to described an Invocation at creation time. However, all of the information required to construct the next request in a sequence MAY be available in the same Batch, or in a previous (but not yet complete) Invocation.
 
-Invocations MAY require arguments from the output of other invocations. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining](http://erights.org/elib/distrib/pipeline.html) is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of one invocations into the input of the other. This liberates the invoker from waiting for each step.
+Invocations MAY require arguments from the output of other invocations. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining] is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of one invocations into the input of the other. This liberates the invoker from waiting for each step.
 
 An `Await` MAY be used as a variable placeholder for a concrete value in a [Task] [Invocation] output, waiting on a previous step to complete.
 
@@ -1067,7 +985,7 @@ const notify = msg.send("mailto:akiko@example.com", {
 
 Any [Task] field other besides `op` MAY be substituted with `Await`. The `op` field is critical in understanding what kind of action will be performed and CAN NOT be substituted with `Await`.
 
-An [Await] MAY be used across [Invocation]s with a same [Authorization], or across [Invocation]s with different [Authorization] and MAY even be across multiple Invokers and Executors. As long as the invocation can be resolved, it MAY be promised. This is sometimes referred to as ["promise pipelining"](http://erights.org/elib/distrib/pipeline.html).
+An [Await] MAY be used across [Invocation]s with a same [Authorization], or across [Invocation]s with different [Authorization] and MAY even be across multiple Invokers and Executors. As long as the invocation can be resolved, it MAY be promised. This is sometimes referred to as ["promise pipelining"].
 
 ## Await
 
@@ -1075,7 +993,7 @@ An `Await` describes the eventual output of the referenced [Task] invocation. An
 
 ### 9.1 Schema
 
-```ipldsch
+```
 type Await union {
   | &Instruction "await/*"
   | &Instruction "await/ok"
@@ -1453,50 +1371,56 @@ flowchart TB
 
 # 10 Prior Art
 
-[ucanto RPC](https://github.com/web3-storage/ucanto) from DAG House is a production system that uses UCAN as the basis for an RPC layer.
+[ucanto RPC] from DAG House is a production system that uses UCAN as the basis for an RPC layer.
 
-The [Capability Transport Protocol (CapTP)](http://erights.org/elib/distrib/captp/index.html) is one of the most influential object-capability systems, and forms the basis for much of the rest of the items on this list.
+The [Capability Transport Protocol (CapTP)] is one of the most influential object-capability systems, and forms the basis for much of the rest of the items on this list.
 
-The [Object Capability Network (OCapN)](https://github.com/ocapn/ocapn) protocol extends CapTP with a generalized networking layer. It has implementations from the [Spritely Institute](https://www.spritely.institute/) and [Agoric](https://agoric.com/). At time of writing, it is in the process of being standardized.
+The [Object Capability Network (OCapN)] protocol extends CapTP with a generalized networking layer. It has implementations from the [Spritely Institute] and [Agoric]. At time of writing, it is in the process of being standardized.
 
-[Electronic Rights Transfer Protocol (ERTP)](https://docs.agoric.com/guides/ertp/) builds on top of CapTP for blockchain & digital asset use cases.
+[Electronic Rights Transfer Protocol (ERTP)] builds on top of CapTP for blockchain & digital asset use cases.
 
-[Cap 'n Proto RPC](https://capnproto.org/) is an influential RPC framework [based on concepts from CapTP](https://capnproto.org/rpc.html#specification).
+[Cap 'n Proto RPC] is an influential RPC framework [based on concepts from CapTP].
 
 # 11 Acknowledgements
 
-Many thanks to [Mark Miller](https://github.com/erights) for his [pioneering work](http://erights.org/talks/thesis/markm-thesis.pdf) on [capability systems](http://erights.org/).
+Many thanks to [Mark Miller] for his [pioneering work] on [capability systems].
 
-Many thanks to [Luke Marsen](https://github.com/lukemarsden) and [Simon Worthington](https://github.com/simonwo) for their feedback on invocation model from their work on [Bacalhau](https://www.bacalhau.org/) and [IPVM](https://github.com/ipvm-wg).
+Many thanks to [Luke Marsen] and [Simon Worthington] for their feedback on invocation model from their work on [Bacalhau] and [IPVM].
 
-Thanks to [Marc-Antoine Parent](https://github.com/maparent) for his discussions of the distinction between declarations and directives both in and out of a UCAN context.
+Thanks to [Marc-Antoine Parent] for his discussions of the distinction between declarations and directives both in and out of a UCAN context.
 
-Many thanks to [Quinn Wilton](https://github.com/QuinnWilton) for her discussion of speech acts, the dangers of signing canonicalized data, and ergonomics.
+Many thanks to [Quinn Wilton] for her discussion of speech acts, the dangers of signing canonicalized data, and ergonomics.
 
-Thanks to [Blaine Cook](https://github.com/blaine) for sharing their experiences with OAuth 1, irreversible design decisions, and advocating for keeping the spec simple-but-evolvable.
+Thanks to [Blaine Cook] for sharing their experiences with OAuth 1, irreversible design decisions, and advocating for keeping the spec simple-but-evolvable.
 
-Thanks to [Philipp Krüger](https://github.com/matheus23/) for the enthusiastic feedback on the overall design and encoding.
+Thanks to [Philipp Krüger] for the enthusiastic feedback on the overall design and encoding.
 
-Thanks to [Christine Lemmer-Webber](https://github.com/cwebber) for the many conversations about capability systems and the programming models that they enable.
+Thanks to [Christine Lemmer-Webber] for the many conversations about capability systems and the programming models that they enable.
 
-Thanks to [Rod Vagg](https://github.com/rvagg/) for the clarifications on IPLD Schema implicits and the general IPLD worldview.
+<!-- Internal Links -->
 
-[Authorization]: #4-authorization
-[Await]: #await
-[Effect]: #7-effect
-[Executor]: #212-executor
+<!-- External Links -->
+
+[BCP 14]: https://www.rfc-editor.org/info/bcp14
+[Bacalhau]: https://www.bacalhau.org/
+[Brooklyn Zelenka]: https://github.com/expede/
+[DAG House]: https://dag.house
+[Fission]: https://fission.codes/
 [Haskell]: https://en.wikipedia.org/wiki/Haskell
-[Instruction]: #3-instruction
-[Invocation]: #52-signed-invocation
-[Invoker]: #211-invoker
-[Pipeline]: #9-pipelines
-[Receipt]: #8-receipt
-[Result]: #6-result
-[Task]: #5-task
+[IPVM]: https://github.com/ipvm-wg
+[Irakli Gozalishvili]: https://github.com/Gozala
+[Luke Marsen]: https://github.com/lukemarsden
+[Mark Miller]: https://github.com/erights
+[Philipp Krüger]: https://github.com/matheus23/
+[Robust Composition]: http://www.erights.org/talks/thesis/markm-thesis.pdf
+[Simon Worthington]: https://github.com/simonwo
+[UCAN Ability]: https://github.com/ucan-wg/spec/#23-ability
 [UCAN]: https://github.com/ucan-wg/spec/
-[Varsig]: https://github.com/ChainAgnostic/varsig/
-[dag-cbor]: https://ipld.io/specs/codecs/dag-cbor/spec/
-[dag-json]: https://ipld.io/docs/codecs/known/dag-json/
-[ipld representation]: https://ipld.io/docs/schemas/features/representation-strategies/
-[lazy-vs-eager]: #112-lazy-vs-eager-evaluation
-[ucan-ipld]: https://github.com/ucan-wg/ucan-ipld/
+[URI]: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
+[Zeeshan Lakhani]: https://github.com/zeeshanlakhani
+[`data`]: https://en.wikipedia.org/wiki/Data_URI_scheme
+[`ipfs`]: https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls
+[`magnet`]: https://en.wikipedia.org/wiki/Magnet_URI_scheme
+[eRights]: https:/erights.org
+[promise pipelining]: http://erights.org/elib/distrib/pipeline.html
+[ucanto RPC]: https://github.com/web3-storage/ucanto
