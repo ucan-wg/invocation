@@ -1,4 +1,4 @@
-# UCAN Invocation Specification v0.2.0
+# UCAN Invocation Specification v1.0.0-rc.1
 
 ## Editors
 
