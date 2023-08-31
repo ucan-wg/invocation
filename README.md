@@ -508,7 +508,7 @@ type InvocationTag union {
 
 ```json
 {
-  "bafy...createBlogPostInstruction": {
+  "bafy...createBlogPost": {
     "rsc" "https://example.com/blog/posts",
     "op": "crud/create",
     "input": {
@@ -526,7 +526,7 @@ type InvocationTag union {
       }
     }
   },
-  "bafy...sendEmailInstruction": {
+  "bafy...sendEmail": {
     "rsc" "mailto:akiko@example.com",
     "op": "msg/send",
     "input": {
@@ -575,7 +575,7 @@ type InvocationTag union {
 
 ```json
 {
-  "bafy...updateDnsInstruction": {
+  "bafy...updateDns": {
     "rsc" "dns:example.com?TYPE=TXT",
     "op": "crud/update",
     "input": {
