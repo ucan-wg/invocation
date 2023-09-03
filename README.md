@@ -264,7 +264,7 @@ const sendEmail = msg.send("mailto://alice@example.com", {
 ## 3.1 Schema
 
 ```
-type Task struct {
+type Instruction struct {
   rsc   URI
   op    Ability
   input {String : Any}
