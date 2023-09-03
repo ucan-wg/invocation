@@ -187,7 +187,7 @@ A [Result] is the output of an [Instruction].
 
 ### 2.2.5 Receipt
 
-A [Receipt] is a cryptographically signed description of the [Invocation] output and requested [Effect]s.
+A [Receipt] is a cryptographically signed description of the [Invocation]'s [Result] and requested [Effect]s.
 
 ### 2.2.6 Effect
 
