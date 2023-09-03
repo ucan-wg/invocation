@@ -545,7 +545,6 @@ type InvocationTag union {
       "run": {"/": "bafy...createBlogPostTask"},
       "prf": [{"/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"}]
     },
-    "sig": {"/": "bafy...multipleAuth"}
   },
   "bafy...sendEmailTask": {
     "task": {
@@ -554,7 +553,6 @@ type InvocationTag union {
         {"/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"}
       ]
     },
-    "sig": {"/": "bafy...multipleAuth"},
   },
   "bafy...sendEmailInvocation": {
     "task": {"/": "bafy...sendEmailTask"},
@@ -956,11 +954,6 @@ For example, consider the following invocation batch:
           "/": "bafy...proofUcanOutsideExample"
         }
       ]
-    },
-    "sig": {
-      "/": {
-        "bytes": "7aEDQDEGkezG7Bcpeknf2UJ7hpqeL1PZodrYYTSwRjqZPf67P4r1lRZvX+6+9gV+wDZUX0DZLMv64n2fPKnjvxrEugE"
-      }
     }
   }
 }
