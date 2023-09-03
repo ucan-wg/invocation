@@ -477,9 +477,6 @@ type InvocationTag union {
     },
     "auth": {"/": "bafy...auth"}
   },
-  "bafy...auth": {
-    "scope": [{"/": "bafy...createBlogPostTask"}],
-    "s": {"/": {"bytes": "7aEDQPPhXNvtVb5/T+O40xXU6TSgJZDFnlVaV3GMlaEo/dvxtyaCLm8uUsFK4xzQsQd82QQUYA6fK506XqjghRlucAQ"}}
   "bafy...createBlogPostTask": {
     "run": {"/": "bafy...createBlogPost"},
     "prf": [{"/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"}]
@@ -501,6 +498,10 @@ type InvocationTag union {
         "draft": true
       }
     }
+  },
+  "bafy...auth": {
+    "scope": [{"/": "bafy...createBlogPostTask"}],
+    "s": {"/": {"bytes": "7aEDQPPhXNvtVb5/T+O40xXU6TSgJZDFnlVaV3GMlaEo/dvxtyaCLm8uUsFK4xzQsQd82QQUYA6fK506XqjghRlucAQ"}}
   }
 }
 ```
