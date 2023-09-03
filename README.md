@@ -562,6 +562,7 @@ type InvocationTag union {
       {"/": "bafy...sendEmailTask"}
     ],
     "s": {"/": {"bytes": "7aEDQKxIrga+88HNDd69Ho4Ggz8zkf+GxWC6dAGYua6l85YgiL3NqGxyGAygiSZtWrWUo6SokgOys2wYE7N+novtcwo"}}
+  }
 }
 ```
 
