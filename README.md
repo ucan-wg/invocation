@@ -470,9 +470,9 @@ type InvocationTag union {
 ```json
 {
   "_": {
-    "ucan/invocation@0.2.0": "bafy...invocation"
+    "ucan/invocation@0.2.0": "bafy...createBlogPostTaskInvocation"
   },
-  "bafy...invocation": {
+  "bafy...createBlogPostTaskInvocation": {
     "task": {"/": "bafy...createBlogPostTask"
     },
     "auth": {"/": "bafy...auth"}
@@ -548,11 +548,11 @@ type InvocationTag union {
     "run": {"/": "bafy...sendEmail"},
     "prf": [{"/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"}]
   },
-  "bafy...sendEmailInvocation": {
+  "bafy...sendEmailTaskInvocation": {
     "task": {"/": "bafy...sendEmail"},
     "auth": {"/": "bafy...multipleAuth"}
   },
-  "bafy...createBlogPostInvocation": {
+  "bafy...createBlogPostTaskInvocation": {
     "task": {"/": "bafy...createBlogPost"},
     "auth": {"/": "bafy...multipleAuth"}
   },
@@ -579,12 +579,10 @@ type InvocationTag union {
   "bafy...updateDnsTask": {
     "run": {"/": "bafy...updateDns"},
     "auth": {"/": "bafy...auth"},
-    "cause": {"/": "bafy...somePriorInvocation"},
-    "prf": [
-      {"/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"}
-    ]
+    "cause": {"/": "bafy...somePriorInstructionTaskInvocationReceipt"},
+    "prf": [{"/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"}]
   },
-  "bafy...updateDnsInvocation": {
+  "bafy...updateDnsTaskInvocation": {
     "task": {"/": "bafy...updateDnsTask"},
     "auth": {"/": "bafy...auth"}
   },
