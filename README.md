@@ -549,11 +549,11 @@ type InvocationTag union {
     "prf": [{"/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"}]
   },
   "bafy...sendEmailTaskInvocation": {
-    "task": {"/": "bafy...sendEmail"},
+    "task": {"/": "bafy...sendEmailTask"},
     "auth": {"/": "bafy...multipleAuth"}
   },
   "bafy...createBlogPostTaskInvocation": {
-    "task": {"/": "bafy...createBlogPost"},
+    "task": {"/": "bafy...createBlogPostTask"},
     "auth": {"/": "bafy...multipleAuth"}
   },
   "bafy...multipleAuth": {
