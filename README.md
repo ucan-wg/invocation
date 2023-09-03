@@ -549,11 +549,11 @@ type InvocationTag union {
     "prf": [{"/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"}]
   },
   "bafy...sendEmailInvocation": {
-    "task": {"/": "bafy...sendEmailTask"},
+    "task": {"/": "bafy...sendEmail"},
     "auth": {"/": "bafy...multipleAuth"}
   },
   "bafy...createBlogPostInvocation": {
-    "task": {"/": "bafy...createBlogPostTask"},
+    "task": {"/": "bafy...createBlogPost"},
     "auth": {"/": "bafy...multipleAuth"}
   },
   "bafy...multipleAuth": {
@@ -577,7 +577,7 @@ type InvocationTag union {
     }
   },
   "bafy...updateDnsTask": {
-    "run": {"/": "bafy...updateDnsTask"},
+    "run": {"/": "bafy...updateDns"},
     "auth": {"/": "bafy...auth"},
     "cause": {"/": "bafy...somePriorInvocation"},
     "prf": [
@@ -907,7 +907,7 @@ For example, consider the following invocation batch:
 
 ```json
 {
-  "bafy...createBlogPostTask": {
+  "bafy...createBlogPost": {
     "rsc": "https://example.com/blog/posts",
     "op": "crud/create",
     "input": {
@@ -917,11 +917,16 @@ For example, consider the following invocation batch:
       }
     }
   },
-  "bafy...getBlogEditorsTask": {
+  "bafy...createBlogPostTask": {
+    "run": {"/": "bafy...createBlogPost"},
+    "prf": [{"/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"}]
+  },
+
+  "bafy...getBlogEditors": {
     "rsc": "https://example.com/users/editors",
     "op": "crud/read"
   },
-  "bafy...sendEmailTask": {
+  "bafy...sendEmail": {
     "rsc": "mailto:akiko@example.com",
     "op": "msg/send",
     "input": {
