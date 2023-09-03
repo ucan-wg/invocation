@@ -432,7 +432,7 @@ The `prf` field MUST contain links to any UCANs that provide the authority to pe
 
 ### 5.1.4 Optional Cause
 
-[Task]s MAY be invoked as an effect caused by a prior [Invocation]. Such [Invocation]s SHOULD have a `cause` field set to the [Receipt] link of the [Invocation] that caused it. The linked [Receipt] MUST have an `Effect` (the `fx` field) containing invoked [Task] in the `run` field.
+[Task]s MAY be invoked as an effect caused by a prior [Invocation]. Such [Invocation]s SHOULD have a `cause` field set to the [Receipt] link of the [Invocation] that caused it. The linked [Receipt] MUST have an `Effect` (the `fx` field) containing invoked [Task] in a `join` or a `fork` field.
 
 ## 5.2 (Signed) Invocation
 
