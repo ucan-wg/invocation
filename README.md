@@ -255,7 +255,7 @@ Later, when we explore promise [pipelines][Pipeline], this also includes capturi
 // Pseudocode
 const getMailingList = crud.read("https://exmaple.com/mailinglist");
 const sendEmail = msg.send("mailto://alice@example.com", {
-  to: mailingList.await().ok,
+  to: (await getMailingList()).ok,
   subject: "hello",
   body: "world"
 });
