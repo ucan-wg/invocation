@@ -418,7 +418,7 @@ type Task struct {
 
 ### 5.1.1 Instruction
 
-The `run` field MUST contain a link to the [Task] to be run.
+The `run` field MUST contain a link to the [Instruction] to be run.
 
 ### 5.1.2 Metadata
 
