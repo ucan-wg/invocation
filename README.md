@@ -167,7 +167,7 @@ The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field
 
 ### 2.2.1 Instruction
 
-An [Instruction] is like a deferred function application: a request to perform some action on a resource with specific input.
+An [Instruction] is like a deferred function application: a description of an action on a resource with specific input.
 
 ### 2.2.2 Task
 
