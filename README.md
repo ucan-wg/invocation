@@ -733,7 +733,7 @@ Receipts MUST use the same version as the invocation that they contain.
 ## 8.1 Receipt
 
 ```
-type Outcome struct {
+type Receipt struct {
   ran     &Invocation # Invocation this is a receipt for
 
   out     Result # Output of the invocation
