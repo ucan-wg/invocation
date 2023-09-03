@@ -253,7 +253,7 @@ Later, when we explore promise [pipelines][Pipeline], this also includes capturi
 
 ```js
 // Pseudocode
-const mailingList = crud.read("https://exmaple.com/mailinglist");
+const getMailingList = crud.read("https://exmaple.com/mailinglist");
 const sendEmail = msg.send("mailto://alice@example.com", {
   to: mailingList.await().ok,
   subject: "hello",
