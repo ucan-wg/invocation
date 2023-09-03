@@ -204,7 +204,7 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 
 ```json
 {
-  "rsc" "mailto:alice@example.com",
+  "rsc": "mailto:alice@example.com",
   "op": "msg/send",
   "input": {
     "to": [
@@ -232,11 +232,11 @@ Later, when we explore promise [pipelines][Pipeline], this also includes capturi
 ```json
 {
   "bafy...getMailingList": {
-    "rsc" "https://exmaple.com/mailinglist",
+    "rsc": "https://exmaple.com/mailinglist",
     "op": "crud/read"
   },
   "bafy...sendEmail": {
-    "rsc" "mailto://alice@example.com",
+    "rsc": "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": {
@@ -307,7 +307,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "rsc" "https://example.com/blog/posts",
+  "rsc": "https://example.com/blog/posts",
   "op": "crud/create",
   "input": {
     "headers": {
@@ -330,7 +330,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "rsc" "mailto:akiko@example.com",
+  "rsc": "mailto:akiko@example.com",
   "op": "msg/send",
   "input": {
     "to": [
@@ -347,7 +347,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "rsc" "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+  "rsc": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
   "op": "wasm/run",
   "input": {
     "func": "add_one",
@@ -484,7 +484,7 @@ type InvocationTag union {
     "s": {"/": {"bytes": "7aEDQPPhXNvtVb5/T+O40xXU6TSgJZDFnlVaV3GMlaEo/dvxtyaCLm8uUsFK4xzQsQd82QQUYA6fK506XqjghRlucAQ"}}
   },
   "bafy...createBlogPost": {
-    "rsc" "https://example.com/blog/posts",
+    "rsc": "https://example.com/blog/posts",
     "op": "crud/create",
     "input": {
       "headers": {
@@ -509,7 +509,7 @@ type InvocationTag union {
 ```json
 {
   "bafy...createBlogPost": {
-    "rsc" "https://example.com/blog/posts",
+    "rsc": "https://example.com/blog/posts",
     "op": "crud/create",
     "input": {
       "headers": {
@@ -527,7 +527,7 @@ type InvocationTag union {
     }
   },
   "bafy...sendEmail": {
-    "rsc" "mailto:akiko@example.com",
+    "rsc": "mailto:akiko@example.com",
     "op": "msg/send",
     "input": {
       "to": [
@@ -576,7 +576,7 @@ type InvocationTag union {
 ```json
 {
   "bafy...updateDns": {
-    "rsc" "dns:example.com?TYPE=TXT",
+    "rsc": "dns:example.com?TYPE=TXT",
     "op": "crud/update",
     "input": {
       "value": "hello world"
@@ -914,7 +914,7 @@ For example, consider the following invocation batch:
 ```json
 {
   "bafy...createBlogPostTask": {
-    "rsc" "https://example.com/blog/posts",
+    "rsc": "https://example.com/blog/posts",
     "op": "crud/create",
     "input": {
       "payload": {
@@ -924,11 +924,11 @@ For example, consider the following invocation batch:
     }
   },
   "bafy...getBlogEditorsTask": {
-    "rsc" "https://example.com/users/editors",
+    "rsc": "https://example.com/users/editors",
     "op": "crud/read"
   },
   "bafy...sendEmailTask": {
-    "rsc" "mailto:akiko@example.com",
+    "rsc": "mailto:akiko@example.com",
     "op": "msg/send",
     "input": {
       "to": {
