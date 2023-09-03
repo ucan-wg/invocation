@@ -473,15 +473,16 @@ type InvocationTag union {
     "ucan/invocation@0.2.0": "bafy...invocation"
   },
   "bafy...invocation": {
-    "task": {
-      "run": {"/": "bafy...createBlogPost"},
-      "prf": [{"/": "bafy...ucanProof"}]
+    "task": {"/": "bafy...createBlogPostTask"
     },
     "auth": {"/": "bafy...auth"}
   },
   "bafy...auth": {
     "scope": [{"/": "bafy...createBlogPostTask"}],
     "s": {"/": {"bytes": "7aEDQPPhXNvtVb5/T+O40xXU6TSgJZDFnlVaV3GMlaEo/dvxtyaCLm8uUsFK4xzQsQd82QQUYA6fK506XqjghRlucAQ"}}
+  "bafy...createBlogPostTask": {
+    "run": {"/": "bafy...createBlogPost"},
+    "prf": [{"/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"}]
   },
   "bafy...createBlogPost": {
     "rsc": "https://example.com/blog/posts",
