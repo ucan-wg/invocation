@@ -541,18 +541,12 @@ type InvocationTag union {
     }
   },
   "bafy...createBlogPostTask": {
-    "task": {
-      "run": {"/": "bafy...createBlogPostTask"},
-      "prf": [{"/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"}]
-    },
+    "run": {"/": "bafy...createBlogPost"},
+    "prf": [{"/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"}]
   },
   "bafy...sendEmailTask": {
-    "task": {
-      "run": {"/": "bafy...sendEmailTask"},
-      "prf": [
-        {"/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"}
-      ]
-    },
+    "run": {"/": "bafy...sendEmail"},
+    "prf": [{"/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"}]
   },
   "bafy...sendEmailInvocation": {
     "task": {"/": "bafy...sendEmailTask"},
