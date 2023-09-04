@@ -189,7 +189,7 @@ A [Result] is the output of an invoked [Task].
 
 A [Receipt] is a cryptographically signed description of the [Invocation]'s [Result] and requested [Effect]s.
 
-### 2.2.6 Effect
+### 2.2.6 Effects
 
 An [Effect] are the instruction to the [Executor] to run set of [Task]s concurrently.
 
@@ -634,7 +634,7 @@ If no information is available, this field SHOULD be set to `{}`.
 }
 ```
 
-## 7 Effect
+## 7 Effects
 
 The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
 
