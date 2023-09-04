@@ -191,7 +191,7 @@ A [Receipt] is a cryptographically signed description of the [Invocation]'s [Res
 
 ### 2.2.6 Effects
 
-An [Effect] are the instruction to the [Executor] to run set of [Task]s concurrently.
+[Effects] is a request to [Executor] to take on execution of some further [Task]s, some may be requested to execute as a continuation of the current [Task], some may be requested to be executed concurrently.
 
 ## 2.3 IPLD Schema
 
