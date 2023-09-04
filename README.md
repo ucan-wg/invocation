@@ -293,7 +293,7 @@ The `input` field MUST have an IPLD [map representation][ipld representation], a
 3. [Unit] in empty map representation.
 4. [Map] in map representation.
 
-UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type of `input`s allowed.
+UCAN capabilities provided in [Proofs] of a wrapping [Task] MAY impose certain constraint on the type of `input`s allowed.
 
 If the `input` field is not present, it is implicitly a `unit` represented as empty map.
 
