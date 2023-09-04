@@ -978,7 +978,7 @@ const notify = msg.send("mailto:akiko@example.com", {
 
 Any [Instruction]'s field other besides `op` MAY be substituted with `Await`. The `op` field is critical in understanding what kind of action will be performed and CAN NOT be substituted with `Await`.
 
-An [Await] MAY be used across [Invocation]s with a same [Authorization], or across [Invocation]s with different [Authorization] and MAY even be across multiple Invokers and Executors. As long as the invocation can be resolved, it MAY be promised. This is sometimes referred to as ["promise pipelining"].
+An [Await] MAY be used across [Invocation]s with the same [Authorization], or across [Invocation]s with different [Authorization] and MAY even be across multiple Invokers and Executors. As long as the invocation can be resolved, it MAY be promised. This is sometimes referred to as ["promise pipelining"].
 
 ## Await
 
