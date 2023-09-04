@@ -358,44 +358,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 }
 ```
 
-# 4 Authorization
-
-An [Authorization] is cryptographically signed data set. It represents an authorization to run [Task]s that are included in `scope` data set.
-
-## 4.1 Schema
-
-```
-type Authorization struct {
-  scope   [&Any] # Authorization is denoted by the set of links been authorized
-  s       Varsig # Scope signed by the invoker
-}
-```
-
-### 4.2 Fields
-
-#### 4.2.1 Authorization Scope
-
-The `scope` field MUST be a set of links been authorized. It SHOULD be encoded as an alphabetically ordered list without duplicates.
-
-If the `scope` field is omitted, it is implicitly treated as an empty list (authorizing nothing).
-
-### 4.2.2 Signature
-
-The `s` field MUST contain a [Varsig] of the [CBOR] encoded `scope` field.
-
-## 4.3 DAG-JSON Example
-
-```json
-{
-  "scope": [
-    {"/": "bafyreihtmwju3okftpeuqe3x3ux5e7c2jescakwnoiyv45vnicke4kdxy4"},
-    {"/": "bafyreieuo63r3y2nuycaq4b3q2xvco3nprlxiwzcfp4cuupgaywat3z6mq"}
-  ],
-  "s": {"/": {"bytes": "7aEDQIJB8XXJ6hWbwu40fN4bq8+Zq8BxyybSWXatMVU3VsL+yzVYpeJqsEBQE5rNtUJefR5rRCNimKNZMJjA9/udZQQ"}}
-}
-```
-
-# 5 Task
+# 4 Task
 
 As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation]s are not executable until they have been provided provable authority (in form of UCANs in the `prf` field) and an [Authorization] (in the `auth` field) from the [Invoker].
 
@@ -403,7 +366,7 @@ The `auth` field MUST contain an [Authorization] which signs over the `&Task` in
 
 Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. A `Receipt` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
 
-## 5.1 Task
+## 4.1 Task
 
 ```
 type Task struct {
@@ -416,23 +379,60 @@ type Task struct {
 }
 ```
 
-### 5.1.1 Instruction
+### 4.1.1 Instruction
 
 The `run` field MUST contain a link to the [Instruction] to be run.
 
-### 5.1.2 Metadata
+### 4.1.2 Metadata
 
 The OPTIONAL `meta` field MAY be used to include human-readable descriptions, tags, execution hints, resource limits, and so on. If present, the `meta` field MUST contain a map with string keys. The contents of the map are left undefined to encourage extensible use.
 
 If `meta` field is not present, it is implicitly a `unit` represented as an empty map.
 
-### 5.1.3 Proofs
+### 4.1.3 Proofs
 
 The `prf` field MUST contain links to any UCANs that provide the authority to perform this task. All of the outermost proofs MUST have `aud` field set to the [Executor]'s DID. All of the outmost proofs MUST have `iss` field set to the [Invoker]'s DID.
 
-### 5.1.4 Optional Cause
+### 4.1.4 Optional Cause
 
 [Task]s MAY be invoked as an effect caused by a prior [Invocation]. Such [Invocation]s SHOULD have a `cause` field set to the [Receipt] link of the [Invocation] that caused it. The linked [Receipt] MUST have an `Effect` (the `fx` field) containing invoked [Task] in a `join` or a `fork` field.
+
+# 5 Authorization
+
+An [Authorization] is cryptographically signed data set. It represents an authorization to run [Task]s that are included in `scope` data set.
+
+## 5.1 Schema
+
+```
+type Authorization struct {
+  scope   [&Any] # Authorization is denoted by the set of links been authorized
+  s       Varsig # Scope signed by the invoker
+}
+```
+
+### 5.2 Fields
+
+#### 5.2.1 Authorization Scope
+
+The `scope` field MUST be a set of links been authorized. It SHOULD be encoded as an alphabetically ordered list without duplicates.
+
+If the `scope` field is omitted, it is implicitly treated as an empty list (authorizing nothing).
+
+### 5.2.2 Signature
+
+The `s` field MUST contain a [Varsig] of the [CBOR] encoded `scope` field.
+
+## 5.3 DAG-JSON Example
+
+```json
+{
+  "scope": [
+    {"/": "bafyreihtmwju3okftpeuqe3x3ux5e7c2jescakwnoiyv45vnicke4kdxy4"},
+    {"/": "bafyreieuo63r3y2nuycaq4b3q2xvco3nprlxiwzcfp4cuupgaywat3z6mq"}
+  ],
+  "s": {"/": {"bytes": "7aEDQIJB8XXJ6hWbwu40fN4bq8+Zq8BxyybSWXatMVU3VsL+yzVYpeJqsEBQE5rNtUJefR5rRCNimKNZMJjA9/udZQQ"}}
+}
+```
 
 ## 5.2 (Signed) Invocation
 
