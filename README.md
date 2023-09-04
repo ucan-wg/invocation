@@ -437,7 +437,7 @@ The `s` field MUST contain a [Varsig] of the [CBOR] encoded `scope` field.
 
 # 6 Invocation
 
-An [Invocation] is a signed [Task].
+An [Invocation] is an authorized [Task].
 
 ## 6.1 Schema
 ```
