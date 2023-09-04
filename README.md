@@ -1006,17 +1006,17 @@ Upon learning of a successful execution of an awaited `Instruction`, the [Execut
 
 ##### 9.2.2 Failure
 
-The failed output of the [Task] MAY be referenced by wrapping the [Task] in the `"await/error"` tag.
+The failed output of an [Instruction] MAY be referenced by wrapping the [Instruction] in the `"await/error"` tag.
 
-[Executor] MUST fail [Task] that `Await`s failed output of the successful [Task].
+[Executor] MUST fail [Instruction] that `Await`s failed output of the successful [Instruction].
 
-[Executor] MUST substitute [Task] field set to the [Await] of the failed [Task] with an (unwrapped) `error` value of the output.
+[Executor] MUST substitute [Instruction]'s field set to the [Await] of the failed [Instruction] with an (unwrapped) `error` value of the [Result] output.
 
 ##### 9.2.3 Result
 
-The [Result] output of the [Task] MAY be reference by wrapping the [Task] in the `"await/*"` tag.
+[Result] of an [Instruction] may be passed in to other [Instruction]s that [Await] it.
 
-[Executor] MUST substitute [Task] field set to the [Await] of the [Task] with a `Result` value of the output.
+[Executor] MUST substitute [Await]ed [Instruction]s with their [Result]s.
 
 ## 9.3 Dataflow
 
