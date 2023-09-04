@@ -185,16 +185,13 @@ An [Invocation] is an [Authorized] [Task].
 
 A [Result] is the output of an invoked [Task].
 
-### 2.2.5 Receipt
-
-A [Receipt] is a cryptographically signed description of the [Invocation]'s [Result] and requested [Effect]s.
-
-### 2.2.6 Effects
+### 2.2.5 Effects
 
 [Effects] is a request to [Executor] to take on execution of some further [Task]s, some may be requested to execute as a continuation of the current [Task], some may be requested to be executed concurrently.
 
-## 2.3 IPLD Schema
+### 2.2.6 Receipt
 
+A [Receipt] is a cryptographically signed description of the [Invocation]'s [Result] and requested [Effect]s.
 
 # 3 Instruction
 
