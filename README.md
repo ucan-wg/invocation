@@ -366,7 +366,7 @@ The `auth` field MUST contain an [Authorization] which signs over the `&Task` in
 
 Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. A `Receipt` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
 
-## 4.1 Task
+## 4.1 Schema
 
 ```
 type Task struct {
@@ -379,21 +379,22 @@ type Task struct {
 }
 ```
 
-### 4.1.1 Instruction
+## 4.2 Fields
+### 4.2.1 Instruction
 
 The `run` field MUST contain a link to the [Instruction] to be run.
 
-### 4.1.2 Metadata
+### 4.2.2 Metadata
 
 The OPTIONAL `meta` field MAY be used to include human-readable descriptions, tags, execution hints, resource limits, and so on. If present, the `meta` field MUST contain a map with string keys. The contents of the map are left undefined to encourage extensible use.
 
 If `meta` field is not present, it is implicitly a `unit` represented as an empty map.
 
-### 4.1.3 Proofs
+### 4.2.3 Proofs
 
 The `prf` field MUST contain links to any UCANs that provide the authority to perform this task. All of the outermost proofs MUST have `aud` field set to the [Executor]'s DID. All of the outmost proofs MUST have `iss` field set to the [Invoker]'s DID.
 
-### 4.1.4 Optional Cause
+### 4.2.4 Optional Cause
 
 [Task]s MAY be invoked as an effect caused by a prior [Invocation]. Such [Invocation]s SHOULD have a `cause` field set to the [Receipt] link of the [Invocation] that caused it. The linked [Receipt] MUST have an `Effect` (the `fx` field) containing invoked [Task] in a `join` or a `fork` field.
 
@@ -410,9 +411,9 @@ type Authorization struct {
 }
 ```
 
-### 5.2 Fields
+## 5.2 Fields
 
-#### 5.2.1 Authorization Scope
+### 5.2.1 Authorization Scope
 
 The `scope` field MUST be a set of links been authorized. It SHOULD be encoded as an alphabetically ordered list without duplicates.
 
@@ -434,10 +435,11 @@ The `s` field MUST contain a [Varsig] of the [CBOR] encoded `scope` field.
 }
 ```
 
-## 5.2 (Signed) Invocation
+# 6 Invocation
 
 An [Invocation] is a signed [Task].
 
+## 6.1 Schema
 ```
 type Invocation struct {
   task     Task
@@ -445,27 +447,29 @@ type Invocation struct {
 }
 ```
 
-### 5.2.1 Task
+## 6.2 Fields
+### 6.2.1 Task
 
 The [Task] containing the [Instruction] and any configuration.
 
-### 5.2.2 Authorization
+### 6.2.2 Authorization
 
 The `auth` field MUST contain a [Varsig] signing over an array of CIDs that includes the [Task]'s CID, signed by the issuer of the proofs.
 
-## 5.3 Invocation Tag
+# 7 Invocation Tag
 
 An invocation capsule associates the [Invocation] with a versioned schema. This field is NOT REQUIRED. Wrapping an [Invocation] in an Invocation Tag is RECOMMENDED in contexts where the schema and version are not clear from context, such as when it is being stores or passed around without being nested in another structure that defines the version in its schema.
 
+## 7.1 Schema
 ```
 type InvocationTag union {
   | Invocation   "ucan/invoke@0.2.0"
 } representation keyed
 ```
 
-## 5.4 DAG-JSON Example
+## 7.1 DAG-JSON Example
 
-### 5.4.1 Single Invocation
+### 7.1.1 Single Invocation
 
 ```json
 {
@@ -506,7 +510,7 @@ type InvocationTag union {
 }
 ```
 
-### 5.4.2 Multiple Invocations
+### 7.1.2 Multiple Invocations
 
 ```json
 {
@@ -566,7 +570,7 @@ type InvocationTag union {
 }
 ```
 
-### 5.4.3 Causal Invocations
+### 7.1.3 Causal Invocations
 
 ```json
 {
@@ -596,11 +600,11 @@ type InvocationTag union {
 }
 ```
 
-# 6 Result
+# 8 Result
 
 A Result records the output of the [Task], as well as its success or failure state.
 
-## 6.1 Schema
+## 8.1 Schema
 
 ```
 type Result union {
@@ -609,9 +613,9 @@ type Result union {
 } representation keyed
 ```
 
-## 6.2 Variants
+## 8.2 Variants
 
-## 6.2.1 Success
+### 8.2.1 Success
 
 The success branch MUST contain the value returned from a successful [Task] wrapped in the `"ok"` tag. The exact shape of the returned data is left undefined to allow for flexibility in various Task types.
 
@@ -619,7 +623,7 @@ The success branch MUST contain the value returned from a successful [Task] wrap
 { "ok": 42 }
 ```
 
-## 6.2.2 Failure
+### 8.2.2 Failure
 
 The failure branch MAY contain detail about why execution failed wrapped in the "error" tag. It is left undefined in this specification to allow for [Task] types to standardize the data that makes sense in their contexts.
 
@@ -634,7 +638,7 @@ If no information is available, this field SHOULD be set to `{}`.
 }
 ```
 
-## 7 Effects
+# 9 Effects
 
 The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
 
@@ -646,7 +650,7 @@ The `join` field describes an OPTIONAL "special" [Invocation] which instruct the
 
 Tasks in the `fork` field MAY be related to the Task in the `join` field if there exists a Promise referencing either Task. If such a promise does not exist, then they SHOULD be treated as entirely separate and MAY be scheduled, deferred, fail, retry, and so on entirely separately.
 
-## 7.1 Schema
+## 9.1 Schema
 
 ```
 # Represents a request to invoke enclosed set of tasks concurrently
@@ -660,19 +664,19 @@ type Effects {
 }
 ```
 
-## 7.2 Fields
+## 9.2 Fields
 
-### 7.2.1 Forked Task Invocations
+### 9.2.1 Forked Task Invocations
 
 The OPTIONAL `fork` field, if present MUST be a list of an alphabetically ordered [Task] links. List MUST NOT not contain duplicate entries.
 
-### 7.2.2 Joined Task Invocation
+### 9.2.2 Joined Task Invocation
 
 The OPTIONAL `join` field, if present MUST be set to a [Task] link.
 
-## 7.3 DAG-JSON Examples
+## 9.3 DAG-JSON Examples
 
-### 7.3.1 Effect spawning concurrent threads
+### 9.3.1 Effect spawning concurrent threads
 
 ```json
 {
@@ -687,7 +691,7 @@ The OPTIONAL `join` field, if present MUST be set to a [Task] link.
 }
 ```
 
-### 7.3.2 Effect continuing thread execution
+### 9.3.2 Effect continuing thread execution
 
 ```json
 {
@@ -697,7 +701,7 @@ The OPTIONAL `join` field, if present MUST be set to a [Task] link.
 }
 ```
 
-### 7.3.1 Effect with fork & join
+### 9.3.1 Effect with fork & join
 
 ```json
 {
@@ -715,7 +719,7 @@ The OPTIONAL `join` field, if present MUST be set to a [Task] link.
 }
 ```
 
-# 8 Receipt
+# 10 Receipt
 
 A `Receipt` is an attestation of the [Result] and requested [Effect]s by a [Task] [Invocation]. A Receipt MUST be signed by the [Executor] or it's delegate. If signed by the delegate, the proof of delegation from the [Executor] to the delegate (the `iss` of the receipt) MUST be provided in `prf`.
 
@@ -723,7 +727,7 @@ A `Receipt` is an attestation of the [Result] and requested [Effect]s by a [Task
 
 Receipts MUST use the same version as the invocation that they contain.
 
-## 8.1 Receipt
+## 10.1 Schema
 
 ```
 type Receipt struct {
@@ -747,51 +751,53 @@ type Receipt struct {
 }
 ```
 
-### 8.1.1 Ran Invocation
+## 10.2 Fields
+### 10.2.1 Ran Invocation
 
 The `ran` field MUST include a link to the [Invocation] that the Receipt is for.
 
-### 8.1.2 Output
+### 10.2.2 Output
 
 The `out` field MUST contain the value output of the invocation in [Result] format.
 
-### 8.1.3 Effect
+### 10.2.3 Effect
 
 The OPTIONAL `fx` field, if present MUST be set to the caused [Effect]. The [Executor] SHOULD invoke contained [Task] to progress a workflow execution.
 
 If `fx` does not contain OPTIONAL `join` field, it denotes completion of the current execution thread.
 
-### 8.1.4 Metadata Fields
+### 10.2.4 Metadata Fields
 
 The OPTIONAL metadata field MAY be omitted or used to contain additional data about the receipt. This field MAY be used for tags, commentary, trace information, and so on.
 
-### 8.1.5 Receipt Issuer
+### 10.2.5 Receipt Issuer
 
 The OPTIONAL `iss` field, if present MUST contain the DID of the [Executor] delegate that signed it. If field is present, delegation from [Executor] MUST be included in the `prf` field.
 
 If `iss` field is omitted, Receipt MUST be signed by the [Executor].
 
-### 8.1.6 Proofs
+### 10.2.6 Proofs
 
 If OPTIONAL `prf` field is present, MUST contain link to UCAN delegation authorizing Receipt Issuer (`iss`) to carry [Task] execution.
 
-### 8.1.7 Signature
+### 10.2.7 Signature
 
 The `sig` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without `s` field. The signature MUST be generated by the [Executor] or a delegate if OPTIONAL `iss` field is set.
 
-## 8.2 Receipt Tag
+# 11 Receipt Tag
 
+A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omitted in contexts where the schema and version are clear from context (for example, when nested in another structure that defines the version).
+
+## 11.1 Schema
 ```
 type ReceiptTag union {
   | &Receipt     "ucan/receipt@0.2.0"
 } representation keyed
 ```
 
-A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omitted in contexts where the schema and version are clear from context (for example, when nested in another structure that defines the version).
+## 11.2 DAG-JSON Examples
 
-## 8.3 DAG-JSON Examples
-
-### 8.3.1 Issued by Executor
+### 11.2.1 Issued by Executor
 
 ```json
 {
@@ -821,7 +827,7 @@ A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omit
 }
 ```
 
-### 8.3.2 Issued by Delegate
+### 11.2.2 Issued by Delegate
 
 ```json
 {
@@ -857,7 +863,7 @@ A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omit
 }
 ```
 
-### 8.3.3 Receipt with effects
+### 11.2.3 Receipt with effects
 
 ```json
 {
@@ -890,7 +896,7 @@ A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omit
 }
 ```
 
-# 9 Pipelines
+# 12 Pipelines
 
 > Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
 >
@@ -980,11 +986,11 @@ Any [Instruction]'s field other besides `op` MAY be substituted with `Await`. Th
 
 An [Await] MAY be used across [Invocation]s with the same [Authorization], or across [Invocation]s with different [Authorization] and MAY even be across multiple Invokers and Executors. As long as the invocation can be resolved, it MAY be promised. This is sometimes referred to as ["promise pipelining"].
 
-## Await
+# 13 Await
 
 An `Await` describes the eventual output of the referenced [Task] invocation. An `Await` MUST resolve to an output [Result] with `await/*` variant. If unwrapping success or failure case is desired, corresponding `await/ok` or `await/error` variants MUST be used.
 
-### 9.1 Schema
+## 13.1 Schema
 
 ```
 type Await union {
@@ -994,9 +1000,9 @@ type Await union {
 } representation keyed
 ```
 
-#### 9.2 Variants
+## 13.2 Variants
 
-##### 9.2.1 Success
+### 13.2.1 Success
 
 The successful output of the [Instruction] MAY be referenced by wrapping the [Instruction] in the `"await/ok"` tag.
 
@@ -1004,7 +1010,7 @@ The [Executor] MUST fail an [Instruction] that `Await`s successful output of the
 
 Upon learning of a successful execution of an awaited `Instruction`, the [Executor] MUST substitute the [Instruction] field set with the (unwrapped) `ok` value of the output.
 
-##### 9.2.2 Failure
+### 13.2.2 Failure
 
 The failed output of an [Instruction] MAY be referenced by wrapping the [Instruction] in the `"await/error"` tag.
 
@@ -1012,17 +1018,17 @@ The failed output of an [Instruction] MAY be referenced by wrapping the [Instruc
 
 [Executor] MUST substitute [Instruction]'s field set to the [Await] of the failed [Instruction] with an (unwrapped) `error` value of the [Result] output.
 
-##### 9.2.3 Result
+### 13.2.3 Result
 
 [Result] of an [Instruction] may be passed in to other [Instruction]s that [Await] it.
 
 [Executor] MUST substitute [Await]ed [Instruction]s with their [Result]s.
 
-## 9.3 Dataflow
+## 13.3 Dataflow
 
 Pipelining uses [Await] as arguments to determine the required dataflow graph. The following examples both express the following dataflow graph:
 
-### 9.3.1 Batched
+### 13.3.1 Batched
 
 ```mermaid
 flowchart BR
@@ -1179,7 +1185,7 @@ flowchart BR
 }
 ```
 
-### 9.4.2 Serial
+### 13.3.2 Serial
 
 ```mermaid
 flowchart TB
@@ -1362,7 +1368,7 @@ flowchart TB
 }
 ```
 
-# 10 Prior Art
+# 14 Prior Art
 
 [ucanto RPC] from DAG House is a production system that uses UCAN as the basis for an RPC layer.
 
@@ -1374,7 +1380,7 @@ The [Object Capability Network (OCapN)] protocol extends CapTP with a generalize
 
 [Cap 'n Proto RPC] is an influential RPC framework [based on concepts from CapTP].
 
-# 11 Acknowledgements
+# 15 Acknowledgements
 
 Many thanks to [Mark Miller] for his [pioneering work] on [capability systems].
 
