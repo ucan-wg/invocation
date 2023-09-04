@@ -183,7 +183,7 @@ An [Invocation] is an [Authorized] [Task].
 
 ### 2.2.4 Result
 
-A [Result] is the output of an [Instruction].
+A [Result] is the output of an invoked [Task].
 
 ### 2.2.5 Receipt
 
