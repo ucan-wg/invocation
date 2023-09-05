@@ -357,11 +357,9 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 # 4 Task
 
-As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation]s are not executable until they have been provided provable authority (in form of UCANs in the `prf` field) and an [Authorization] (in the `auth` field) from the [Invoker].
-
-The `auth` field MUST contain an [Authorization] which signs over the `&Task` in `task`.
-
-Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. A `Receipt` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
+As [noted in the introduction][112-lazy-vs-eager-evaluation], there is a difference between a function and evocation of that function.
+A [Task] is akin to a function (not its evocation).
+A [Task] is an [Instruction] with [Metadata] (some runtime configuration, including timeouts, fuel, trace metadata, etc.) and [Proofs] that it's been issued on behald of [Invoker].
 
 ## 4.1 Schema
 
