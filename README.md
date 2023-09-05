@@ -434,7 +434,8 @@ The `s` field MUST contain a [Varsig] of the [CBOR] encoded `scope` field.
 
 # 6 Invocation
 
-An [Invocation] is an authorized [Task].
+An [Invocation] is a request to execute a [Task] - it's a [Task] with [Authorization] of [Executor] to execute it on behalf of [Invoker].
+[Invocation] is not executable unless has authority [Proofs] (in form of UCANs in the `prf` field of its [Task]) and an [Authorization] (in the `auth` field of [Invocation]) from the [Invoker].
 
 ## 6.1 Schema
 ```
