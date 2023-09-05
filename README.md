@@ -452,6 +452,8 @@ The [Task] containing the [Instruction] and any configuration.
 
 The `auth` field MUST contain a [Varsig] signing over an array of CIDs that includes the [Task]'s CID, signed by the issuer of the proofs.
 
+Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. [Invocation], as well as its [Receipt], where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
+
 # 7 Invocation Tag
 
 An invocation capsule associates the [Invocation] with a versioned schema. This field is NOT REQUIRED. Wrapping an [Invocation] in an Invocation Tag is RECOMMENDED in contexts where the schema and version are not clear from context, such as when it is being stores or passed around without being nested in another structure that defines the version in its schema.
