@@ -446,7 +446,7 @@ type Invocation struct {
 ## 6.2 Fields
 ### 6.2.1 Task
 
-The [Task] containing the [Instruction] and any configuration.
+The [Task] containing the [Instruction], any configuration and authority [Proofs].
 
 ### 6.2.2 Authorization
 
