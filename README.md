@@ -594,6 +594,20 @@ type InvocationTag union {
 } representation keyed
 ```
 
+## 7.2 DAG-JSON Example
+### 7.2.1 Single Invocation
+``` json
+{
+  "_": {
+    "ucan/invocation@0.2.0": "bafy...createBlogPostTaskInvocation"
+  },
+  "bafy...createBlogPostTaskInvocation": {
+    "task": {"/": "bafy...createBlogPostTask"},
+    "auth": {"/": "bafy...multipleAuth"}
+  }
+}
+```
+
 # 8 Result
 
 A Result records the output of the [Task], as well as its success or failure state.
