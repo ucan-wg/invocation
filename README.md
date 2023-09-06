@@ -913,7 +913,7 @@ There MAY not be enough information to described an Invocation at creation time.
 
 Invocations MAY require arguments from the output of other invocations. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining] is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of one invocations into the input of the other. This liberates the invoker from waiting for each step.
 
-An `Await` MAY be used as a variable placeholder for a concrete value in a [Task] [Invocation] output, waiting on a previous step to complete.
+An `Await` MAY be used as a variable placeholder for a concrete [Result] of an [Instruction] [Invocation], waiting on a previous step to complete.
 
 For example, consider the following invocation batch:
 
