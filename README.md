@@ -1044,41 +1044,41 @@ flowchart BR
 
 ```json
 {
-  "bafy...updateDnsTask": {
-    "rsc" "dns:example.com?TYPE=TXT",
+  "bafy...updateDns": {
+    "rsc": "dns:example.com?TYPE=TXT",
     "op": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
-  "bafy...sendBobEmailTask": {
-    "rsc" "mailto://alice@example.com",
+  "bafy...emailBob": {
+    "rsc": "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": "bob@example.com",
       "subject": "DNSLink for example.com",
       "body": {
         "await/ok": {
-          "/": "bafy...updateDnsTask"
+          "/": "bafy...updateDns"
         }
       }
     }
   },
-  "bafy...sendCarolEmailTask": {
-    "rsc" "mailto://alice@example.com",
+  "bafy...emailCarol": {
+    "rsc": "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": "carol@example.com",
       "subject": "Hey Carol, DNSLink was updated!",
       "body": {
         "await/ok": {
-          "/": "bafy...updateDnsTask"
+          "/": "bafy...updateDns"
         }
       }
     }
   },
-  "bafy...updateReportTask": {
-    "rsc" "https://example.com/report",
+  "bafy...updateReport": {
+    "rsc": "https://example.com/report",
     "op": "crud/update",
     "input": {
       "payload": {
@@ -1092,16 +1092,56 @@ flowchart BR
       "_": [
         {
           "await/ok": {
-            "/": "bafy...sendBobEmailTask"
+            "/": "bafy...emailBob"
           }
         },
         {
           "await/ok": {
-            "/": "bafy...sendCarolEmailTask"
+            "/": "bafy...emailCarol"
           }
         }
       ]
     }
+  },
+  "bafy...updateDnsTask": {
+    "run": {
+      "/": "bafy...updateDns"
+    },
+    "prf": [
+      {
+        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+      }
+    ]
+  },
+  "bafy...emailBobTask": {
+    "run": {
+      "/": "bafy...emailBob"
+    },
+    "prf": [
+      {
+        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+      }
+    ]
+  },
+  "bafy...emailCarolTask": {
+    "run": {
+      "/": "bafy...emailCarol"
+    },
+    "prf": [
+      {
+        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+      }
+    ]
+  },
+  "bafy...updateReportTask": {
+    "run": {
+      "/": "bafy...updateReport"
+    },
+    "prf": [
+      {
+        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+      }
+    ]
   },
   "bafy...auth": {
     "scope": [
@@ -1109,10 +1149,10 @@ flowchart BR
         "/": "bafy...updateDnsTask"
       },
       {
-        "/": "bafy...sendBobEmailTask"
+        "/": "bafy...emailBobTask"
       },
       {
-        "/": "bafy...sendCarolEmailTask"
+        "/": "bafy...emailCarolTask"
       },
       {
         "/": "bafy...updateReportTask"
@@ -1124,57 +1164,37 @@ flowchart BR
       }
     }
   },
-  "bafy...updateDnsInvocation": {
-    "run": {
+  "bafy...updateDnsTaskInvocation": {
+    "task": {
       "/": "bafy...updateDnsTask"
     },
     "auth": {
       "/": "bafy...auth"
-    },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
+    }
   },
-  "bafy...sendBobEmailInvocation": {
-    "run": {
-      "/": "bafy...sendBobEmailTask"
+  "bafy...emailBobTaskInvocation": {
+    "task": {
+      "/": "bafy...emailBobTask"
     },
     "auth": {
       "/": "bafy...auth"
-    },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
+    }
   },
-  "bafy...sendCarolEmailInvocation": {
-    "run": {
-      "/": "bafy...sendCarolEmailTask"
+  "bafy...emailCarolTaskInvocation": {
+    "task": {
+      "/": "bafy...emailCarolTask"
     },
     "auth": {
       "/": "bafy...auth"
-    },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
+    }
   },
-  "bafy...updateReportInvocation": {
-    "run": {
+  "bafy...updateReportTaskInvocation": {
+    "task": {
       "/": "bafy...updateReportTask"
     },
     "auth": {
       "/": "bafy...auth"
-    },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
+    }
   }
 }
 ```
@@ -1213,32 +1233,29 @@ flowchart TB
 
 ```json
 {
-  "bafy...updateDnsTask": {
-    "rsc" "dns:example.com?TYPE=TXT",
+  "bafy...updateDns": {
+    "rsc": "dns:example.com?TYPE=TXT",
     "op": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
-  "bafy...sendBobEmailTask": {
-    "rsc" "mailto://alice@example.com",
+  "bafy...emailBob": {
+    "rsc": "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": "bob@example.com",
       "subject": "DNSLink for example.com",
       "body": {
         "await/ok": {
-          "/": "bafy...updateDnsTask"
+          "/": "bafy...updateDns"
         }
       }
     }
   },
-  "bafy...updateDnsInvocation": {
+  "bafy...updateDnsTask": {
     "run": {
-      "/": "bafy...updateDnsInvocation"
-    },
-    "auth": {
-      "/": "bafy...authForBatchOne"
+      "/": "bafy...updateDns"
     },
     "prf": [
       {
@@ -1246,18 +1263,10 @@ flowchart TB
       }
     ]
   },
-  "bafy...sendBobEmailInvocation": {
+  "bafy...emailBobTask": {
     "run": {
-      "/": "bafy...sendBobEmailTask"
+      "/": "bafy...emailBob"
     },
-    "auth": {
-      "/": "bafy...authForBatchOne"
-    },
-    "prf": [
-      {
-        "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha"
-      }
-    ]
   },
   "bafy...authForBatchOne": {
     "scope": [
@@ -1265,7 +1274,7 @@ flowchart TB
         "/": "bafy...updateDnsTask"
       },
       {
-        "/": "bafy...sendBobEmailTask"
+        "/": "bafy...emailBobTask"
       }
     ],
     "s": {
@@ -1273,27 +1282,43 @@ flowchart TB
         "bytes": "7aEDQG2GvLnr2gVEfMDrEUV8S3fw8JuFGVKAGIhSZCqCmHGyQ8cdU2A/Vp97yAsZQ+tqBaMWN3Q6YJLfPpAdgaXf2gY"
       }
     }
-  }
+  },
+  "bafy...updateDnsTaskInvocation": {
+    "task": {
+      "/": "bafy...updateDnsTask"
+    },
+    "auth": {
+      "/": "bafy...authForBatchOne"
+    }
+  },
+  "bafy...emailBobTaskInvocation": {
+    "task": {
+      "/": "bafy...emailBobTask"
+    },
+    "auth": {
+      "/": "bafy...authForBatchOne"
+    },
+  },
 }
 ```
 
 ```json
 {
-  "bafy...emailCarolTask": {
-    "rsc" "mailto://alice@example.com",
+  "bafy...emailCarol": {
+    "rsc": "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": "carol@example.com",
       "subject": "Hey Carol, DNSLink was updated!",
       "body": {
         "await/ok": {
-          "/": "bafy...updateDnsTask"
+          "/": "bafy...updateDns"
         }
       }
     }
   },
-  "bafy...updateReportTask": {
-    "rsc" "https://example.com/report",
+  "bafy...updateReport": {
+    "rsc": "https://example.com/report",
     "op": "crud/update",
     "input": {
       "payload": {
@@ -1307,16 +1332,31 @@ flowchart TB
       "_": [
         {
           "await/ok": {
-            "/": "bafy...emailBobTask"
+            "/": "bafy...emailBob"
           }
         },
         {
           "await/ok": {
-            "/": "bafy...emailCarolTask"
+            "/": "bafy...emailCarol"
           }
         }
       ]
     }
+  },
+  "bafy...emailCarolTask": {
+    "run": {
+      "/": "bafy...emailCarol"
+    }
+  },
+  "bafy...updateReportTask": {
+    "run": {
+      "/": "bafy...updateReport"
+    },
+    "prf": [
+      {
+        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
+      }
+    ]
   },
   "bafy...authForSecondBatch": {
     "scope": [
@@ -1324,7 +1364,7 @@ flowchart TB
         "/": "bafy...emailCarolTask"
       },
       {
-        "/": "bafy...updateReportInvocation"
+        "/": "bafy...updateReportTask"
       }
     ],
     "s": {
@@ -1332,33 +1372,23 @@ flowchart TB
         "bytes": "7aEDQM1yNTEO/+TF69wUwteH+ftAjD0ik5tXDa+sheAiuOZobSco/+vU882/Nf3LtMRF1EDoP/H38PX2bD5nJzkHAAU"
       }
     }
-  },
-  "bafy...emailCarolInvocation": {
-    "run": {
+  }
+  "bafy...emailCarolTaskInvocation": {
+    "task": {
       "/": "bafy...emailCarolTask"
     },
     "auth": {
       "/": "bafy...authForSecondBatch"
     },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
   },
-  "bafy...updateReportInvocation": {
-    "run": {
-      "/": "bafy...updateReporttask"
+  "bafy...updateReportTaskInvocation": {
+    "task": {
+      "/": "bafy...updateReportTask"
     },
     "auth": {
       "/": "bafy...authForSecondBatch"
-    },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
-  }
+    }
+  },
 }
 ```
 
