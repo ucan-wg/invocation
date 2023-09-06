@@ -638,15 +638,15 @@ If no information is available, this field SHOULD be set to `{}`.
 
 # 9 Effects
 
-The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
+The result of an [Invocation] MAY include a request for further actions to be performed via [Effects]. This enables several things: a clean separation of pure return values from requesting impure invocations to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
 
-Effects describe requests for future work to be performed. All [Invocation]s in an [Effect] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s. The `fx` block contains two fields: `fork` and `join`.
+Effects describe requests for future work to be performed. All [Invocation]s in an [Effects] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s. The `fx` block contains two fields: `fork` and `join`.
 
 [Task]s listed in the `fork` field are first-class and only ordered by promises; they otherwise SHOULD be considered independent and equal. As such, atomic guarantees such as failure of one effect implying failure of other effects is left undefined.
 
-The `join` field describes an OPTIONAL "special" [Invocation] which instruct the [Executor] that the [Task] [Invocation] is a continuation of the previous Invocation. This roughly emulates a virtual thread which terminates in an Invocation that produces Effect without a `join` field.
+The `join` field describes an OPTIONAL "special" [Invocation] which instructs the [Executor] that the [Invocation] is a continuation of the previous Invocation. This roughly emulates a virtual thread which terminates in an Invocation that produces Effects without a `join` field.
 
-Tasks in the `fork` field MAY be related to the Task in the `join` field if there exists a Promise referencing either Task. If such a promise does not exist, then they SHOULD be treated as entirely separate and MAY be scheduled, deferred, fail, retry, and so on entirely separately.
+Invocations in the `fork` field MAY be related to the Invocation in the `join` field if there exists a Promise referencing that Invocation's Instruction. If such a promise does not exist, then they SHOULD be treated as entirely separate and MAY be scheduled, deferred, fail, retry, and so on entirely separately.
 
 ## 9.1 Schema
 
@@ -664,13 +664,13 @@ type Effects {
 
 ## 9.2 Fields
 
-### 9.2.1 Forked Task Invocations
+### 9.2.1 Forked Invocations
 
-The OPTIONAL `fork` field, if present MUST be a list of an alphabetically ordered [Task] links. List MUST NOT not contain duplicate entries.
+The OPTIONAL `fork` field, if present MUST be a list of an alphabetically ordered [Invocation] links. List MUST NOT not contain duplicate entries.
 
-### 9.2.2 Joined Task Invocation
+### 9.2.2 Joined Invocation
 
-The OPTIONAL `join` field, if present MUST be set to a [Task] link.
+The OPTIONAL `join` field, if present MUST be set to an [Invocation] link.
 
 ## 9.3 DAG-JSON Examples
 
@@ -719,7 +719,7 @@ The OPTIONAL `join` field, if present MUST be set to a [Task] link.
 
 # 10 Receipt
 
-A `Receipt` is an attestation of the [Result] and requested [Effect]s by a [Task] [Invocation]. A Receipt MUST be signed by the [Executor] or it's delegate. If signed by the delegate, the proof of delegation from the [Executor] to the delegate (the `iss` of the receipt) MUST be provided in `prf`.
+A [Receipt] is an attestation of the [Result] and requested [Effects] of an [Invocation]. A Receipt MUST be signed by the [Executor] or it's delegate. If signed by the delegate, the proof of delegation from the [Executor] to the delegate (the `iss` of the receipt) MUST be provided in [Proofs] (the `prf` of the task).
 
 **NB: a Receipt does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
@@ -758,9 +758,9 @@ The `ran` field MUST include a link to the [Invocation] that the Receipt is for.
 
 The `out` field MUST contain the value output of the invocation in [Result] format.
 
-### 10.2.3 Effect
+### 10.2.3 Effects
 
-The OPTIONAL `fx` field, if present MUST be set to the caused [Effect]. The [Executor] SHOULD invoke contained [Task] to progress a workflow execution.
+The OPTIONAL `fx` field, if present MUST be set to the caused [Effects]. The [Executor] SHOULD invoke contained [Invocation]s to progress a workflow execution.
 
 If `fx` does not contain OPTIONAL `join` field, it denotes completion of the current execution thread.
 
