@@ -726,7 +726,6 @@ A [Receipt] is an attestation of the [Result] and requested [Effects] of an [Inv
 Receipts MUST use the same version as the invocation that they contain.
 
 ## 10.1 Schema
-
 ```
 type Receipt struct {
   ran     &Invocation # Invocation this is a receipt for
