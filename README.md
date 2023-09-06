@@ -454,26 +454,11 @@ The `auth` field MUST contain a [Varsig] signing over an array of CIDs that incl
 
 Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. [Invocation], as well as its [Receipt], where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
 
-# 7 Invocation Tag
-
-An invocation capsule associates the [Invocation] with a versioned schema. This field is NOT REQUIRED. Wrapping an [Invocation] in an Invocation Tag is RECOMMENDED in contexts where the schema and version are not clear from context, such as when it is being stores or passed around without being nested in another structure that defines the version in its schema.
-
-## 7.1 Schema
-```
-type InvocationTag union {
-  | Invocation   "ucan/invoke@0.2.0"
-} representation keyed
-```
-
-## 7.1 DAG-JSON Example
-
-### 7.1.1 Single Invocation
+## 6.3 DAG-JSON Examples
+### 6.3.1 Single Invocation
 
 ```json
 {
-  "_": {
-    "ucan/invocation@0.2.0": "bafy...createBlogPostTaskInvocation"
-  },
   "bafy...createBlogPostTaskInvocation": {
     "task": {"/": "bafy...createBlogPostTask"
     },
@@ -508,7 +493,7 @@ type InvocationTag union {
 }
 ```
 
-### 7.1.2 Multiple Invocations
+### 6.3.2 Multiple Invocations
 
 ```json
 {
@@ -568,7 +553,7 @@ type InvocationTag union {
 }
 ```
 
-### 7.1.3 Causal Invocations
+### 6.3.3 Causal Invocations
 
 ```json
 {
@@ -596,6 +581,17 @@ type InvocationTag union {
     "s": {"/": { "bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}}
   },
 }
+```
+
+# 7 Invocation Tag
+
+An invocation capsule associates the [Invocation] with a versioned schema. This field is NOT REQUIRED. Wrapping an [Invocation] in an Invocation Tag is RECOMMENDED in contexts where the schema and version are not clear from context, such as when it is being stores or passed around without being nested in another structure that defines the version in its schema.
+
+## 7.1 Schema
+```
+type InvocationTag union {
+  | Invocation   "ucan/invoke@0.2.0"
+} representation keyed
 ```
 
 # 8 Result
