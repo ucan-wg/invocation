@@ -929,11 +929,6 @@ For example, consider the following invocation batch:
       }
     }
   },
-  "bafy...createBlogPostTask": {
-    "run": {"/": "bafy...createBlogPost"},
-    "prf": [{"/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"}]
-  },
-
   "bafy...getBlogEditors": {
     "rsc": "https://example.com/users/editors",
     "op": "crud/read"
@@ -944,28 +939,20 @@ For example, consider the following invocation batch:
     "input": {
       "to": {
         "await/ok": {
-          "/": "bafy...getBlogPostEditorsTask"
+          "/": "bafy...getBlogPostEditors"
         }
       },
       "subject": "Coffee",
       "body": {
         "await/ok": {
-          "/": "bafy...createBlogPostTask"
+          "/": "bafy...createBlogPost"
         }
       }
     }
   },
-  "bafy...sendEmailInvocation": {
-    "ctx": {
-      "run": {
-        "/": "bafy...sendEmailTask"
-      },
-      "prf": [
-        {
-          "/": "bafy...proofUcanOutsideExample"
-        }
-      ]
-    }
+  "bafy...sendEmailTaskInvocation": {
+    "task": {"/": "bafy...sendEmailTask"},
+    "auth": {"/": "bafy...sendEmailTaskAuth"}
   }
 }
 ```
