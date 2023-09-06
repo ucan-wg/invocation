@@ -438,7 +438,7 @@ An [Invocation] is a request to execute a [Task] - it's a [Task] with [Authoriza
 ## 6.1 Schema
 ```
 type Invocation struct {
-  task     Task
+  task     &Task
   auth     &Authorization
 }
 ```
