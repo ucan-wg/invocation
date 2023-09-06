@@ -175,7 +175,7 @@ A [Task] wraps an [Instruction] with runtime configuration, including timeouts, 
 
 ### 2.2.2 Authorization
 
-An [Authorization] is a cryptographically signed proof permitting execution of referenced [Task]s. It allows the [Invoker] to authorize a group of tasks using one cryptographic signature.
+An [Authorization] is a cryptographically signed proof permitting execution of the referenced [Task]. It allows the [Invoker] to authorize the task.
 
 ### 2.2.3 Invocation
 
