@@ -161,7 +161,7 @@ The invoker MUST be the UCAN delegator. Their DID MUST be authenticated in the `
 
 The executor is directed to perform some task described in the UCAN by the invoker.
 
-The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field of the contained UCAN.
+The executor MUST be the UCAN delegate. Their DID MUST be set in the `aud` field of the contained UCAN.
 
 ## 2.2 Components
 
