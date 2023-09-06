@@ -960,19 +960,19 @@ For example, consider the following invocation batch:
 By analogy, above examples can be interpreted roughly as follows:
 
 ```js
-const createDraft = crud.create("https://example.com/blog/posts", {
+const createBlogPost = crud.create("https://example.com/blog/posts", {
   payload: {
     title: "How UCAN Tasks Changed My Life",
     body: "This is the story of how one spec changed everything...",
   },
 })
 
-const getEditors = crud.read("https://example.com/users/editors")
+const getBlogEditors = crud.read("https://example.com/users/editors")
 
-const notify = msg.send("mailto:akiko@example.com", {
-  to: (await createDraft).ok,
+const sendEmail = msg.send("mailto:akiko@example.com", {
+  to: (await createBlogPost()).ok,
   subject: "Coffee",
-  body: (await getEditors).ok,
+  body: (await getBlogEditors()).ok,
 })
 ```
 
