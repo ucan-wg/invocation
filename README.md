@@ -88,23 +88,39 @@ sequenceDiagram
         Bob      -->> Carol 📧: Delegate<Read from Alice's DB>
         Carol 📧 -->> Dan:      Delegate<Read from Alice's DB>
         Carol 📧 -->> Dan:      Delegate<Send email as Carol>
-        Dan      -->> Erin:     Delegate<Send email as Carol>
 
     Note over Alice 💾, Erin: Single Invocation
-        Erin     -)  Alice 💾: Read from Alice's DB!
-        Alice 💾 --) Erin:     Return<Value>
+        Dan      -)  Alice 💾: Read from Alice's DB!
+        Alice 💾 --) Dan:      Value
+
+    Note over Alice 💾, Erin: Proxy Execution
+        Dan      -->> Erin:     Delegate<Send email as Carol>
+        Dan      -)   Erin:     Run<Read from Alice's DB>!
+        Erin     -)   Alice 💾: Read from Alice's DB!
+        Alice 💾 --)  Erin:     Value
+        Erin     -)   Dan:      Value
 
     Note over Alice 💾, Erin: Multiple Invocation Flow
         Dan      -)  Alice 💾: Read from Alice's DB!
-        Alice 💾 --) Dan:      Return<Value>
+        Alice 💾 --) Dan:      Value
         Dan      -)  Carol 📧: Send email containing <Value> as Carol!
+        Carol 📧 -)  Carol 📧: Send email!
 
     Note over Alice 💾, Erin: Promise Pipeline
         Dan      -)  Alice 💾: Read from Alice's DB! [Invocation ID = 123]
-        Dan      -)  Carol 📧: Send email containing [Inviocation ID = 123] as Carol!
-        Alice 💾 --) Carol 📧: Return<Value>
-        Carol 📧 -) Carol 📧:  Send email!
+        Dan      -)  Carol 📧: Send email containing Result<Invocation 123> as Carol!
+        Alice 💾 --) Carol 📧: Value
+        Carol 📧 -)  Carol 📧: Send email containing <Value> as Carol!
+
 ```
+
+## 1.4 Serialization
+
+Unlike [UCAN Delegation]s, Invocations are point-to-point. This means that — aside from an Instruction ID — the exact format need only be agreed on by the two parties directly communicating. The examples in this document are given as [DAG-JSON] (consistent with [`invocation-ipld`]), but any serialization format MAY be used as long as it's accepted by both parties.
+
+## 1.5 Public Resources
+
+A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible and 
 
 # 2 High-Level Concepts
 
@@ -158,16 +174,6 @@ A [Receipt] is a cryptographically signed description of the [Invocation] output
 ### 2.2.6 Effect
 
 An [Effect] is the instruction to the [Executor] to enqueue a new set of [Task]s.
-
-## 2.3 IPLD Schema
-
-
-
-
-
-
-
-
 
 # 3 Instruction
 
@@ -249,22 +255,15 @@ type Task struct {
 
 ### 3.2.1 Resource
 
-The Resource `(uri`) field MUST contain the [URI] of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`], [`ipfs`], or [`magnet`] URI schemes.
+The Resource (`uri`) field MUST contain the [URI] of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`], [`ipfs`], or [`magnet`] URI schemes.
 
-### 3.2.3 Ability
+### 3.2.3 Operation
 
-The Ability (sometimes called "operation") field MUST contain a [UCAN Ability]. This field can be thought of as the message or trait being sent to the resource.
+The Operation field MUST contain a concrete operation that can be sent to the Resource. This field can be thought of as the message or trait being sent to the resource. Note that _unlike_ a [UCAN Ability], which includes heirarchy, an Operation MUST be fully concrete.
 
 ### 3.2.4 Input
 
-The Input field, MAY contain any parameters expected by the URI/Ability pair, which MAY be different between different URIs and Abilities, and is thus left to the executor to define the shape of this data.
-
-The Input field MUST have an IPLD [map representation][ipld representation], and thus MUST be one of the following:
-
-1. [Struct] in map representation.
-2. [Keyed], [enveloped] or [inline] union.
-3. [Unit] in empty map representation.
-4. [Map] in map representation.
+The Input field, MAY contain any parameters expected by the Resource/Operation pair, which MAY be different between different Resources and Operations, and is thus left to the executor to define the shape of this data. This field MUST be representable as a map or keyword list.
 
 UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type of `input`s allowed.
 
@@ -320,7 +319,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "uri" "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+  "uri": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
   "op": "wasm/run",
   "input": {
     "func": "add_one",
@@ -382,7 +381,7 @@ Concretely, this means that the `&Task` MUST be present in the associated `auth`
 type Task struct {
   run     &Instruction
   meta    {String : Any}
-  prf     [&UCAN]
+  prf     [&UcanDelegation]
 
   # Receipt of the invocation that caused this invocation
   cause   optional &Receipt
@@ -402,6 +401,21 @@ If `meta` field is not present, it is implicitly a `unit` represented as an empt
 ### 5.1.3 Proofs
 
 The `prf` field MUST contain links to any UCANs that provide the authority to perform this task. All of the outermost proofs MUST have `aud` field set to the [Executor]'s DID. All of the outmost proofs MUST have `iss` field set to the [Invoker]'s DID.
+
+
+
+
+
+
+
+FIXME expand to move proofs here
+
+
+
+
+
+
+
 
 ### 5.1.4 Optional Cause
 
@@ -424,17 +438,7 @@ The [Task] containing the [Instruction] and any configuration.
 
 ### 5.2.2 Authorization
 
-The `auth` field MUST contain a [Varsig] signing over an array of CIDs that includes the [Task]'s CID, signed by the issuer of the proofs.
-
-## 5.3 Invocation Tag
-
-An invocation capsule associates the [Invocation] with a versioned schema. This field is NOT REQUIRED. Wrapping an [Invocation] in an Invocation Tag is RECOMMENDED in contexts where the schema and version are not clear from context, such as when it is being stores or passed around without being nested in another structure that defines the version in its schema.
-
-```
-type InvocationTag union {
-  | Invocation   "ucan/invoke@0.2.0"
-} representation keyed
-```
+The `auth` field MUST contain a signature over an array of CIDs that includes the [Task]'s CID, signed by the issuer of the proofs.
 
 ## 5.4 DAG-JSON Example
 
