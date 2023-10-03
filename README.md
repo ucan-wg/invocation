@@ -84,20 +84,26 @@ sequenceDiagram
     participant Erin
 
     Note over Alice 💾, Erin: Delegations
-    Alice 💾 -->> Bob:      Delegate<Read from Alice's DB>
-    Bob      -->> Carol 📧: Delegate<Read from Alice's DB>
-    Carol 📧 -->> Dan:      Delegate<Read from Alice's DB>
-    Carol 📧 -->> Dan:      Delegate<Send email as Carol>
-    Dan      -->> Erin:     Delegate<Send email as Carol>
+        Alice 💾 -->> Bob:      Delegate<Read from Alice's DB>
+        Bob      -->> Carol 📧: Delegate<Read from Alice's DB>
+        Carol 📧 -->> Dan:      Delegate<Read from Alice's DB>
+        Carol 📧 -->> Dan:      Delegate<Send email as Carol>
+        Dan      -->> Erin:     Delegate<Send email as Carol>
 
     Note over Alice 💾, Erin: Single Invocation
-    Erin     -)  Alice 💾: Read from Alice's DB!
-    Alice 💾 --) Erin:     Return<Value>
+        Erin     -)  Alice 💾: Read from Alice's DB!
+        Alice 💾 --) Erin:     Return<Value>
 
     Note over Alice 💾, Erin: Multiple Invocation Flow
-    Dan      -)  Alice 💾: Read from Alice's DB!
-    Alice 💾 --) Dan:      Return<Value>
-    Dan      -)  Carol 📧: Send email containing <Value> as Carol!
+        Dan      -)  Alice 💾: Read from Alice's DB!
+        Alice 💾 --) Dan:      Return<Value>
+        Dan      -)  Carol 📧: Send email containing <Value> as Carol!
+
+    Note over Alice 💾, Erin: Promise Pipeline
+        Dan      -)  Alice 💾: Read from Alice's DB! [Invocation ID = 123]
+        Dan      -)  Carol 📧: Send email containing [Inviocation ID = 123] as Carol!
+        Alice 💾 --) Carol 📧: Return<Value>
+        Carol 📧 -) Carol 📧:  Send email!
 ```
 
 # 2 High-Level Concepts
