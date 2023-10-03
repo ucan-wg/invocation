@@ -2,18 +2,18 @@
 
 ## Editors
 
-- [Brooklyn Zelenka](https://github.com/expede/), [Fission](https://fission.codes/)
-- [Irakli Gozalishvili](https://github.com/Gozala), [DAG House](https://dag.house/)
+- [Brooklyn Zelenka], [Fission]
+- [Irakli Gozalishvili], [DAG House]
 
 ## Authors
 
-- [Brooklyn Zelenka](https://github.com/expede/), [Fission](https://fission.codes/)
-- [Irakli Gozalishvili](https://github.com/Gozala), [DAG House](https://dag.house/)
-- [Zeeshan Lakhani](https://github.com/zeeshanlakhani), [Fission](https://fission.codes/)
+- [Brooklyn Zelenka], [Fission]
+- [Irakli Gozalishvili], [DAG House]
+- [Zeeshan Lakhani], [Fission]
 
 ## Depends On
 
-- [UCAN]
+- [UCAN Delegation]
 
 # 0 Abstract
 
@@ -75,70 +75,30 @@ Information about the scheduling, order, and pipelining of tasks is orthogonal t
 
 As we shall see in the [discussion of promise pipelining][Pipeline], asking an agent to perform a sequence of tasks before you know the exact parameters requires delegating capabilities for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
 
-```txt
-  ────────────────────────────────────────────Time──────────────────────────────────────────────────────►
+``` mermaid
+sequenceDiagram
+    participant Alice 💾
+    participant Bob
+    participant Carol 📧
+    participant Dan
+    participant Erin
 
-┌──────────────────────────────────────────Delegation─────────────────────────────────────────────────────┐
-│                                                                                                         │
-│  ┌─────────┐   ┌─────────┐   ┌─────────┐         ┌─────────┐                ┌─────────┐                 │
-│  │         │   │         │   │         │         │         │                │         │                 │
-│  │  Alice  ├──►│   Bob   ├──►│  Carol  ├────────►│   Dan   ├───────────────►│  Erin   │                 │
-│  │         │   │         │   │         │         │         │                │         │                 │
-│  └─────────┘   └─────────┘   └─────────┘         └─────────┘                └─────────┘                 │
-│                                                                                                         │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+    Note over Alice 💾, Erin: Delegations
+    Alice 💾 -->> Bob:      Delegate<Read from Alice's DB>
+    Bob      -->> Carol 📧: Delegate<Read from Alice's DB>
+    Carol 📧 -->> Dan:      Delegate<Read from Alice's DB>
+    Carol 📧 -->> Dan:      Delegate<Send email as Carol>
+    Dan      -->> Erin:     Delegate<Send email as Carol>
 
-┌──────────────────────────────────────────Invocation─────────────────────────────────────────────────────┐
-│                                                                                                         │
-│                              ┌─────────┐         ┌─────────┐                                            │
-│                              │         │         │         │                                            │
-│                              │  Carol  ╞═══All══►│   Dan   │                                            │
-│                              │         │         │         │                                            │
-│                              └─────────┘         └─────────┘                                            │
-│                                                                                                         │
-│                                                  ┌─────────┐                              ┌─────────┐   │
-│                                                  │         │                              │         │   │
-│                                                  │   Dan   ╞═══════════Update DB═════════►│  Erin   │   │
-│                                                  │         │                              │         │   │
-│                                                  └─────────┘                              └─────────┘   │
-│                                                                                                         │
-│                                                           ┌─────────┐                ┌─────────┐        │
-│                                                           │         │                │         │        │
-│                                                           │   Dan   ╞═══Read Email══►│  Erin   │        │
-│                                                           │         │           ▲    │         │        │
-│                                                           └─────────┘           ┆    └─────────┘        │
-│                                                                               With                      │
-│                                                                               Result                    │
-│                                                                  ┌─────────┐   Of         ┌─────────┐   │
-│                                                                  │         │    ┆         │         │   │
-│                                                                  │   Dan   ╞════Set DNS══►│  Erin   │   │
-│                                                                  │         │              │         │   │
-│                                                                  └─────────┘              └─────────┘   │
-│                                                                                                         │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+    Note over Alice 💾, Erin: Single Invocation
+    Erin     -)  Alice 💾: Read from Alice's DB!
+    Alice 💾 --) Erin:     Return<Value>
+
+    Note over Alice 💾, Erin: Multiple Invocation Flow
+    Dan      -)  Alice 💾: Read from Alice's DB!
+    Alice 💾 --) Dan:      Return<Value>
+    Dan      -)  Carol 📧: Send email containing <Value> as Carol!
 ```
-
-## 1.3 A Note On Serialization
-
-The JSON examples below are given in [DAG-JSON], but UCAN Task is actually defined as IPLD. This makes UCAN Task agnostic to encoding. DAG-JSON follows particular conventions around wrapping CIDs and binary data in tags like so:
-
-### CID
-
-```json
-{"/": "Qmf412jQZiuVUtdgnB36FXFX7xg5V6KEbSJ4dpQuhkLyfD"}
-```
-
-### Bytes
-
-```json
-{"/": {"bytes": "s0m3Byte5"}}
-```
-
-This format help disambiguate type information in generic [DAG-JSON] tooling. However, your presentation need not be in this specific format, as long as it can be converted to and from this cleanly. As it is used for the signature format, [DAG-CBOR] is RECOMMENDED.
-
-## 1.4 Signatures
-
-All payloads described in this spec MUST be signed with a [Varsig].
 
 # 2 High-Level Concepts
 
@@ -191,9 +151,16 @@ A [Receipt] is a cryptographically signed description of the [Invocation] output
 
 ### 2.2.6 Effect
 
-An [Effect] are the instruction to the [Executor] to run set of [Task]s concurrently.
+An [Effect] is the instruction to the [Executor] to enqueue a new set of [Task]s.
 
 ## 2.3 IPLD Schema
+
+
+
+
+
+
+
 
 
 # 3 Instruction
@@ -204,7 +171,7 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 
 ```json
 {
-  "rsc" "mailto:alice@example.com",
+  "uri" "mailto:alice@example.com",
   "op": "msg/send",
   "input": {
     "to": [
@@ -232,11 +199,11 @@ Later, when we explore promise [pipelines][Pipeline], this also includes capturi
 ```json
 {
   "bafy...getMailingList": {
-    "rsc" "https://exmaple.com/mailinglist",
+    "uri" "https://exmaple.com/mailinglist",
     "op": "crud/read"
   },
   "bafy...sendEmail": {
-    "rsc" "mailto://alice@example.com",
+    "uri" "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": {
@@ -265,7 +232,7 @@ const sendEmail = msg.send("mailto://alice@example.com", {
 
 ```
 type Task struct {
-  rsc   URI
+  uri   URI
   op    Ability
   input {String : Any}
   nnc   String 
@@ -276,17 +243,17 @@ type Task struct {
 
 ### 3.2.1 Resource
 
-The `rsc` field MUST contain the [URI] of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`], [`ipfs`], or [`magnet`] URI schemes.
+The Resource `(uri`) field MUST contain the [URI] of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`], [`ipfs`], or [`magnet`] URI schemes.
 
 ### 3.2.3 Ability
 
-The `op` field MUST contain a [UCAN Ability]. This field can be thought of as the message or trait being sent to the resource.
+The Ability (sometimes called "operation") field MUST contain a [UCAN Ability]. This field can be thought of as the message or trait being sent to the resource.
 
 ### 3.2.4 Input
 
-The `input` field, MAY contain any parameters expected by the URI/Ability pair, which MAY be different between different URIs and Abilities, and is thus left to the executor to define the shape of this data.
+The Input field, MAY contain any parameters expected by the URI/Ability pair, which MAY be different between different URIs and Abilities, and is thus left to the executor to define the shape of this data.
 
-The `input` field MUST have an IPLD [map representation][ipld representation], and thus MUST be one of the following:
+The Input field MUST have an IPLD [map representation][ipld representation], and thus MUST be one of the following:
 
 1. [Struct] in map representation.
 2. [Keyed], [enveloped] or [inline] union.
@@ -307,7 +274,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "rsc" "https://example.com/blog/posts",
+  "uri" "https://example.com/blog/posts",
   "op": "crud/create",
   "input": {
     "headers": {
@@ -330,7 +297,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "rsc" "mailto:akiko@example.com",
+  "uri" "mailto:akiko@example.com",
   "op": "msg/send",
   "input": {
     "to": [
@@ -347,7 +314,7 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
-  "rsc" "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+  "uri" "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
   "op": "wasm/run",
   "input": {
     "func": "add_one",
@@ -381,7 +348,7 @@ If the `scope` field is omitted, it is implicitly treated as an empty list (auth
 
 ### 4.2.2 Signature
 
-The `s` field MUST contain a [Varsig] of the [CBOR] encoded `scope` field.
+The `s` field MUST contain a signature FIXME `scope` field.
 
 ## 4.3 DAG-JSON Example
 
@@ -391,7 +358,7 @@ The `s` field MUST contain a [Varsig] of the [CBOR] encoded `scope` field.
     {"/": "bafyreihtmwju3okftpeuqe3x3ux5e7c2jescakwnoiyv45vnicke4kdxy4"},
     {"/": "bafyreieuo63r3y2nuycaq4b3q2xvco3nprlxiwzcfp4cuupgaywat3z6mq"}
   ],
-  "s": {"/": {"bytes": "7aEDQIJB8XXJ6hWbwu40fN4bq8+Zq8BxyybSWXatMVU3VsL+yzVYpeJqsEBQE5rNtUJefR5rRCNimKNZMJjA9/udZQQ"}}
+  "sig": {"/": {"bytes": "7aEDQIJB8XXJ6hWbwu40fN4bq8+Zq8BxyybSWXatMVU3VsL+yzVYpeJqsEBQE5rNtUJefR5rRCNimKNZMJjA9/udZQQ"}}
 }
 ```
 
@@ -484,7 +451,7 @@ type InvocationTag union {
     "s": {"/": {"bytes": "7aEDQPPhXNvtVb5/T+O40xXU6TSgJZDFnlVaV3GMlaEo/dvxtyaCLm8uUsFK4xzQsQd82QQUYA6fK506XqjghRlucAQ"}}
   },
   "bafy...createBlogPost": {
-    "rsc" "https://example.com/blog/posts",
+    "uri" "https://example.com/blog/posts",
     "op": "crud/create",
     "input": {
       "headers": {
@@ -509,7 +476,7 @@ type InvocationTag union {
 ```json
 {
   "bafy...createBlogPostInstruction": {
-    "rsc" "https://example.com/blog/posts",
+    "uri" "https://example.com/blog/posts",
     "op": "crud/create",
     "input": {
       "headers": {
@@ -527,7 +494,7 @@ type InvocationTag union {
     }
   },
   "bafy...sendEmailInstruction": {
-    "rsc" "mailto:akiko@example.com",
+    "uri" "mailto:akiko@example.com",
     "op": "msg/send",
     "input": {
       "to": [
@@ -576,7 +543,7 @@ type InvocationTag union {
 ```json
 {
   "bafy...updateDnsInstruction": {
-    "rsc" "dns:example.com?TYPE=TXT",
+    "uri" "dns:example.com?TYPE=TXT",
     "op": "crud/update",
     "input": {
       "value": "hello world"
@@ -901,20 +868,20 @@ A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omit
 
 > Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
 >
-> — [Mark Miller], [Robust Composition]
+> — [Mark Miller], [Robust Composition]
 
 There MAY not be enough information to described an Invocation at creation time. However, all of the information required to construct the next request in a sequence MAY be available in the same Batch, or in a previous (but not yet complete) Invocation.
 
 Invocations MAY require arguments from the output of other invocations. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining] is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of one invocations into the input of the other. This liberates the invoker from waiting for each step.
 
-An `Await` MAY be used as a variable placeholder for a concrete value in a [Task] [Invocation] output, waiting on a previous step to complete.
+A `Promise` MAY be used as a variable placeholder for a concrete value in a [Task] [Invocation] output, waiting on a previous step to complete.
 
 For example, consider the following invocation batch:
 
 ```json
 {
   "bafy...createBlogPostTask": {
-    "rsc" "https://example.com/blog/posts",
+    "uri" "https://example.com/blog/posts",
     "op": "crud/create",
     "input": {
       "payload": {
@@ -924,11 +891,11 @@ For example, consider the following invocation batch:
     }
   },
   "bafy...getBlogEditorsTask": {
-    "rsc" "https://example.com/users/editors",
+    "uri" "https://example.com/users/editors",
     "op": "crud/read"
   },
   "bafy...sendEmailTask": {
-    "rsc" "mailto:akiko@example.com",
+    "uri" "mailto:akiko@example.com",
     "op": "msg/send",
     "input": {
       "to": {
@@ -994,7 +961,7 @@ An `Await` describes the eventual output of the referenced [Task] invocation. An
 ### 9.1 Schema
 
 ```
-type Await union {
+type Promise union {
   | &Instruction "await/*"
   | &Instruction "await/ok"
   | &Instruction "await/error"
@@ -1052,14 +1019,14 @@ flowchart BR
 ```json
 {
   "bafy...updateDnsTask": {
-    "rsc" "dns:example.com?TYPE=TXT",
+    "uri" "dns:example.com?TYPE=TXT",
     "op": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
-    "rsc" "mailto://alice@example.com",
+    "uri" "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": "bob@example.com",
@@ -1072,7 +1039,7 @@ flowchart BR
     }
   },
   "bafy...sendCarolEmailTask": {
-    "rsc" "mailto://alice@example.com",
+    "uri" "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": "carol@example.com",
@@ -1085,7 +1052,7 @@ flowchart BR
     }
   },
   "bafy...updateReportTask": {
-    "rsc" "https://example.com/report",
+    "uri" "https://example.com/report",
     "op": "crud/update",
     "input": {
       "payload": {
@@ -1221,14 +1188,14 @@ flowchart TB
 ```json
 {
   "bafy...updateDnsTask": {
-    "rsc" "dns:example.com?TYPE=TXT",
+    "uri" "dns:example.com?TYPE=TXT",
     "op": "crud/update",
     "input": {
       "value": "hello world"
     }
   },
   "bafy...sendBobEmailTask": {
-    "rsc" "mailto://alice@example.com",
+    "uri" "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": "bob@example.com",
@@ -1287,7 +1254,7 @@ flowchart TB
 ```json
 {
   "bafy...emailCarolTask": {
-    "rsc" "mailto://alice@example.com",
+    "uri" "mailto://alice@example.com",
     "op": "msg/send",
     "input": {
       "to": "carol@example.com",
@@ -1300,7 +1267,7 @@ flowchart TB
     }
   },
   "bafy...updateReportTask": {
-    "rsc" "https://example.com/report",
+    "uri" "https://example.com/report",
     "op": "crud/update",
     "input": {
       "payload": {
@@ -1371,7 +1338,7 @@ flowchart TB
 
 # 10 Prior Art
 
-[ucanto RPC] from DAG House is a production system that uses UCAN as the basis for an RPC layer.
+[ucanto RPC] from [DAG House] is a production system that uses UCAN as the basis for an RPC layer.
 
 The [Capability Transport Protocol (CapTP)] is one of the most influential object-capability systems, and forms the basis for much of the rest of the items on this list.
 
@@ -1414,8 +1381,8 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 [Philipp Krüger]: https://github.com/matheus23/
 [Robust Composition]: http://www.erights.org/talks/thesis/markm-thesis.pdf
 [Simon Worthington]: https://github.com/simonwo
-[UCAN Ability]: https://github.com/ucan-wg/spec/#23-ability
-[UCAN]: https://github.com/ucan-wg/spec/
+[UCAN Ability]: https://github.com/ucan-wg/delegation/#23-ability
+[UCAN Delegation]: https://github.com/ucan-wg/delegation/
 [URI]: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
 [Zeeshan Lakhani]: https://github.com/zeeshanlakhani
 [`data`]: https://en.wikipedia.org/wiki/Data_URI_scheme
