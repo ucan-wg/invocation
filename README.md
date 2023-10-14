@@ -5,6 +5,7 @@ FIXME
 - explain in FAQ why we don't need `join` (i.e. use promises, since the model is inverted)
 - add expiry
 - Consider ability heirarcy as being subpaths: `fs/mutate/write`
+- operation -> command, Instruction -> action
 
 ## Editors
 
@@ -125,13 +126,13 @@ Unlike [UCAN Delegation]s, Invocations are point-to-point. This means that — a
 
 A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible and 
 
-# 2 High-Level Concepts
+FIXME Open HTTP GET doensn't need a prf, but can still use invocation
 
-## 2.1 Roles
+# 2 Roles
 
 Task adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
 
-| UCAN Field | Delegation                             | Task                            |
+| UCAN Field | Delegation                             | Invocation                      |
 | ---------- | -------------------------------------- | ------------------------------- |
 | `iss`      | Delegator: transfer authority (active) | Invoker: request task (active)  |
 | `aud`      | Delegate: gain authority (passive)     | Executor: perform task (active) |
@@ -142,47 +143,41 @@ The invoker signals to the executor that a task associated with a UCAN SHOULD be
 
 The invoker MUST be the UCAN delegator. Their DID MUST be authenticated in the `iss` field of the contained UCAN.
 
+### Subject
+
 ### 2.1.2 Executor
 
 The executor is directed to perform some task described in the UCAN by the invoker.
 
 The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field of the contained UCAN.
 
-## 2.2 Components
+## 3 Components
 
-### 2.2.1 Instruction
+### 3.1 Command
 
-FIXME merge Instrction and task?
+A [Command] is like a deferred function application: a request to perform some action on a resource with specific input.
 
-An [Instruction] is like a deferred function application: a request to perform some action on a resource with specific input.
+### 3.2 Task
 
-### 2.2.2 Task
+A [Task] wraps a [Command] with runtime configuration, including timeouts, fuel, trace metadata, and so on.
 
-A [Task] wraps an [Instruction] with runtime configuration, including timeouts, fuel, trace metadata, and so on.
-
-<!--
-### 2.2.2 Authorization
-
-An [Authorization] is a cryptographically signed proof permitting execution of referenced [Task]s. It allows the [Invoker] to authorize a group of tasks using one cryptographic signature.
--->
-
-### 2.2.3 Invocation
+### 3.3 Invocation
 
 An [Invocation] is an [Authorized] [Task].
 
-### 2.2.4 Result
+### 3.4 Result
 
-A [Result] is the output of an [Instruction].
+A [Result] is the output of an [Command].
 
-### 2.2.5 Receipt
+### 3.5 Receipt
 
 A [Receipt] is a cryptographically signed description of the [Invocation] output and requested [Effect]s.
 
-### 2.2.6 Effect
+### 3.6 Effect
 
 An [Effect] is the instruction to the [Executor] to enqueue a new set of [Task]s.
 
-# 3 Instruction
+# 3 Command
 
 FIXME rename?
 
@@ -216,18 +211,6 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
   })
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
 ```json
 {
   alg: "EdDSA",
@@ -236,79 +219,26 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 {
   iss: "did:example:bob",
   aud: "did:example:alice",
+  act: "msg/send",
+  nnc: "",
+  arg: {
+    from: "mailto:alice@example.com",
+    to: [
+      "bob@example.com",
+      "carol@example.com"
+    ],
+    subject: "hello",
+    body: "world"
+  }
   meta: {
     fuel: 100,
     disk: "100GB"
   },
-  run: {
-    "act": "msg/send",
-    "arg": {
-      "from": "mailto:alice@example.com",
-      "to": [
-        "bob@example.com",
-        "carol@example.com"
-      ],
-      "subject": "hello",
-      "body": "world"
-    },
-    prf: [bafy1, bafy2]
-  }
+  prf: [bafy1, bafy2]
 }
 
 
 
-//
-
-{
-  alg: "EdDSA",
-  typ: "JWT"
-}
-{
-  iss: "did:example:bob",
-  aud: "did:example:alice",
-  meta: {
-    fuel: 100,
-    disk: "100GB"
-  },
-  run: {
-    "act": "ipvm/workflow/run",
-    "arg": {
-      steps: [bafyX, bafyY, bafyZ],
-      inlineSteps: [
-        {
-          "act": "msg/send",
-          "arg": {
-            "from": "mailto:alice@example.com",
-            "to": [
-              "bob@example.com",
-              "carol@example.com"
-            ],
-            "subject": "hello",
-            "body": "world"
-          },
-          prf: [bafy1, bafy2]
-        },
-        {
-          "act": "wasm/run",
-          "arg": {
-            "mod": "ipfs://...",
-            "fun": "add_one",
-            "arg": [42]
-          }
-        },
-        {
-          "sub": "did:web:myDatabaseService", // <- where
-          "act": "crud/update",
-          "arg": {
-            ""
-          }
-        }
-      ]
-      prf: [bafy1, bafy3]
-    }
-  }
-}
-```
 
 
 
@@ -316,16 +246,15 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 ``` js
 {
   iss: "did:example:bob",
-  aud: "did:example:alice",
-  task: {
-    run: {
-      sub: "did:example:alice", // <- where, IFF the subject is relevant... only really useful for 
-      act: "counter/inc",
-      arg: {}
-    },
-    meta: {},
-    prf: [bafy1, bafy3],
+  aud: "did:example:alice", // Origoinally removed these because it's duplicated from prf, but important for e.g. CRDT
+  run: {
+    sub: "did:example:alice", // <- where, IFF the subject is relevant... only really useful for 
+    cmd: "counter/inc",
+    arg: {by: 4}
   },
+  meta: {},
+  cause: {"/": "bafy...123"},
+  prf: [bafy1, bafy3],
   exp: 999999 // Doubles as a handy timeout
 }
 ```
@@ -336,7 +265,6 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
   aud: "did:example:alice", // NOTE: can be ANYONE in the delegation chain for proxying if you don't have a direct path?
   exp: 999999,
   run: {
-    sub: null,
     act: "wasm/run",
     arg: {
       mod: "ipfs://...",
@@ -350,78 +278,24 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 
 
 NOTE TO SELF: keep aud field as optional. i.e. make it salient for ergonomic reasons / push it into the task writer's face. also aud & sub MAY diverge in the future.
-
-
-
 FIXME showdelegated execution off a queue
-
-
-FIXME change operation to action in other specs?
 FIXME bring back constructivity in delegations becauyse it makes invocation easier to check?
-
-
-
-
-
-
-
-
-
-<!--
-
-FIXME move to pipeline spec
-
-Later, when we explore promise [pipelines][Pipeline], this also includes capturing the promise, also with a natural analogy to closures:
-
-
-
-
-
-```json
-{
-  "bafy...getMailingList": {
-    "uri" "https://exmaple.com/mailinglist",
-    "op": "crud/read"
-  },
-  "bafy...sendEmail": {
-    "uri" "mailto://alice@example.com",
-    "op": "msg/send",
-    "input": {
-      "to": {
-        "await/ok": {
-          "/": "bafy...getMailingList"
-        }
-      },
-      "subject": "hello",
-      "body": "world"
-    }
-  }
-}
-```
-
-```js
-// Pseudocode
-const mailingList = crud.read("https://exmaple.com/mailinglist");
-const sendEmail = msg.send("mailto://alice@example.com", {
-  to: mailingList.await().ok,
-  subject: "hello",
-  body: "world"
-});
-```
-   -->
 
 
 ## 3.1 Fields
 
-| Field     | Type                | Description | Required |
-|-----------|---------------------|-------------|----------|
-| Operation | String              |             | Yes      |
-| Input     | Map `{String: Any}` |             | Yes      |
-| Nonce     | String              |             | Yes      |
+| Name        | Field | Type                | Required | Notes        |
+|-------------|-------|---------------------|----------|--------------|
+| [Subject]   | `sub` | DID                 | No       |              |
+| [Action]    | `act` | String              | Yes      |              | FIXME or `cmd`?
+| [Arguments] | `arg` | Map `{String: Any}` | Yes      |              |
+| [Nonce]     | `nnc` | String              | Yes      | May be empty |
 
-### 3.1.1 Resource
+### 3.1.1 Subject
 
-The Resource (`uri`) field MUST contain the [URI] of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`], [`ipfs`], or [`magnet`] URI schemes.
+The OPTIONAL `sub` field is intended for cases where parametrizing a specific agent is importnat
+
+<!-- The Resource (`uri`) field MUST contain the [URI] of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`], [`ipfs`], or [`magnet`] URI schemes. -->
 
 ### 3.1.3 Action
 
@@ -437,29 +311,97 @@ If the `input` field is not present, it is implicitly a `unit` represented as em
 
 ### 3.1.6 Nonce
 
-If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple invocations are unique.
+If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple invocations are unique. The nonce MUST be left blank for commands that are expected to be idempotent.
+
+FIXME better wording
 
 ## 3.2 DAG-JSON Examples
+
+```
+type Invocation struct {
+  uci SemVer
+
+  iss DID
+  aud DID
+
+  run Task
+  cse optional &Receipt
+}
+
+type Task struct {
+  run &Inst
+  mta {String : Any}
+  prf [&Delegation]
+}
+
+type Inststruct {
+  act Action
+  arg {String : Any}
+
+  nnc optional String
+  sub optional DID
+}
+
+```
+
+```
+type Signed<T> struct {
+  pld &T
+  sig Signature
+}
+
+type Signature union {
+  | inline Bytes
+  | batch  Authorization
+}
+
+type Authorization struct {
+  scp [&Any]
+  sig Bytes
+}
+```
+
+```
+type Receipt struct {
+  iss DID
+  ran &Invocation
+
+  enq [&Task] # AKA fx
+
+  out Output
+
+  mta {String : Any}
+  rec &Signed<Receipt>
+}
+```
+
+// FIXME show how to model join with more tasks
+TODO NOTE add JWT sig serialization + sig types to Varsig?
+
 
 ### 3.2.1 Interacting with an HTTP API
 
 ```json
 {
-  "act": "crud/create",
-  "arg": {
-    "uri" "https://example.com/blog/posts",
-    "headers": {
-      "content-type": "application/json"
+  // ...
+  run: {
+    "act": "crud/create",
+    "arg": {
+      "uri" "https://example.com/blog/posts",
+      "headers": {
+        "content-type": "application/json"
+      },
+      "payload": {
+        "title": "How UCAN Tasks Changed My Life",
+        "body": "This is the story of how one spec changed everything...",
+        "topics": [
+          "authz",
+          "journal"
+        ],
+        "draft": true
+      }
     },
-    "payload": {
-      "title": "How UCAN Tasks Changed My Life",
-      "body": "This is the story of how one spec changed everything...",
-      "topics": [
-        "authz",
-        "journal"
-      ],
-      "draft": true
-    }
+    "nnc": "&NCC-1701-D*"
   }
 }
 ```
@@ -476,8 +418,9 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
       "carol@example.com"
     ],
     "subject": "Coffee",
-    "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!"
-  }
+    "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Invocations!"
+  },
+  "nnc": "1234567890"
 }
 ```
 
@@ -485,61 +428,17 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ```json
 {
+  "nnc": "", // FIXME infers idempotence
   "act": "wasm/run",
   "arg": {
     "mod": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
-    "func": "add_one",
-    "input": [
-      42
-    ]
+    "fun": "add_one",
+    "params": [42]
   }
 }
 ```
 
-<!--
-
-FIXME: SUPER out of scope
-
-
-# 4 Authorization
-
-An [Authorization] is cryptographically signed data set. It represents an authorization to run [Task]s that are included in `scope` data set.
-
-## 4.1 Schema
-
-```
-type Authorization struct {
-  scope   [&Any] # Authorization is denoted by the set of links been authorized
-  s       Varsig # Scope signed by the invoker
-}
-```
-
-### 4.2 Fields
-
-#### 4.2.1 Authorization Scope
-
-The `scope` field MUST be a set of links been authorized. It SHOULD be encoded as an alphabetically ordered list without duplicates.
-
-If the `scope` field is omitted, it is implicitly treated as an empty list (authorizing nothing).
-
-### 4.2.2 Signature
-
-The `s` field MUST contain a signature FIXME `scope` field.
-
-## 4.3 DAG-JSON Example
-
-```json
-{
-  "scope": [
-    {"/": "bafyreihtmwju3okftpeuqe3x3ux5e7c2jescakwnoiyv45vnicke4kdxy4"},
-    {"/": "bafyreieuo63r3y2nuycaq4b3q2xvco3nprlxiwzcfp4cuupgaywat3z6mq"}
-  ],
-  "sig": {"/": {"bytes": "7aEDQIJB8XXJ6hWbwu40fN4bq8+Zq8BxyybSWXatMVU3VsL+yzVYpeJqsEBQE5rNtUJefR5rRCNimKNZMJjA9/udZQQ"}}
-}
-```
--->
-
-# 5 Task
+# 4 Task
 
 As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation]s are not executable until they have been provided provable authority (in form of UCANs in the `prf` field) and an [Authorization] (in the `auth` field) from the [Invoker].
 
@@ -547,16 +446,13 @@ The `auth` field MUST be contain an [Authorization] which signs over the `&Task`
 
 Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. A `Receipt` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
 
-## 5.1 Task
+## 4.1 Task
 
 ```
 type Task struct {
-  run     &Instruction
-  meta    {String : Any}
-  prf     [&Delegation]
-
-  # Receipt of the invocation that caused this invocation
-  cause   optional &Receipt
+  run   &Command
+  meta  {String : Any}
+  cause optional &Receipt
 }
 ```
 
@@ -593,53 +489,9 @@ FIXME expand to move proofs here
 
 [Task]s MAY be invoked as an effect caused by a prior [Invocation]. Such [Invocation]s SHOULD have a `cause` field set to the [Receipt] link of the [Invocation] that caused it. The linked [Receipt] MUST have an `Effect` (the `fx` field) containing invoked [Task] in the `run` field.
 
-## 5.2 (Signed) Invocation
-
-An [Invocation] is a signed [Task].
-
-```
-type Invocation struct {
-  task     Task
-  auth     &Authorization
-}
-```
-
 ### 5.2.1 Task
 
 The [Task] containing the [Instruction] and any configuration.
-
-
-### 5.4.3 Causal Invocations
-
-```json
-{
-  "bafy...updateDnsInstruction": {
-    "uri" "dns:example.com?TYPE=TXT",
-    "op": "crud/update",
-    "input": {
-      "value": "hello world"
-    }
-  },
-  "bafy...updateDnsTask": {
-    "run": {"/": "bafy...updateDnsTask"},
-    "auth": {"/": "bafy...auth"},
-    "cause": {"/": "bafy...somePriorInvocation"},
-    "prf": [
-      {"/": "bafyreieynwqrabzdhgl652ftsk4mlphcj3bxchkj2aw5eb6dc2wxieilau"}
-    ]
-  },
-  "bafy...updateDnsInvocation": {
-    "task": {"/": "bafy...updateDnsTask"},
-    "auth": {"/": "bafy...auth"}
-  },
-  "bafy...auth": {
-    "scope": [
-      {"/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"}
-    ],
-    "s": {"/": { "bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}}
-  },
-}
-```
 
 # 6 Result
 
@@ -696,65 +548,12 @@ Tasks in the `fork` field MAY be related to the Task in the `join` field if ther
 ```
 # Represents a request to invoke enclosed set of tasks concurrently
 type Effects {
-  # Primary set of tasks to be invoked
-  fork      [&Invocation]
+  fx [&Invocation]
 }
 ```
 
 ## 7.2 Fields
 
-### 7.2.1 Forked Task Invocations
-
-The OPTIONAL `fork` field, if present MUST be a list of an alphabetically ordered [Task] links. List MUST NOT not contain duplicate entries.
-
-### 7.2.2 Joined Task Invocation
-
-The OPTIONAL `join` field, if present MUST be set to a [Task] link.
-
-## 7.3 DAG-JSON Examples
-
-### 7.3.1 Effect spawning concurrent threads
-
-```json
-{
-  "fork": [
-    {
-      "/": "bafyreigmmdzix2vxboojvv6j6h7sgvxnrecdxtglwtqpxw7hybebzlsax4"
-    },
-    {
-      "/": "bafyreif6gfpzgxnii4ys6a4bjenefg737fb5bgam3onrbmhnoa4llk244q"
-    }
-  ]
-}
-```
-
-### 7.3.2 Effect continuing thread execution
-
-```json
-{
-  "join": {
-    "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
-  }
-}
-```
-
-### 7.3.1 Effect with fork & join
-
-```json
-{
-  "join": {
-    "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
-  },
-  "fork": [
-    {
-      "/": "bafyreigmmdzix2vxboojvv6j6h7sgvxnrecdxtglwtqpxw7hybebzlsax4"
-    },
-    {
-      "/": "bafyreif6gfpzgxnii4ys6a4bjenefg737fb5bgam3onrbmhnoa4llk244q"
-    }
-  ]
-}
-```
 
 # 8 Receipt
 
@@ -771,22 +570,14 @@ type Outcome struct {
   ran     &Invocation # Invocation this is a receipt for
 
   out     Result # Output of the invocation
-  fx      Effects # Effects to be enqueued
+  fx      [&Task] # Effects to be enqueued
 
   meta    {String : Any} # All the other metadata
-
-  # Principal that issued this receipt. If omitted issuer is
-  # inferred from the invocation task audience.
-  iss     optional Principal
-
-  # When issuer is different from executor this MUST hold a UCAN
-  # delegation chain from executor to the issuer. This should be 
-  # omitted when the executor is the issuer.
-  prf     [&UCAN]
   
-  sig     Varsig
+  rec     &Outcome # MUST include the 
 }
 ```
+FIXME make rec work for dag hosue case
 
 ### 8.1.1 Ran Invocation
 
@@ -820,19 +611,38 @@ If OPTIONAL `prf` field is present, MUST contain link to UCAN delegation authori
 
 The `sig` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without `s` field. The signature MUST be generated by the [Executor] or a delegate if OPTIONAL `iss` field is set.
 
-## 8.2 Receipt Tag
-
-```
-type ReceiptTag union {
-  | &Receipt     "ucan/receipt@0.2.0"
-} representation keyed
-```
-
 A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omitted in contexts where the schema and version are clear from context (for example, when nested in another structure that defines the version).
 
 ## 8.3 DAG-JSON Examples
 
 ### 8.3.1 Issued by Executor
+
+``` js
+{
+  "ran": {"/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu"}
+  "out": {
+    type: "ok",
+    value: {
+      "members": [
+        "bob@example.com",
+        "alice@web.mail"
+      ]
+    }
+  },
+  "meta": {
+    "retries": 2,
+    "time": [
+      400,
+      "hours"
+    ]
+  },
+  "s": {
+    "/": {
+      "bytes": "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU"
+    }
+  }
+}
+```
 
 ```json
 {
@@ -953,115 +763,6 @@ A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omit
 
 
 
-FIXME Split into new spec
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 9 Pipelines
-
-> Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
->
-> — [Mark Miller], [Robust Composition]
-
-There MAY not be enough information to described an Invocation at creation time. However, all of the information required to construct the next request in a sequence MAY be available in the same Batch, or in a previous (but not yet complete) Invocation.
-
-Invocations MAY require arguments from the output of other invocations. Waiting for each request to complete before proceeding to the next task has a performance impact due to the amount of latency. [Promise pipelining] is a solution to this problem: by referencing a prior invocation, a pipelined invocation can direct the executor to use the output of one invocations into the input of the other. This liberates the invoker from waiting for each step.
-
-A `Promise` MAY be used as a variable placeholder for a concrete value in a [Task] [Invocation] output, waiting on a previous step to complete.
-
-For example, consider the following invocation batch:
-
-```json
-{
-  "bafy...createBlogPostTask": {
-    "uri" "https://example.com/blog/posts",
-    "op": "crud/create",
-    "input": {
-      "payload": {
-        "title": "How UCAN Tasks Changed My Life",
-        "body": "This is the story of how one spec changed everything..."
-      }
-    }
-  },
-  "bafy...getBlogEditorsTask": {
-    "uri" "https://example.com/users/editors",
-    "op": "crud/read"
-  },
-  "bafy...sendEmailTask": {
-    "uri" "mailto:akiko@example.com",
-    "op": "msg/send",
-    "input": {
-      "to": {
-        "await/ok": {
-          "/": "bafy...getBlogPostEditorsTask"
-        }
-      },
-      "subject": "Coffee",
-      "body": {
-        "await/ok": {
-          "/": "bafy...createBlogPostTask"
-        }
-      }
-    }
-  },
-  "bafy...sendEmailInvocation": {
-    "ctx": {
-      "run": {
-        "/": "bafy...sendEmailTask"
-      },
-      "prf": [
-        {
-          "/": "bafy...proofUcanOutsideExample"
-        }
-      ]
-    },
-    "sig": {
-      "/": {
-        "bytes": "7aEDQDEGkezG7Bcpeknf2UJ7hpqeL1PZodrYYTSwRjqZPf67P4r1lRZvX+6+9gV+wDZUX0DZLMv64n2fPKnjvxrEugE"
-      }
-    }
-  }
-}
-```
-
-By analogy, above examples can be interpreted roughly as follows:
-
-```js
-const createDraft = crud.create("https://example.com/blog/posts", {
-  payload: {
-    title: "How UCAN Tasks Changed My Life",
-    body: "This is the story of how one spec changed everything...",
-  },
-})
-
-const getEditors = crud.read("https://example.com/users/editors")
-
-const notify = msg.send("mailto:akiko@example.com", {
-  to: (await createDraft).ok,
-  subject: "Coffee",
-  body: (await getEditors).ok,
-})
-```
-
-Any [Task] field other besides `op` MAY be substituted with `Await`. The `op` field is critical in understanding what kind of action will be performed and CAN NOT be substituted with `Await`.
-
-An [Await] MAY be used across [Invocation]s with a same [Authorization], or across [Invocation]s with different [Authorization] and MAY even be across multiple Invokers and Executors. As long as the invocation can be resolved, it MAY be promised. This is sometimes referred to as ["promise pipelining"].
 
 
 # 10 Prior Art
@@ -1123,3 +824,8 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 
 
 [E-lang Mailing List, 2000 Oct 18]: http://wiki.erights.org/wiki/Capability-based_Active_Invocation_Certificates
+
+
+
+FIXME show proxy invocation
+FIXME show delegated execution (work stealing) example
