@@ -318,50 +318,6 @@ FIXME better wording
 ## 3.2 DAG-JSON Examples
 
 ```
-type Invocation struct {
-  uci SemVer
-
-  iss DID
-  aud DID
-
-  run Task
-  cse optional &Receipt
-}
-
-type Task struct {
-  run &Inst
-  mta {String : Any}
-  prf [&Delegation]
-}
-
-type Inststruct {
-  act Action
-  arg {String : Any}
-
-  nnc optional String
-  sub optional DID
-}
-
-```
-
-```
-type Signed<T> struct {
-  pld &T
-  sig Signature
-}
-
-type Signature union {
-  | inline Bytes
-  | batch  Authorization
-}
-
-type Authorization struct {
-  scp [&Any]
-  sig Bytes
-}
-```
-
-```
 type Receipt struct {
   iss DID
   ran &Invocation
@@ -377,7 +333,6 @@ type Receipt struct {
 
 // FIXME show how to model join with more tasks
 TODO NOTE add JWT sig serialization + sig types to Varsig?
-
 
 ### 3.2.1 Interacting with an HTTP API
 

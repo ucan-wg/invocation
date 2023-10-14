@@ -1,0 +1,28 @@
+type SignedInvocation struct {
+  pld &Invocation
+  sig Signature
+}
+
+type Invocation struct {
+  uiv SemVer
+
+  iss DID
+  aud DID
+
+  run &Task
+  cse optional &Receipt
+}
+
+type Task struct {
+  run &Operation
+  mta {String : Any}
+  prf [&Delegation]
+}
+
+type Operation {
+  act Action
+  arg {String : Any}
+
+  nnc optional String
+  sub optional DID
+}

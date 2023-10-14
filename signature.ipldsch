@@ -1,0 +1,9 @@
+type Signature union {
+  | inline Bytes
+  | batch  Authorization
+}
+
+type Authorization struct {
+  scp [&Any]
+  sig Bytes
+}

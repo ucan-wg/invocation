@@ -1,0 +1,17 @@
+type SignedReceipt {
+  pld &Receipt
+  sig Signature
+}
+
+type Receipt struct {
+  iss DID
+  ran &Invocation
+
+  enq [&Task]
+  out Output
+
+  mta {String : Any}
+  rec &SignedReceipt
+}
+
+FIXME show how to rec
