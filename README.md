@@ -1,11 +1,12 @@
 # UCAN Invocation Specification v1.0.0-rc. 1
 
 FIXME
+FIXME show proxy invocation
+FIXME show delegated execution (work stealing) example
 - move pipelines, await, etc to own spec
 - explain in FAQ why we don't need `join` (i.e. use promises, since the model is inverted)
-- add expiry
-- Consider ability heirarcy as being subpaths: `fs/mutate/write`
 - operation -> command, Instruction -> action
+- Be clear that you MUST sign
 
 ## Editors
 
@@ -151,7 +152,7 @@ The executor is directed to perform some task described in the UCAN by the invok
 
 The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field of the contained UCAN.
 
-## 3 Components
+## 3 Concepts
 
 ### 3.1 Command
 
@@ -172,10 +173,6 @@ A [Result] is the output of an [Command].
 ### 3.5 Receipt
 
 A [Receipt] is a cryptographically signed description of the [Invocation] output and requested [Effect]s.
-
-### 3.6 Effect
-
-An [Effect] is the instruction to the [Executor] to enqueue a new set of [Task]s.
 
 # 3 Command
 
@@ -203,7 +200,7 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 ```js
 // Pseudocode
 () =>
-  cast(alice, msg.send({
+  send(alice, msg.send({
     from: "mailto:alice@example.com",
     to: ["bob@example.com", "carol@example.com"],
     subject: "hello",
@@ -212,10 +209,6 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 ```
 
 ```json
-{
-  alg: "EdDSA",
-  typ: "JWT"
-}
 {
   iss: "did:example:bob",
   aud: "did:example:alice",
@@ -278,16 +271,13 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 
 
 NOTE TO SELF: keep aud field as optional. i.e. make it salient for ergonomic reasons / push it into the task writer's face. also aud & sub MAY diverge in the future.
-FIXME showdelegated execution off a queue
-FIXME bring back constructivity in delegations becauyse it makes invocation easier to check?
-
 
 ## 3.1 Fields
 
 | Name        | Field | Type                | Required | Notes        |
 |-------------|-------|---------------------|----------|--------------|
 | [Subject]   | `sub` | DID                 | No       |              |
-| [Action]    | `act` | String              | Yes      |              | FIXME or `cmd`?
+| [Command]   | `cmd` | String              | Yes      |              |
 | [Arguments] | `arg` | Map `{String: Any}` | Yes      |              |
 | [Nonce]     | `nnc` | String              | Yes      | May be empty |
 
@@ -297,9 +287,9 @@ The OPTIONAL `sub` field is intended for cases where parametrizing a specific ag
 
 <!-- The Resource (`uri`) field MUST contain the [URI] of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`], [`ipfs`], or [`magnet`] URI schemes. -->
 
-### 3.1.3 Action
+### 3.1.3 Command
 
-The Action (`act`) field MUST contain a concrete operation that can be sent to the Resource. This field can be thought of as the message or trait being sent to the resource. Note that _unlike_ a [UCAN Ability], which includes heirarchy, an Operation MUST be fully concrete.
+The Command (`cmd`) field MUST contain a concrete operation that can be sent to the Resource. This field can be thought of as the message or trait being sent to the resource. Note that _unlike_ a [UCAN Ability], which includes heirarchy, an Operation MUST be fully concrete.
 
 ### 3.1.4 Arguments
 
@@ -314,25 +304,6 @@ If the `input` field is not present, it is implicitly a `unit` represented as em
 If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple invocations are unique. The nonce MUST be left blank for commands that are expected to be idempotent.
 
 FIXME better wording
-
-## 3.2 DAG-JSON Examples
-
-```
-type Receipt struct {
-  iss DID
-  ran &Invocation
-
-  enq [&Task] # AKA fx
-
-  out Output
-
-  mta {String : Any}
-  rec &Signed<Receipt>
-}
-```
-
-// FIXME show how to model join with more tasks
-TODO NOTE add JWT sig serialization + sig types to Varsig?
 
 ### 3.2.1 Interacting with an HTTP API
 
@@ -486,7 +457,7 @@ If no information is available, this field SHOULD be set to `{}`.
 }
 ```
 
-## 7 Effect
+## 7 Effects
 
 The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
 
@@ -520,53 +491,15 @@ Receipts MUST use the same version as the invocation that they contain.
 
 ## 8.1 Receipt
 
-```
-type Outcome struct {
-  ran     &Invocation # Invocation this is a receipt for
-
-  out     Result # Output of the invocation
-  fx      [&Task] # Effects to be enqueued
-
-  meta    {String : Any} # All the other metadata
-  
-  rec     &Outcome # MUST include the 
-}
-```
-FIXME make rec work for dag hosue case
-
-### 8.1.1 Ran Invocation
-
-The `ran` field MUST include a link to the [Invocation] that the Receipt is for.
-
-### 8.1.2 Output
-
-The `out` field MUST contain the value output of the invocation in [Result] format.
-
-### 8.1.3 Effect
-
-The OPTIONAL `fx` field, if present MUST be set to the caused [Effect]. The [Executor] SHOULD invoke contained [Task] to progress a workflow execution.
-
-If `fx` does not contain OPTIONAL `join` field, it denotes completion of the current execution thread.
-
-### 8.1.4 Metadata Fields
-
-The OPTIONAL metadata field MAY be omitted or used to contain additional data about the receipt. This field MAY be used for tags, commentary, trace information, and so on.
-
-### 8.1.5 Receipt Issuer
-
-The OPTIONAL `iss` field, if present MUST contain the DID of the [Executor] delegate that signed it. If field is present, delegation from [Executor] MUST be included in the `prf` field.
-
-If `iss` field is omitted, Receipt MUST be signed by the [Executor].
-
-### 8.1.6 Proofs
-
-If OPTIONAL `prf` field is present, MUST contain link to UCAN delegation authorizing Receipt Issuer (`iss`) to carry [Task] execution.
-
-### 8.1.7 Signature
-
-The `sig` field MUST contain a [Varsig] of the [DAG-CBOR] encoded Receipt without `s` field. The signature MUST be generated by the [Executor] or a delegate if OPTIONAL `iss` field is set.
-
-A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omitted in contexts where the schema and version are clear from context (for example, when nested in another structure that defines the version).
+| Field | Type             | Required | Description                                                                        |
+|-------|------------------|----------|------------------------------------------------------------------------------------|
+| `iss` | `DID`            | Yes      | The DID of the Executor                                                            |
+| `prf` | `[&Delegation]`  | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
+| `ran` | `&Invocation`    | Yes      | MUST be a link to the [Invocation] that the Receipt is for                         |
+| `out` | `Result`         | Yes      | MUST contain the value output of the invocation in [Result] format                 |
+| `enq` | `[&Task]`        | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
+| `mta` | `{String : Any}` | Yes      | Additional data about the receipt                                                  |
+| `rec` | `&Receipt`       | No       | Recursive `Signed<Receipt>`s if the Invocation was proxied to another Executor     |
 
 ## 8.3 DAG-JSON Examples
 
@@ -576,22 +509,21 @@ A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omit
 {
   "ran": {"/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu"}
   "out": {
-    type: "ok",
-    value: {
+    "ok": {
       "members": [
         "bob@example.com",
         "alice@web.mail"
       ]
     }
   },
-  "meta": {
+  "mta": {
     "retries": 2,
     "time": [
       400,
       "hours"
     ]
   },
-  "s": {
+  "sig": {
     "/": {
       "bytes": "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU"
     }
@@ -601,29 +533,17 @@ A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omit
 
 ```json
 {
-  "ran": {
-    "/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu"
-  },
+  "ran": { "/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu" },
   "out": {
     "ok": {
-      "members": [
-        "bob@example.com",
-        "alice@web.mail"
-      ]
+      "members": [ "bob@example.com", "alice@web.mail" ]
     }
   },
   "meta": {
     "retries": 2,
-    "time": [
-      400,
-      "hours"
-    ]
+    "time": [ 400, "hours" ]
   },
-  "s": {
-    "/": {
-      "bytes": "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU"
-    }
-  }
+  "sig": { "/": { "bytes": "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU" } }
 }
 ```
 
@@ -631,68 +551,37 @@ A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omit
 
 ```json
 {
-  "ran": {
-    "/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu"
-  },
-  "out": {
-    "ok": {
-      "members": [
-        "bob@example.com",
-        "alice@web.mail"
-      ]
-    }
-  },
-  "meta": {
-    "retries": 2,
-    "time": [
-      400,
-      "hours"
-    ]
-  },
   "iss": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
   "prf": [
-    {
-      "/": "bafyreihfgvlol74ugosa5gkzvbsghmq7wiqn4xvgack4uwn4qagrml6p74"
-    }
+    { "/": "bafyreihfgvlol74ugosa5gkzvbsghmq7wiqn4xvgack4uwn4qagrml6p74" },
+    { "/": "SOME OTHER CID FIXME" }
   ],
-  "s": {
-    "/": {
-      "bytes": "7aEDQKxIrga+88HNDd69Ho4Ggz8zkf+GxWC6dAGYua6l85YgiL3NqGxyGAygiSZtWrWUo6SokgOys2wYE7N+novtcwo"
+  "ran": { "/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu" },
+  "out": {
+    "ok": {
+      "members": [ "bob@example.com", "alice@web.mail" ]
     }
-  }
+  },
+  "mta": {
+    "retries": 2,
+    "time": [ 400, "hours" ]
+  },
+  "sig": { "/": { "bytes": "7aEDQKxIrga+88HNDd69Ho4Ggz8zkf+GxWC6dAGYua6l85YgiL3NqGxyGAygiSZtWrWUo6SokgOys2wYE7N+novtcwo" } }
 }
 ```
 
-### 8.3.3 Receipt with effects
+### 8.3.3 Receipt with Enqueued Tasks
 
 ```json
 {
-  "ran": {
-    "/": "bafyreig3qnao4suz3lchh4joof7fhlobmgxhaal3vw4vtcghtlgtp7u4xy"
-  },
-  "out": {
-    "ok": {
-      "status": 200
-    }
-  },
-  "fx": {
-    "join": {
-      "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny"
-    },
-    "fork": [
-      {
-        "/": "bafyreigmmdzix2vxboojvv6j6h7sgvxnrecdxtglwtqpxw7hybebzlsax4"
-      },
-      {
-        "/": "bafyreif6gfpzgxnii4ys6a4bjenefg737fb5bgam3onrbmhnoa4llk244q"
-      }
-    ]
-  },
-  "s": {
-    "/": {
-      "bytes": "7aEDQAHWabtCE+QikM3Np94TrA5T8n2yXqy8Uf35hgw0fe5c2Xi1O0h/JgrFmGl2Gsbhfm05zpdQmwfK2f/Sbe00YQE"
-    }
-  }
+  "ran": { "/": "bafyreig3qnao4suz3lchh4joof7fhlobmgxhaal3vw4vtcghtlgtp7u4xy" },
+  "out": { "ok": { "status": 200 } },
+  "fx": [
+      { "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny" },
+      { "/": "bafyreigmmdzix2vxboojvv6j6h7sgvxnrecdxtglwtqpxw7hybebzlsax4" },
+      { "/": "bafyreif6gfpzgxnii4ys6a4bjenefg737fb5bgam3onrbmhnoa4llk244q" }
+  ],
+  "sig": { "/": { "bytes": "7aEDQAHWabtCE+QikM3Np94TrA5T8n2yXqy8Uf35hgw0fe5c2Xi1O0h/JgrFmGl2Gsbhfm05zpdQmwfK2f/Sbe00YQE" } }
 }
 ```
 
@@ -756,6 +645,7 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 [Bacalhau]: https://www.bacalhau.org/
 [Brooklyn Zelenka]: https://github.com/expede/
 [DAG House]: https://dag.house
+[E-lang Mailing List, 2000 Oct 18]: http://wiki.erights.org/wiki/Capability-based_Active_Invocation_Certificates
 [Fission]: https://fission.codes/
 [Haskell]: https://en.wikipedia.org/wiki/Haskell
 [IPVM]: https://github.com/ipvm-wg
@@ -775,12 +665,3 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 [eRights]: https:/erights.org
 [promise pipelining]: http://erights.org/elib/distrib/pipeline.html
 [ucanto RPC]: https://github.com/web3-storage/ucanto
-
-
-
-[E-lang Mailing List, 2000 Oct 18]: http://wiki.erights.org/wiki/Capability-based_Active_Invocation_Certificates
-
-
-
-FIXME show proxy invocation
-FIXME show delegated execution (work stealing) example

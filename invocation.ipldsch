@@ -1,6 +1,6 @@
 type SignedInvocation struct {
   pld &Invocation
-  sig Signature
+  sig &Signature
 }
 
 type Invocation struct {
@@ -14,15 +14,16 @@ type Invocation struct {
 }
 
 type Task struct {
-  run &Operation
+  run &Command
   mta {String : Any}
   prf [&Delegation]
+  exp Integer
 }
 
-type Operation {
-  act Action
+type Action {
+  cmd Command
   arg {String : Any}
+  nnc String
 
-  nnc optional String
   sub optional DID
 }

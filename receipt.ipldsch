@@ -10,8 +10,9 @@ type Receipt struct {
   enq [&Task]
   out Output
 
+  iat Integer
   mta {String : Any}
+
+  prf [&Delegation]
   rec &SignedReceipt
 }
-
-FIXME show how to rec
