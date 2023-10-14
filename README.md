@@ -1,4 +1,10 @@
-# UCAN Invocation Specification v1.0.0-rc.1
+# UCAN Invocation Specification v1.0.0-rc. 1
+
+FIXME
+- move pipelines, await, etc to own spec
+- explain in FAQ why we don't need `join` (i.e. use promises, since the model is inverted)
+- add expiry
+- Consider ability heirarcy as being subpaths: `fs/mutate/write`
 
 ## Editors
 
@@ -17,7 +23,7 @@
 
 # 0 Abstract
 
-UCAN Invocation defines a format for expressing the intention to execute delegated UCAN capabilities, the attested receipts from an execution, and how to extend computation via promise pipelining.
+UCAN Invocation defines a format for expressing the intention to execute delegated UCAN capabilities, and the attested receipts from an execution.
 
 ## Language
 
@@ -28,6 +34,10 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 > Just because you can doesn't mean that you should
 >
 > — Anonymous
+
+> When authorizaton is communicated without such context, it's like receiving a key in the mail with no hint about what to do with it [...] After an object receives this message, she can invoke arg if she chooses, but why would she ever choose to do so?
+>
+> Mark Miller, [E-lang Mailing List, 2000 Oct 18]
 
 UCAN is a chained-capability format. A UCAN contains all of the information that one would need to perform some task, and the provable authority to do so. This begs the question: can UCAN be used directly as an RPC language?
 
@@ -81,42 +91,35 @@ sequenceDiagram
     participant Bob
     participant Carol 📧
     participant Dan
-    participant Erin
 
-    Note over Alice 💾, Erin: Delegations
+    autonumber
+
+    Note over Alice 💾, Dan: Delegations
         Alice 💾 -->> Bob:      Delegate<Read from Alice's DB>
         Bob      -->> Carol 📧: Delegate<Read from Alice's DB>
         Carol 📧 -->> Dan:      Delegate<Read from Alice's DB>
         Carol 📧 -->> Dan:      Delegate<Send email as Carol>
 
-    Note over Alice 💾, Erin: Single Invocation
-        Dan      -)  Alice 💾: Read from Alice's DB!
-        Alice 💾 --) Dan:      Value
+    Note over Alice 💾, Dan: Single Invocation
+        Dan      ->>  Alice 💾: Read from Alice's DB!
+        Alice 💾 -->> Dan:      Result<➎>
 
-    Note over Alice 💾, Erin: Proxy Execution
-        Dan      -->> Erin:     Delegate<Send email as Carol>
-        Dan      -)   Erin:     Run<Read from Alice's DB>!
-        Erin     -)   Alice 💾: Read from Alice's DB!
-        Alice 💾 --)  Erin:     Value
-        Erin     -)   Dan:      Value
+    Note over Alice 💾, Dan: Multiple Invocation Flow
+        Dan      ->>  Alice 💾: Read from Alice's DB!
+        Alice 💾 -->> Dan:      Result<➐>
+        Dan      ->>  Carol 📧: Send email containing Result<➐> as Carol!
+        Carol 📧 ->>  Carol 📧: Send email!
 
-    Note over Alice 💾, Erin: Multiple Invocation Flow
-        Dan      -)  Alice 💾: Read from Alice's DB!
-        Alice 💾 --) Dan:      Value
-        Dan      -)  Carol 📧: Send email containing <Value> as Carol!
-        Carol 📧 -)  Carol 📧: Send email!
-
-    Note over Alice 💾, Erin: Promise Pipeline
-        Dan      -)  Alice 💾: Read from Alice's DB! [Invocation ID = 123]
-        Dan      -)  Carol 📧: Send email containing Result<Invocation 123> as Carol!
-        Alice 💾 --) Carol 📧: Value
-        Carol 📧 -)  Carol 📧: Send email containing <Value> as Carol!
-
+    Note over Alice 💾, Dan: Promise Pipeline
+        Dan      ->>  Alice 💾: Read from Alice's DB!
+        Dan      ->>  Carol 📧: Send email containing Result<⓫> as Carol!
+        Alice 💾 -->> Carol 📧: Result<⓫>
+        Carol 📧 ->>  Carol 📧: Send email containing Result<⓫> as Carol!
 ```
 
 ## 1.4 Serialization
 
-Unlike [UCAN Delegation]s, Invocations are point-to-point. This means that — aside from an Instruction ID — the exact format need only be agreed on by the two parties directly communicating. The examples in this document are given as [DAG-JSON] (consistent with [`invocation-ipld`]), but any serialization format MAY be used as long as it's accepted by both parties.
+Unlike [UCAN Delegation]s, Invocations are point-to-point. This means that — aside from an Instruction ID — the exact format need only be agreed on by the two parties directly communicating. The examples in this document are given as [JWT], but others (such as [`invocation-ipld`]) MAY be used as long as it's accepted by both parties.
 
 ## 1.5 Public Resources
 
@@ -149,15 +152,19 @@ The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field
 
 ### 2.2.1 Instruction
 
+FIXME merge Instrction and task?
+
 An [Instruction] is like a deferred function application: a request to perform some action on a resource with specific input.
 
 ### 2.2.2 Task
 
 A [Task] wraps an [Instruction] with runtime configuration, including timeouts, fuel, trace metadata, and so on.
 
+<!--
 ### 2.2.2 Authorization
 
 An [Authorization] is a cryptographically signed proof permitting execution of referenced [Task]s. It allows the [Invoker] to authorize a group of tasks using one cryptographic signature.
+-->
 
 ### 2.2.3 Invocation
 
@@ -177,15 +184,17 @@ An [Effect] is the instruction to the [Executor] to enqueue a new set of [Task]s
 
 # 3 Instruction
 
+FIXME rename?
+
 An Instruction is the smallest unit of work that can be requested from a UCAN. It describes one `(resource, operation, input)` triple. The `input` field is free form, and depend on the specific resource and ability being interacted with, and is not described in this specification.
 
 Using the JavaScript analogy from the introduction, an Instruction is similar to wrapping a call in a closure:
 
 ```json
 {
-  "uri" "mailto:alice@example.com",
-  "op": "msg/send",
-  "input": {
+  "act": "msg/send",
+  "arg": {
+    "from": "mailto:alice@example.com",
     "to": [
       "bob@example.com",
       "carol@example.com"
@@ -199,14 +208,174 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 ```js
 // Pseudocode
 () =>
-  msg.send("mailto:alice@example.com", {
+  cast(alice, msg.send({
+    from: "mailto:alice@example.com",
     to: ["bob@example.com", "carol@example.com"],
     subject: "hello",
     body: "world"
   })
 ```
 
+
+
+
+
+
+
+
+
+
+
+
+
+```json
+{
+  alg: "EdDSA",
+  typ: "JWT"
+}
+{
+  iss: "did:example:bob",
+  aud: "did:example:alice",
+  meta: {
+    fuel: 100,
+    disk: "100GB"
+  },
+  run: {
+    "act": "msg/send",
+    "arg": {
+      "from": "mailto:alice@example.com",
+      "to": [
+        "bob@example.com",
+        "carol@example.com"
+      ],
+      "subject": "hello",
+      "body": "world"
+    },
+    prf: [bafy1, bafy2]
+  }
+}
+
+
+
+//
+
+{
+  alg: "EdDSA",
+  typ: "JWT"
+}
+{
+  iss: "did:example:bob",
+  aud: "did:example:alice",
+  meta: {
+    fuel: 100,
+    disk: "100GB"
+  },
+  run: {
+    "act": "ipvm/workflow/run",
+    "arg": {
+      steps: [bafyX, bafyY, bafyZ],
+      inlineSteps: [
+        {
+          "act": "msg/send",
+          "arg": {
+            "from": "mailto:alice@example.com",
+            "to": [
+              "bob@example.com",
+              "carol@example.com"
+            ],
+            "subject": "hello",
+            "body": "world"
+          },
+          prf: [bafy1, bafy2]
+        },
+        {
+          "act": "wasm/run",
+          "arg": {
+            "mod": "ipfs://...",
+            "fun": "add_one",
+            "arg": [42]
+          }
+        },
+        {
+          "sub": "did:web:myDatabaseService", // <- where
+          "act": "crud/update",
+          "arg": {
+            ""
+          }
+        }
+      ]
+      prf: [bafy1, bafy3]
+    }
+  }
+}
+```
+
+
+
+
+``` js
+{
+  iss: "did:example:bob",
+  aud: "did:example:alice",
+  task: {
+    run: {
+      sub: "did:example:alice", // <- where, IFF the subject is relevant... only really useful for 
+      act: "counter/inc",
+      arg: {}
+    },
+    meta: {},
+    prf: [bafy1, bafy3],
+  },
+  exp: 999999 // Doubles as a handy timeout
+}
+```
+
+``` js
+{
+  iss: "did:example:bob",
+  aud: "did:example:alice", // NOTE: can be ANYONE in the delegation chain for proxying if you don't have a direct path?
+  exp: 999999,
+  run: {
+    sub: null,
+    act: "wasm/run",
+    arg: {
+      mod: "ipfs://...",
+      fun: "add_one",
+      arg: [42]
+    }
+  },
+  prf: [bafy1, bafy3]
+}
+```
+
+
+NOTE TO SELF: keep aud field as optional. i.e. make it salient for ergonomic reasons / push it into the task writer's face. also aud & sub MAY diverge in the future.
+
+
+
+FIXME showdelegated execution off a queue
+
+
+FIXME change operation to action in other specs?
+FIXME bring back constructivity in delegations becauyse it makes invocation easier to check?
+
+
+
+
+
+
+
+
+
+<!--
+
+FIXME move to pipeline spec
+
 Later, when we explore promise [pipelines][Pipeline], this also includes capturing the promise, also with a natural analogy to closures:
+
+
+
+
 
 ```json
 {
@@ -239,49 +408,46 @@ const sendEmail = msg.send("mailto://alice@example.com", {
   body: "world"
 });
 ```
+   -->
 
-## 3.1 Schema
 
-```
-type Task struct {
-  uri   URI
-  op    Ability
-  input {String : Any}
-  nnc   String 
-}
-```
+## 3.1 Fields
 
-## 3.2 Fields
+| Field     | Type                | Description | Required |
+|-----------|---------------------|-------------|----------|
+| Operation | String              |             | Yes      |
+| Input     | Map `{String: Any}` |             | Yes      |
+| Nonce     | String              |             | Yes      |
 
-### 3.2.1 Resource
+### 3.1.1 Resource
 
 The Resource (`uri`) field MUST contain the [URI] of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`], [`ipfs`], or [`magnet`] URI schemes.
 
-### 3.2.3 Operation
+### 3.1.3 Action
 
-The Operation field MUST contain a concrete operation that can be sent to the Resource. This field can be thought of as the message or trait being sent to the resource. Note that _unlike_ a [UCAN Ability], which includes heirarchy, an Operation MUST be fully concrete.
+The Action (`act`) field MUST contain a concrete operation that can be sent to the Resource. This field can be thought of as the message or trait being sent to the resource. Note that _unlike_ a [UCAN Ability], which includes heirarchy, an Operation MUST be fully concrete.
 
-### 3.2.4 Input
+### 3.1.4 Arguments
 
-The Input field, MAY contain any parameters expected by the Resource/Operation pair, which MAY be different between different Resources and Operations, and is thus left to the executor to define the shape of this data. This field MUST be representable as a map or keyword list.
+The Arguments (`arg`) field, MAY contain any parameters expected by the Resource/Operation pair, which MAY be different between different Resources and Operations, and is thus left to the executor to define the shape of this data. This field MUST be representable as a map or keyword list.
 
 UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type of `input`s allowed.
 
 If the `input` field is not present, it is implicitly a `unit` represented as empty map.
 
-### 3.2.6 Nonce
+### 3.1.6 Nonce
 
 If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple invocations are unique.
 
-## 3.3 DAG-JSON Examples
+## 3.2 DAG-JSON Examples
 
-### 3.3.1 Interacting with an HTTP API
+### 3.2.1 Interacting with an HTTP API
 
 ```json
 {
-  "uri" "https://example.com/blog/posts",
-  "op": "crud/create",
-  "input": {
+  "act": "crud/create",
+  "arg": {
+    "uri" "https://example.com/blog/posts",
     "headers": {
       "content-type": "application/json"
     },
@@ -298,13 +464,13 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 }
 ```
 
-### 3.3.2 Sending Email
+### 3.2.2 Sending Email
 
 ```json
 {
-  "uri" "mailto:akiko@example.com",
-  "op": "msg/send",
-  "input": {
+  "act": "msg/send",
+  "arg": {
+    "from" "mailto:akiko@example.com",
     "to": [
       "boris@example.com",
       "carol@example.com"
@@ -315,13 +481,13 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 }
 ```
 
-### 3.3.3 Running WebAssembly
+### 3.2.3 Running WebAssembly
 
 ```json
 {
-  "uri": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
-  "op": "wasm/run",
-  "input": {
+  "act": "wasm/run",
+  "arg": {
+    "mod": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
     "func": "add_one",
     "input": [
       42
@@ -329,6 +495,11 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
   }
 }
 ```
+
+<!--
+
+FIXME: SUPER out of scope
+
 
 # 4 Authorization
 
@@ -366,6 +537,7 @@ The `s` field MUST contain a signature FIXME `scope` field.
   "sig": {"/": {"bytes": "7aEDQIJB8XXJ6hWbwu40fN4bq8+Zq8BxyybSWXatMVU3VsL+yzVYpeJqsEBQE5rNtUJefR5rRCNimKNZMJjA9/udZQQ"}}
 }
 ```
+-->
 
 # 5 Task
 
@@ -381,14 +553,14 @@ Concretely, this means that the `&Task` MUST be present in the associated `auth`
 type Task struct {
   run     &Instruction
   meta    {String : Any}
-  prf     [&UcanDelegation]
+  prf     [&Delegation]
 
   # Receipt of the invocation that caused this invocation
   cause   optional &Receipt
 }
 ```
 
-### 5.1.1 Instruction
+### 5.1.1 Task
 
 The `run` field MUST contain a link to the [Task] to be run.
 
@@ -436,117 +608,6 @@ type Invocation struct {
 
 The [Task] containing the [Instruction] and any configuration.
 
-### 5.2.2 Authorization
-
-The `auth` field MUST contain a signature over an array of CIDs that includes the [Task]'s CID, signed by the issuer of the proofs.
-
-## 5.4 DAG-JSON Example
-
-### 5.4.1 Single Invocation
-
-```json
-{
-  "_": {
-    "ucan/invocation@0.2.0": "bafy...invocation"
-  },
-  "bafy...invocation": {
-    "task": {
-      "run": {"/": "bafy...createBlogPost"},
-      "prf": [{"/": "bafy...ucanProof"}]
-    },
-    "auth": {"/": "bafy...auth"}
-  },
-  "bafy...auth": {
-    "scope": [{"/": "bafy...createBlogPostTask"}],
-    "s": {"/": {"bytes": "7aEDQPPhXNvtVb5/T+O40xXU6TSgJZDFnlVaV3GMlaEo/dvxtyaCLm8uUsFK4xzQsQd82QQUYA6fK506XqjghRlucAQ"}}
-  },
-  "bafy...createBlogPost": {
-    "uri" "https://example.com/blog/posts",
-    "op": "crud/create",
-    "input": {
-      "headers": {
-        "content-type": "application/json"
-      },
-      "payload": {
-        "title": "How UCAN Tasks Changed My Life",
-        "body": "This is the story of how one spec changed everything...",
-        "topics": [
-          "authz",
-          "journal"
-        ],
-        "draft": true
-      }
-    }
-  }
-}
-```
-
-### 5.4.2 Multiple Invocations
-
-```json
-{
-  "bafy...createBlogPostInstruction": {
-    "uri" "https://example.com/blog/posts",
-    "op": "crud/create",
-    "input": {
-      "headers": {
-        "content-type": "application/json"
-      },
-      "payload": {
-        "title": "How UCAN Tasks Changed My Life",
-        "body": "This is the story of how one spec changed everything...",
-        "topics": [
-          "authz",
-          "journal"
-        ],
-        "draft": true
-      }
-    }
-  },
-  "bafy...sendEmailInstruction": {
-    "uri" "mailto:akiko@example.com",
-    "op": "msg/send",
-    "input": {
-      "to": [
-        "boris@example.com",
-        "carol@example.com"
-      ],
-      "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Tasks!",
-      "subject": "Coffee"
-    }
-  },
-  "bafy...createBlogPostTask": {
-    "task": {
-      "run": {"/": "bafy...createBlogPostTask"},
-      "prf": [{"/": "bafyreid6q7uslc33xqvodeysekliwzs26u5wglas3u4ndlzkelolbt5z3a"}]
-    },
-    "sig": {"/": "bafy...multipleAuth"}
-  },
-  "bafy...sendEmailTask": {
-    "task": {
-      "run": {"/": "bafy...sendEmailTask"},
-      "prf": [
-        {"/": "bafyreihvee5irbkfxspsim5s2zk2onb7hictmpbf5lne2nvq6xanmbm6e4"}
-      ]
-    },
-    "sig": {"/": "bafy...multipleAuth"},
-  },
-  "bafy...sendEmailInvocation": {
-    "task": {"/": "bafy...sendEmailTask"},
-    "auth": {"/": "bafy...multipleAuth"}
-  },
-  "bafy...createBlogPostInvocation": {
-    "task": {"/": "bafy...createBlogPostTask"},
-    "auth": {"/": "bafy...multipleAuth"}
-  },
-  "bafy...multipleAuth": {
-    "scope": [
-      {"/": "bafy...createBlogPostTask"},
-      {"/": "bafy...sendEmailTask"}
-    ],
-    "s": {"/": {"bytes": "7aEDQKxIrga+88HNDd69Ho4Ggz8zkf+GxWC6dAGYua6l85YgiL3NqGxyGAygiSZtWrWUo6SokgOys2wYE7N+novtcwo"}}
-}
-```
 
 ### 5.4.3 Causal Invocations
 
@@ -637,10 +698,6 @@ Tasks in the `fork` field MAY be related to the Task in the `join` field if ther
 type Effects {
   # Primary set of tasks to be invoked
   fork      [&Invocation]
-  
-  # Additional task to be invoked with added semantics
-  # of representing a workflow execution continuation.
-  join      optional &Invocation
 }
 ```
 
@@ -874,6 +931,48 @@ A Receipt Tag associates the `Receipt` with a versioned schema. This MAY be omit
 }
 ```
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FIXME Split into new spec
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 9 Pipelines
 
 > Machines grow faster and memories grow larger. But the speed of light is constant and New York is not getting any closer to Tokyo. As hardware continues to improve, the latency barrier between distant machines will increasingly dominate the performance of distributed computation. When distributed computational steps require unnecessary round trips, compositions of these steps can cause unnecessary cascading sequences of round trips
@@ -964,387 +1063,6 @@ Any [Task] field other besides `op` MAY be substituted with `Await`. The `op` fi
 
 An [Await] MAY be used across [Invocation]s with a same [Authorization], or across [Invocation]s with different [Authorization] and MAY even be across multiple Invokers and Executors. As long as the invocation can be resolved, it MAY be promised. This is sometimes referred to as ["promise pipelining"].
 
-## Await
-
-An `Await` describes the eventual output of the referenced [Task] invocation. An `Await` MUST resolve to an output [Result] with `await/*` variant. If unwrapping success or failure case is desired, corresponding `await/ok` or `await/error` variants MUST be used.
-
-### 9.1 Schema
-
-```
-type Promise union {
-  | &Instruction "await/*"
-  | &Instruction "await/ok"
-  | &Instruction "await/error"
-} representation keyed
-```
-
-#### 9.2 Variants
-
-##### 9.2.1 Success
-
-The successful output of the [Instruction] MAY be referenced by wrapping the [Instruction] in the `"await/ok"` tag.
-
-The [Executor] MUST fail an [Instruction] that `Await`s successful output of the failed [Instruction].
-
-Upon learning of a successful execution of an awaited `Instruction`, the [Executor] MUST substitute the [Instruction] field set with the (unwrapped) `ok` value of the output.
-
-##### 9.2.2 Failure
-
-The failed output of the [Task] MAY be referenced by wrapping the [Task] in the `"await/error"` tag.
-
-[Executor] MUST fail [Task] that `Await`s failed output of the successful [Task].
-
-[Executor] MUST substitute [Task] field set to the [Await] of the failed [Task] with an (unwrapped) `error` value of the output.
-
-##### 9.2.3 Result
-
-The [Result] output of the [Task] MAY be reference by wrapping the [Task] in the `"await/*"` tag.
-
-[Executor] MUST substitute [Task] field set to the [Await] of the [Task] with a `Result` value of the output.
-
-## 9.3 Dataflow
-
-Pipelining uses [Await] as arguments to determine the required dataflow graph. The following examples both express the following dataflow graph:
-
-### 9.3.1 Batched
-
-```mermaid
-flowchart BR
-    update-dns("with: dns:example.com?TYPE=TXT
-                do: crud/update")
-    notify-bob("with: mailto://alice@example.com
-                do: msg/send
-                to: bob@example.com")
-    notify-carol("with: mailto://alice@example.com
-                  do: msg/send
-                  to: carol@example.com")
-
-    log-as-done("with: https://example.com/report
-                do: crud/update")
-
-    update-dns --> notify-bob --> log-as-done
-    update-dns --> notify-carol --> log-as-done
-```
-
-```json
-{
-  "bafy...updateDnsTask": {
-    "uri" "dns:example.com?TYPE=TXT",
-    "op": "crud/update",
-    "input": {
-      "value": "hello world"
-    }
-  },
-  "bafy...sendBobEmailTask": {
-    "uri" "mailto://alice@example.com",
-    "op": "msg/send",
-    "input": {
-      "to": "bob@example.com",
-      "subject": "DNSLink for example.com",
-      "body": {
-        "await/ok": {
-          "/": "bafy...updateDnsTask"
-        }
-      }
-    }
-  },
-  "bafy...sendCarolEmailTask": {
-    "uri" "mailto://alice@example.com",
-    "op": "msg/send",
-    "input": {
-      "to": "carol@example.com",
-      "subject": "Hey Carol, DNSLink was updated!",
-      "body": {
-        "await/ok": {
-          "/": "bafy...updateDnsTask"
-        }
-      }
-    }
-  },
-  "bafy...updateReportTask": {
-    "uri" "https://example.com/report",
-    "op": "crud/update",
-    "input": {
-      "payload": {
-        "from": "mailto://alice@exmaple.com",
-        "to": [
-          "bob@exmaple.com",
-          "carol@example.com"
-        ],
-        "event": "email-notification"
-      },
-      "_": [
-        {
-          "await/ok": {
-            "/": "bafy...sendBobEmailTask"
-          }
-        },
-        {
-          "await/ok": {
-            "/": "bafy...sendCarolEmailTask"
-          }
-        }
-      ]
-    }
-  },
-  "bafy...auth": {
-    "scope": [
-      {
-        "/": "bafy...updateDnsTask"
-      },
-      {
-        "/": "bafy...sendBobEmailTask"
-      },
-      {
-        "/": "bafy...sendCarolEmailTask"
-      },
-      {
-        "/": "bafy...updateReportTask"
-      }
-    ],
-    "s": {
-      "/": {
-        "bytes": "7aEDQLbVVvN/RU8juyz+r36xMgCP1Eh1OknVckuCPrkTmvGS+ULTtCcvjF3gCqpqf6As7VLewoqTvWX1sswRudmOvAY"
-      }
-    }
-  },
-  "bafy...updateDnsInvocation": {
-    "run": {
-      "/": "bafy...updateDnsTask"
-    },
-    "auth": {
-      "/": "bafy...auth"
-    },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
-  },
-  "bafy...sendBobEmailInvocation": {
-    "run": {
-      "/": "bafy...sendBobEmailTask"
-    },
-    "auth": {
-      "/": "bafy...auth"
-    },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
-  },
-  "bafy...sendCarolEmailInvocation": {
-    "run": {
-      "/": "bafy...sendCarolEmailTask"
-    },
-    "auth": {
-      "/": "bafy...auth"
-    },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
-  },
-  "bafy...updateReportInvocation": {
-    "run": {
-      "/": "bafy...updateReportTask"
-    },
-    "auth": {
-      "/": "bafy...auth"
-    },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
-  }
-}
-```
-
-### 9.4.2 Serial
-
-```mermaid
-flowchart TB
-    update-dns("with: dns:example.com?TYPE=TXT
-                do: crud/update")
-    notify-bob("with: mailto://alice@example.com
-                do: msg/send
-                to: bob@example.com")
-    notify-carol("with: mailto://alice@example.com
-                  do: msg/send
-                  to: carol@example.com")
-
-    log-as-done("with: https://example.com/report
-                do: crud/update")
-
-    subgraph start [ ]
-    update-dns
-    notify-bob
-    end
-
-    subgraph finish [ ]
-    notify-carol
-    log-as-done
-    end
-
-    update-dns -.-> notify-bob
-    update-dns --> notify-carol
-    notify-bob --> log-as-done
-    notify-carol -.-> log-as-done
-```
-
-```json
-{
-  "bafy...updateDnsTask": {
-    "uri" "dns:example.com?TYPE=TXT",
-    "op": "crud/update",
-    "input": {
-      "value": "hello world"
-    }
-  },
-  "bafy...sendBobEmailTask": {
-    "uri" "mailto://alice@example.com",
-    "op": "msg/send",
-    "input": {
-      "to": "bob@example.com",
-      "subject": "DNSLink for example.com",
-      "body": {
-        "await/ok": {
-          "/": "bafy...updateDnsTask"
-        }
-      }
-    }
-  },
-  "bafy...updateDnsInvocation": {
-    "run": {
-      "/": "bafy...updateDnsInvocation"
-    },
-    "auth": {
-      "/": "bafy...authForBatchOne"
-    },
-    "prf": [
-      {
-        "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha"
-      }
-    ]
-  },
-  "bafy...sendBobEmailInvocation": {
-    "run": {
-      "/": "bafy...sendBobEmailTask"
-    },
-    "auth": {
-      "/": "bafy...authForBatchOne"
-    },
-    "prf": [
-      {
-        "/": "bafyreibblnq5bawcchzh73nxkdmkx47hu64uwistvg4kyvdgfd6igkcnha"
-      }
-    ]
-  },
-  "bafy...authForBatchOne": {
-    "scope": [
-      {
-        "/": "bafy...updateDnsTask"
-      },
-      {
-        "/": "bafy...sendBobEmailTask"
-      }
-    ],
-    "s": {
-      "/": {
-        "bytes": "7aEDQG2GvLnr2gVEfMDrEUV8S3fw8JuFGVKAGIhSZCqCmHGyQ8cdU2A/Vp97yAsZQ+tqBaMWN3Q6YJLfPpAdgaXf2gY"
-      }
-    }
-  }
-}
-```
-
-```json
-{
-  "bafy...emailCarolTask": {
-    "uri" "mailto://alice@example.com",
-    "op": "msg/send",
-    "input": {
-      "to": "carol@example.com",
-      "subject": "Hey Carol, DNSLink was updated!",
-      "body": {
-        "await/ok": {
-          "/": "bafy...updateDnsTask"
-        }
-      }
-    }
-  },
-  "bafy...updateReportTask": {
-    "uri" "https://example.com/report",
-    "op": "crud/update",
-    "input": {
-      "payload": {
-        "from": "mailto://alice@exmaple.com",
-        "to": [
-          "bob@exmaple.com",
-          "carol@example.com"
-        ],
-        "event": "email-notification"
-      },
-      "_": [
-        {
-          "await/ok": {
-            "/": "bafy...emailBobTask"
-          }
-        },
-        {
-          "await/ok": {
-            "/": "bafy...emailCarolTask"
-          }
-        }
-      ]
-    }
-  },
-  "bafy...authForSecondBatch": {
-    "scope": [
-      {
-        "/": "bafy...emailCarolTask"
-      },
-      {
-        "/": "bafy...updateReportInvocation"
-      }
-    ],
-    "s": {
-      "/": {
-        "bytes": "7aEDQM1yNTEO/+TF69wUwteH+ftAjD0ik5tXDa+sheAiuOZobSco/+vU882/Nf3LtMRF1EDoP/H38PX2bD5nJzkHAAU"
-      }
-    }
-  },
-  "bafy...emailCarolInvocation": {
-    "run": {
-      "/": "bafy...emailCarolTask"
-    },
-    "auth": {
-      "/": "bafy...authForSecondBatch"
-    },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
-  },
-  "bafy...updateReportInvocation": {
-    "run": {
-      "/": "bafy...updateReporttask"
-    },
-    "auth": {
-      "/": "bafy...authForSecondBatch"
-    },
-    "prf": [
-      {
-        "/": "bafyreiflsrhtwctat4gulwg5g55evudlrnsqa2etnorzrn2tsl2kv2in5i"
-      }
-    ]
-  }
-}
-```
 
 # 10 Prior Art
 
@@ -1401,3 +1119,7 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 [eRights]: https:/erights.org
 [promise pipelining]: http://erights.org/elib/distrib/pipeline.html
 [ucanto RPC]: https://github.com/web3-storage/ucanto
+
+
+
+[E-lang Mailing List, 2000 Oct 18]: http://wiki.erights.org/wiki/Capability-based_Active_Invocation_Certificates
