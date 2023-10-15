@@ -1,12 +1,10 @@
 # UCAN Invocation Specification v1.0.0-rc. 1
 
-FIXME
 FIXME show proxy invocation
 FIXME show delegated execution (work stealing) example
-- move pipelines, await, etc to own spec
-- explain in FAQ why we don't need `join` (i.e. use promises, since the model is inverted)
-- operation -> command, Instruction -> action
-- Be clear that you MUST sign
+FIXME move pipelines, await, etc to own spec
+FIXME explain in FAQ why we don't need `join` (i.e. use promises, since the model is inverted)
+FIXME reverse lookup secion
 
 ## Editors
 
@@ -154,35 +152,55 @@ The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field
 
 | Concept      | Description                                                                 |
 |--------------|-----------------------------------------------------------------------------|
-| [Invocation] | A request to perform some action based on [delegated][Delegation] authority |
 | [Command]    | (Deferred) function application; a description of work to be performed      |
 | [Task]       | Contextual information for a [Command], such as resource limits             |
-| [Receipt]    | The return value from an [Invocation], which may [enqueue] more tasks       |
+| [Invocation] | A request to perform some [Task] based on [delegated][Delegation] authority |
 | [Result]     | The success value or error information from the run [Invocation]            |
+| [Receipt]    | The return value from an [Invocation], which may [enqueue] more tasks       |
 
 ``` mermaid
 flowchart RL
-    subgraph InvocationPayload
-        subgraph Invocation
+    subgraph Invocation
+        direction LR
+        subgraph InvocationPayload
             subgraph Task
+                direction TB
+
                 Command
-                DelegationProofs
+                DelegationProofs["Delegation Proofs"]
             end
         end
 
-        Signature
+        Inv1Sig
     end
 
     subgraph Receipt
         subgraph ReceiptPayload
             Ran
             Result
+            Enqueue
         end
 
-        Signature
+        RecSig[Signature]
     end
 
-    Ran -->|references| Invocation
+    subgraph Invocation2["(Next Invocation)"]
+        direction RL
+
+        subgraph InvocationPayload2["Invocation Payload"]
+            subgraph Task2
+                Command2["Command"]
+                DelegationProofs2["Delegation Proofs"]
+            end
+
+            Cause
+        end
+
+        Inv2Sig[Signature]
+    end
+
+    Cause --> Enqueue
+    Ran   --> Invocation
 ```
 
 # 3 Command
@@ -240,15 +258,16 @@ UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type
 
 If the `input` field is not present, it is implicitly a `unit` represented as empty map.
 
-### 3.1.1 Subject
+### 3.1.5 Subject
 
-The OPTIONAL `sub` field is intended for cases where parametrizing a specific agent is importnat
+The OPTIONAL `sub` field is intended for cases where parametrizing a specific agent is important. This is especially critical for two parts of the lifecycle:
 
-<!-- The Resource (`uri`) field MUST contain the [URI] of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`], [`ipfs`], or [`magnet`] URI schemes. -->
+1. Specifying a particular `sub` (and thus `aud`) when [enqueuing new Tasks][enqueue] in a Receipt
+2. Indexing Receipts for reverse lookup and memoization
 
 ### 3.1.6 Nonce
 
-If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple (non-idempotent) invocations are unique. The nonce MUST be `""` for commands that are idempotent.
+If present, the REQUIRED `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple (non-idempotent) invocations are unique. The nonce SHOULD be `""` for Commands that are idempotent.
 
 ### 3.2.1 Interacting with an HTTP API
 
@@ -297,6 +316,8 @@ If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in AS
 
 ### 3.2.3 Running WebAssembly
 
+In this case, the Wasm module is inlined.
+
 ```json
 {
   "nnc": "", // FIXME infers idempotence
@@ -319,81 +340,31 @@ Concretely, this means that the `&Task` MUST be present in the associated `auth`
 
 ## 4.1 Task
 
-```
-type Task struct {
-  run   &Command
-  meta  {String : Any}
-  cause optional &Receipt
-}
-```
+Tasks wrap a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits.
 
-### 5.1.1 Task
+| Field | Type                      | Description                                                                                  | Required |
+|-------|---------------------------|----------------------------------------------------------------------------------------------|----------|
+| `run` | `&Command`                | The `run` field MUST contain a link to the [Task] to be run                                  | Yes      |
+| `mta` | `{String : Any}`          | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on               | Yes      |
+| `prf` | `[&Delegation]`           | Links to any [UCAN Delegation]s that provide the authority to perform the enclosed [Command] | Yes      |
+| `exp` | `Integer | null`[^js-num] | The UTC Unix timestamp at which the Task expires                                             | Yes      |
 
-The `run` field MUST contain a link to the [Task] to be run.
-
-### 5.1.2 Metadata
-
-The OPTIONAL `meta` field MAY be used to include human-readable descriptions, tags, execution hints, resource limits, and so on. If present, the `meta` field MUST contain a map with string keys. The contents of the map are left undefined to encourage extensible use.
-
-If `meta` field is not present, it is implicitly a `unit` represented as an empty map.
-
-### 5.1.3 Proofs
-
-The `prf` field MUST contain links to any UCANs that provide the authority to perform this task. All of the outermost proofs MUST have `aud` field set to the [Executor]'s DID. All of the outmost proofs MUST have `iss` field set to the [Invoker]'s DID.
-
-
-
-
-
-
-
-FIXME expand to move proofs here
-
-
-
-
-
-
-
-
-### 5.1.4 Cause
-
-[Task]s MAY be invoked as an effect caused by a prior [Invocation]. Such [Invocation]s SHOULD have a `cause` field set to the [Receipt] link of the [Invocation] that caused it. The linked [Receipt] MUST have an `Effect` (the `fx` field) containing invoked [Task] in the `run` field.
-
-### 5.2.1 Task
-
-The [Task] containing the [Instruction] and any configuration.
+# 5 Invocation
 
 # 6 Result
 
-A Result records the output of the [Task], as well as its success or failure state.
+A Result records the output of the [Task], as well as its success or failure state. A Result MUST be formatted as map with a single `tag` field.
 
-## 6.1 Schema
+| Tag     | Value            | Description                                     |
+|---------|------------------|-------------------------------------------------|
+| `ok`    | `Any`            | The successfully returned data from a [Command] |
+| `error` | `{String : Any}` | Error information from a failed [Command]       |
 
-```
-type Result union {
-  | any "ok"
-  | any "error"
-} representation keyed
-```
-
-## 6.2 Variants
-
-## 6.2.1 Success
-
-The success branch MUST contain the value returned from a successful [Task] wrapped in the `"ok"` tag. The exact shape of the returned data is left undefined to allow for flexibility in various Task types.
-
-```json
+```js
+// Success
 { "ok": 42 }
-```
 
-## 6.2.2 Failure
-
-The failure branch MAY contain detail about why execution failed wrapped in the "error" tag. It is left undefined in this specification to allow for [Task] types to standardize the data that makes sense in their contexts.
-
-If no information is available, this field SHOULD be set to `{}`.
-
-```json
+// Failure
 {
   "error": {
     "dev/reason": "unauthorized",
@@ -402,28 +373,6 @@ If no information is available, this field SHOULD be set to `{}`.
 }
 ```
 
-## 7 Effects
-
-The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
-
-Effects describe requests for future work to be performed. All [Invocation]s in an [Effect] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s. The `fx` block contains two fields: `fork` and `join`.
-
-[Task]s listed in the `fork` field are first-class and only ordered by promises; they otherwise SHOULD be considered independent and equal. As such, atomic guarantees such as failure of one effect implying failure of other effects if left undefined.
-
-The `join` field describes an OPTIONAL "special" [Invocation] which instruct the [Executor] that the [Task] [Invocation] is a continuation of the previous Invocation. This roughly emulates a virtual thread which terminates in an Invocation that produces Effect without a `join` field.
-
-Tasks in the `fork` field MAY be related to the Task in the `join` field if there exists a Promise referencing either Task. If such a promise does not exist, then they SHOULD be treated as entirely separate and MAY be scheduled, deferred, fail, retry, and so on entirely separately.
-
-## 7.1 Schema
-
-```
-# Represents a request to invoke enclosed set of tasks concurrently
-type Effects {
-  fx [&Invocation]
-}
-```
-
-## 7.2 Fields
 
 
 # 8 Receipt
@@ -529,6 +478,31 @@ Receipts MUST use the same version as the invocation that they contain.
   "sig": { "/": { "bytes": "7aEDQAHWabtCE+QikM3Np94TrA5T8n2yXqy8Uf35hgw0fe5c2Xi1O0h/JgrFmGl2Gsbhfm05zpdQmwfK2f/Sbe00YQE" } }
 }
 ```
+
+
+## 7 Effects
+
+The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
+
+Effects describe requests for future work to be performed. All [Invocation]s in an [Effect] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s. The `fx` block contains two fields: `fork` and `join`.
+
+[Task]s listed in the `fork` field are first-class and only ordered by promises; they otherwise SHOULD be considered independent and equal. As such, atomic guarantees such as failure of one effect implying failure of other effects if left undefined.
+
+The `join` field describes an OPTIONAL "special" [Invocation] which instruct the [Executor] that the [Task] [Invocation] is a continuation of the previous Invocation. This roughly emulates a virtual thread which terminates in an Invocation that produces Effect without a `join` field.
+
+Tasks in the `fork` field MAY be related to the Task in the `join` field if there exists a Promise referencing either Task. If such a promise does not exist, then they SHOULD be treated as entirely separate and MAY be scheduled, deferred, fail, retry, and so on entirely separately.
+
+## 7.1 Schema
+
+```
+# Represents a request to invoke enclosed set of tasks concurrently
+type Effects {
+  fx [&Invocation]
+}
+```
+
+## 7.2 Fields
+
 
 
 

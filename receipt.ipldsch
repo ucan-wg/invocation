@@ -1,6 +1,6 @@
 type Receipt {
   pld &Receipt
-  sig Signature
+  sig &Signature
 }
 
 type ReceiptPayload struct {

@@ -1,5 +1,5 @@
 type Invocation struct {
-  pld &InvocationPayload
+  inv &InvocationPayload
   sig &Signature
 }
 
@@ -17,7 +17,7 @@ type Task struct {
   run &Command
   mta {String : Any}
   prf [&Delegation]
-  exp Integer
+  exp optional Integer
 }
 
 type Action {
