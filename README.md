@@ -283,31 +283,31 @@ The Invocation attaches the authentication information required to authorize the
 ```js
 {
   sig: {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
-  inv: {                                        //                                         ┐
-    iss: "did:web:example.com",                 //                                         │
-    aud: "did:......FIXME",                     //                                         │
-    run: {                                      //                                ┐        │
-      act: {                                    // ┐                              │        │
-        nnc: "&NCC-1701-D*",                    // │                              │        │
-        cmd: "crud/create",                     // │                              │        │
-        arg: {                                  // │                              │        │
-          uri "https://example.com/blog/posts", // │                              │        │
-          headers: {                            // │                              │        │
-            content-type: "application/json"    // │                              │        │
-          },                                    // ├── Action                     │        │
-          payload: {                            // │                              │        │
-            title: "UCAN for Fun an Profit",    // │                              │        │
-            body: "UCAN is great!",             // │                              ├── Task ├── Payload
-            topics: ["authz", "journal"],       // │                              │        │
-            draft": true                        // │                              │        │
-          }                                     // │                              │        │
-        }                                       // │                              │        │
-      },                                        // ┘                              │        │
-      mta: {                                    //                                │        │
-        env: "development",                     //                                │        │
-        tags: ["blog", "post", "pr#123"]        //                                │        │
-      },                                        //                                │        │
-      prf: [                                    //                                │        │
+  inv: {                                                                      //           ┐
+    iss: "did:plc:ewvi7nxzyoun6zhxrhs64oiz",                                  //           │
+    aud: "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",          //           │
+    run: {                                                                    //  ┐        │
+      act: {                                     // ┐                             │        │
+        nnc: "&NCC-1701-D*",                     // │                             │        │
+        cmd: "crud/create",                      // │                             │        │
+        arg: {                                   // │                             │        │
+          uri: "https://example.com/blog/posts", // │                             │        │
+          headers: {                             // │                             │        │
+            content-type: "application/json"     // │                             │        │
+          },                                     // ├── Action                    │        │
+          payload: {                             // │                             │        │
+            title: "UCAN for Fun an Profit",     // │                             │        │
+            body: "UCAN is great!",              // │                             ├── Task ├── Payload
+            topics: ["authz", "journal"],        // │                             │        │
+            draft": true                         // │                             │        │
+          }                                      // │                             │        │
+        }                                        // │                             │        │
+      },                                         // ┘                             │        │
+      mta: {                                                                  //  │        │
+        env: "development",                                                   //  │        │
+        tags: ["blog", "post", "pr#123"]                                      //  │        │
+      },                                                                      //  │        │
+      prf: [                                                                  //  │        │
         {"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"}, //  │        │
         {"/": "bafkr4idnrqfouibxdqpvh2lmkhgsbw5yabvjbiaea3fplrb4vxifaphvgy"}, //  │        │
         {"/": "bafkr4ig4o5mwufavfewt4jurycn7g7dby2tcwg5q2ii2y6idnwguoyeruq"}, //  │        │
