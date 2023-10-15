@@ -148,7 +148,23 @@ The executor is directed to perform some task described in the UCAN by the invok
 
 The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field of the contained UCAN.
 
-## 2.2 Anatomy
+## 2.2 Lifecycle
+
+At a very high level:
+
+- A [Task] absractly requests some action
+- An [Invocation] attaches proven ([Delegation]) authority to a [Task]
+- A [Receipt] MAY request that the Invoker enqueue more [Task]s
+
+``` mermaid
+erDiagram
+    Delegation }o--|{ Invocation: proves
+    Invocation }|--|| Task: requests
+    Invocation ||--|| Receipt: returns
+    Receipt |o--|{ Task: enqueues
+```
+
+## 2.3 Anatomy
 
 | Concept      | Description                                                                 |
 |--------------|-----------------------------------------------------------------------------|
@@ -199,17 +215,8 @@ flowchart RL
         Inv2Sig[Signature]
     end
 
-    Cause --> Enqueue
-    Ran   --> Invocation
-```
-
-## 2.3 Lifecycle
-
-``` mermaid
-erDiagram
-    Invocation }|--|| Task: requests
-    Invocation ||--|| Receipt: returns
-    Receipt |o--|{ Task: enqueues
+    Cause -->|provenance| Enqueue
+    Ran   -->|provenance| Invocation
 ```
 
 # 3 Request
