@@ -509,12 +509,23 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 
 <!-- Internal Links -->
 
+[Arguments]: #312-arguments
+[Command]: #311-command
+[Invocation]: #33-invocation
+[Nonce]: #314-nonce
+[Receipt]: #42-receipt
+[Response]: #4-response
+[Result]: #41-result
+[Subject]: #313-subject
+[Task]: #32-task
+
 <!-- External Links -->
 
 [BCP 14]: https://www.rfc-editor.org/info/bcp14
 [Bacalhau]: https://www.bacalhau.org/
 [Brooklyn Zelenka]: https://github.com/expede/
 [DAG House]: https://dag.house
+[Delegation]: https://github.com/ucan-wg/delegation
 [E-lang Mailing List, 2000 Oct 18]: http://wiki.erights.org/wiki/Capability-based_Active_Invocation_Certificates
 [Fission]: https://fission.codes/
 [Haskell]: https://en.wikipedia.org/wiki/Haskell
