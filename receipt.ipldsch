@@ -1,18 +1,23 @@
-type SignedReceipt {
+type Receipt {
   pld &Receipt
   sig Signature
 }
 
-type Receipt struct {
+type ReceiptPayload struct {
   iss DID
   ran &Invocation
 
   enq [&Task]
-  out Output
+  out Result
 
   iat Integer
   mta {String : Any}
 
   prf [&Delegation]
-  rec &SignedReceipt
+  rec &Receipt
 }
+
+type Result union {
+  | any "ok"
+  | any "error"
+} representation keyed

@@ -1,9 +1,9 @@
-type SignedInvocation struct {
-  pld &Invocation
+type Invocation struct {
+  pld &InvocationPayload
   sig &Signature
 }
 
-type Invocation struct {
+type InvocationPayload struct {
   uiv SemVer
 
   iss DID

@@ -125,11 +125,11 @@ Unlike [UCAN Delegation]s, Invocations are point-to-point. This means that — a
 
 ## 1.5 Public Resources
 
-A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible and 
+A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible, and a hard required for initiating flow (e.g. signup). These cases typically involve a reference passed out of band (such as a web link). Due to [designation without authorization], knowing the URI of a public resource is often sufficient for interacting with it. In these cases, the Executor MAY accept Invocations without having a "closed-loop" proof chain , but this SHOULD NOT be the default behaviour.
 
-FIXME Open HTTP GET doensn't need a prf, but can still use invocation
+# 2 Concepts
 
-# 2 Roles
+## 2.1 Roles
 
 Task adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
 
@@ -144,41 +144,52 @@ The invoker signals to the executor that a task associated with a UCAN SHOULD be
 
 The invoker MUST be the UCAN delegator. Their DID MUST be authenticated in the `iss` field of the contained UCAN.
 
-### Subject
-
 ### 2.1.2 Executor
 
 The executor is directed to perform some task described in the UCAN by the invoker.
 
 The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field of the contained UCAN.
 
-## 3 Concepts
+## 2.2 Anatomy
 
-### 3.1 Command
+| Concept      | Description                                                                 |
+|--------------|-----------------------------------------------------------------------------|
+| [Invocation] | A request to perform some action based on [delegated][Delegation] authority |
+| [Command]    | (Deferred) function application; a description of work to be performed      |
+| [Task]       | Contextual information for a [Command], such as resource limits             |
+| [Receipt]    | The return value from an [Invocation], which may [enqueue] more tasks       |
+| [Result]     | The success value or error information from the run [Invocation]            |
 
-A [Command] is like a deferred function application: a request to perform some action on a resource with specific input.
+``` mermaid
+flowchart RL
+    subgraph InvocationPayload
+        subgraph Invocation
+            subgraph Task
+                Command
+                DelegationProofs
+            end
+        end
 
-### 3.2 Task
+        Signature
+    end
 
-A [Task] wraps a [Command] with runtime configuration, including timeouts, fuel, trace metadata, and so on.
+    subgraph Receipt
+        subgraph ReceiptPayload
+            Ran
+            Result
+        end
 
-### 3.3 Invocation
+        Signature
+    end
 
-An [Invocation] is an [Authorized] [Task].
-
-### 3.4 Result
-
-A [Result] is the output of an [Command].
-
-### 3.5 Receipt
-
-A [Receipt] is a cryptographically signed description of the [Invocation] output and requested [Effect]s.
+    Ran -->|references| Invocation
+```
 
 # 3 Command
 
-FIXME rename?
+A Command is the smallest unit of work that can be Invoked. It is akin to a function call or actor message.
 
-An Instruction is the smallest unit of work that can be requested from a UCAN. It describes one `(resource, operation, input)` triple. The `input` field is free form, and depend on the specific resource and ability being interacted with, and is not described in this specification.
+The `input` field is free form, and depend on the specific resource and ability being interacted with, and is not described in this specification.
 
 Using the JavaScript analogy from the introduction, an Instruction is similar to wrapping a call in a closure:
 
@@ -200,77 +211,13 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 ```js
 // Pseudocode
 () =>
-  send(alice, msg.send({
+  msg.send({
     from: "mailto:alice@example.com",
     to: ["bob@example.com", "carol@example.com"],
     subject: "hello",
     body: "world"
   })
 ```
-
-```json
-{
-  iss: "did:example:bob",
-  aud: "did:example:alice",
-  act: "msg/send",
-  nnc: "",
-  arg: {
-    from: "mailto:alice@example.com",
-    to: [
-      "bob@example.com",
-      "carol@example.com"
-    ],
-    subject: "hello",
-    body: "world"
-  }
-  meta: {
-    fuel: 100,
-    disk: "100GB"
-  },
-  prf: [bafy1, bafy2]
-}
-
-
-
-
-
-
-
-``` js
-{
-  iss: "did:example:bob",
-  aud: "did:example:alice", // Origoinally removed these because it's duplicated from prf, but important for e.g. CRDT
-  run: {
-    sub: "did:example:alice", // <- where, IFF the subject is relevant... only really useful for 
-    cmd: "counter/inc",
-    arg: {by: 4}
-  },
-  meta: {},
-  cause: {"/": "bafy...123"},
-  prf: [bafy1, bafy3],
-  exp: 999999 // Doubles as a handy timeout
-}
-```
-
-``` js
-{
-  iss: "did:example:bob",
-  aud: "did:example:alice", // NOTE: can be ANYONE in the delegation chain for proxying if you don't have a direct path?
-  exp: 999999,
-  run: {
-    act: "wasm/run",
-    arg: {
-      mod: "ipfs://...",
-      fun: "add_one",
-      arg: [42]
-    }
-  },
-  prf: [bafy1, bafy3]
-}
-```
-
-
-NOTE TO SELF: keep aud field as optional. i.e. make it salient for ergonomic reasons / push it into the task writer's face. also aud & sub MAY diverge in the future.
 
 ## 3.1 Fields
 
@@ -280,12 +227,6 @@ NOTE TO SELF: keep aud field as optional. i.e. make it salient for ergonomic rea
 | [Command]   | `cmd` | String              | Yes      |              |
 | [Arguments] | `arg` | Map `{String: Any}` | Yes      |              |
 | [Nonce]     | `nnc` | String              | Yes      | May be empty |
-
-### 3.1.1 Subject
-
-The OPTIONAL `sub` field is intended for cases where parametrizing a specific agent is importnat
-
-<!-- The Resource (`uri`) field MUST contain the [URI] of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`], [`ipfs`], or [`magnet`] URI schemes. -->
 
 ### 3.1.3 Command
 
@@ -299,11 +240,15 @@ UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type
 
 If the `input` field is not present, it is implicitly a `unit` represented as empty map.
 
+### 3.1.1 Subject
+
+The OPTIONAL `sub` field is intended for cases where parametrizing a specific agent is importnat
+
+<!-- The Resource (`uri`) field MUST contain the [URI] of the resource being accessed. If the resource being accessed is some static data, it is RECOMMENDED to reference it by the [`data`], [`ipfs`], or [`magnet`] URI schemes. -->
+
 ### 3.1.6 Nonce
 
-If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple invocations are unique. The nonce MUST be left blank for commands that are expected to be idempotent.
-
-FIXME better wording
+If present, the OPTIONAL `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple (non-idempotent) invocations are unique. The nonce MUST be `""` for commands that are idempotent.
 
 ### 3.2.1 Interacting with an HTTP API
 
@@ -411,7 +356,7 @@ FIXME expand to move proofs here
 
 
 
-### 5.1.4 Optional Cause
+### 5.1.4 Cause
 
 [Task]s MAY be invoked as an effect caused by a prior [Invocation]. Such [Invocation]s SHOULD have a `cause` field set to the [Receipt] link of the [Invocation] that caused it. The linked [Receipt] MUST have an `Effect` (the `fx` field) containing invoked [Task] in the `run` field.
 
@@ -665,3 +610,91 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 [eRights]: https:/erights.org
 [promise pipelining]: http://erights.org/elib/distrib/pipeline.html
 [ucanto RPC]: https://github.com/web3-storage/ucanto
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```json
+{
+  iss: "did:example:bob",
+  aud: "did:example:alice",
+  act: "msg/send",
+  nnc: "",
+  arg: {
+    from: "mailto:alice@example.com",
+    to: [
+      "bob@example.com",
+      "carol@example.com"
+    ],
+    subject: "hello",
+    body: "world"
+  }
+  meta: {
+    fuel: 100,
+    disk: "100GB"
+  },
+  prf: [bafy1, bafy2]
+}
+
+
+
+
+
+
+
+``` js
+{
+  iss: "did:example:bob",
+  aud: "did:example:alice", // Origoinally removed these because it's duplicated from prf, but important for e.g. CRDT
+  run: {
+    sub: "did:example:alice", // <- where, IFF the subject is relevant... only really useful for 
+    cmd: "counter/inc",
+    arg: {by: 4}
+  },
+  meta: {},
+  cause: {"/": "bafy...123"},
+  prf: [bafy1, bafy3],
+  exp: 999999 // Doubles as a handy timeout
+}
+```
+
+``` js
+{
+  iss: "did:example:bob",
+  aud: "did:example:alice", // NOTE: can be ANYONE in the delegation chain for proxying if you don't have a direct path?
+  exp: 999999,
+  run: {
+    act: "wasm/run",
+    arg: {
+      mod: "ipfs://...",
+      fun: "add_one",
+      arg: [42]
+    }
+  },
+  prf: [bafy1, bafy3]
+}
+```
+
+
+NOTE TO SELF: keep aud field as optional. i.e. make it salient for ergonomic reasons / push it into the task writer's face. also aud & sub MAY diverge in the future.
