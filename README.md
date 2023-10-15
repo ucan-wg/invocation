@@ -87,6 +87,10 @@ Unlike [UCAN Delegation]s, Invocations are point-to-point. This means that — a
 
 A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible, and a hard required for initiating flow (e.g. signup). These cases typically involve a reference passed out of band (such as a web link). Due to [designation without authorization], knowing the URI of a public resource is often sufficient for interacting with it. In these cases, the Executor MAY accept Invocations without having a "closed-loop" proof chain , but this SHOULD NOT be the default behaviour.
 
+## 1.5 Promise Pipelining
+
+[UCAN Promise] extends UCAN Invocation with [distributed promise pipelines]. Promises are helpful in a wide variety of situations for efficiency and convenience. Implementing [UCAN Promise]s is RECOMMENDED.
+
 # 2 Concepts
 
 ## 2.1 Roles
@@ -145,11 +149,11 @@ flowchart RL
                 direction TB
 
                 Command
-                DelegationProofs["Delegation Proofs"]
+                DelegationProofs[Delegation Proofs]
             end
         end
 
-        Inv1Sig
+        Inv1Sig[Signature]
     end
 
     subgraph Receipt
@@ -162,13 +166,13 @@ flowchart RL
         RecSig[Signature]
     end
 
-    subgraph Invocation2["(Next Invocation)"]
+    subgraph Invocation2["(Next) Invocation"]
         direction RL
 
-        subgraph InvocationPayload2["Invocation Payload"]
+        subgraph InvocationPayload2[Invocation Payload]
             subgraph Task2
                 Command2["Command"]
-                DelegationProofs2["Delegation Proofs"]
+                DelegationProofs2[Delegation Proofs]
             end
 
             Cause
@@ -589,15 +593,15 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 [Simon Worthington]: https://github.com/simonwo
 [UCAN Ability]: https://github.com/ucan-wg/delegation/#23-ability
 [UCAN Delegation]: https://github.com/ucan-wg/delegation/
+[UCAN Promise]: https://github.com/ucan-wg/promise/
 [URI]: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
 [Zeeshan Lakhani]: https://github.com/zeeshanlakhani
 [`data`]: https://en.wikipedia.org/wiki/Data_URI_scheme
 [`ipfs`]: https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls
 [`magnet`]: https://en.wikipedia.org/wiki/Magnet_URI_scheme
 [eRights]: https:/erights.org
-[promise pipelining]: http://erights.org/elib/distrib/pipeline.html
+[promise pipelines]: http://erights.org/elib/distrib/pipeline.html
 [ucanto RPC]: https://github.com/web3-storage/ucanto
-
 
 
 
