@@ -79,15 +79,11 @@ For example, if `alice@example.com` delegates her `web3.storage` storage quota t
 
 By distinguishing invocation from delegation, agents are able to understand the user intention, and handle such messages accordingly. Receipt of an invocation with misaligned principles will fail, but a delegation may be held in e.g. Bob's proxy inbox to be acted on when he comes online or widely distributed across the `web3.storage` infrastructure.
 
-## 1.3 Serialization
-
-Unlike [UCAN Delegation]s, Invocations are point-to-point. This means that — aside from an Instruction ID — the exact format need only be agreed on by the two parties directly communicating. The examples in this document are given as [JWT], but others (such as [`invocation-ipld`]) MAY be used as long as it's accepted by both parties.
-
-## 1.4 Public Resources
+## 1.3 Public Resources
 
 A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible, and a hard required for initiating flow (e.g. signup). These cases typically involve a reference passed out of band (such as a web link). Due to [designation without authorization], knowing the URI of a public resource is often sufficient for interacting with it. In these cases, the Executor MAY accept Invocations without having a "closed-loop" proof chain , but this SHOULD NOT be the default behaviour.
 
-## 1.5 Promise Pipelining
+## 1.4 Promise Pipelining
 
 [UCAN Promise] extends UCAN Invocation with [distributed promise pipelines]. Promises are helpful in a wide variety of situations for efficiency and convenience. Implementing [UCAN Promise]s is RECOMMENDED.
 
