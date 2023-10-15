@@ -203,7 +203,18 @@ flowchart RL
     Ran   --> Invocation
 ```
 
-# 3 Command
+## 2.3 Lifecycle
+
+``` mermaid
+erDiagram
+    Invocation }|--|| Task: requests
+    Invocation ||--|| Receipt: returns
+    Receipt |o--|{ Task: enqueues
+```
+
+# 3 Request
+
+## 3.1 Command
 
 A Command is the smallest unit of work that can be Invoked. It is akin to a function call or actor message.
 
@@ -237,20 +248,20 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
   })
 ```
 
-## 3.1 Fields
+### 3.1.1 Fields
 
-| Name        | Field | Type                | Required | Notes        |
-|-------------|-------|---------------------|----------|--------------|
-| [Subject]   | `sub` | DID                 | No       |              |
-| [Command]   | `cmd` | String              | Yes      |              |
-| [Arguments] | `arg` | Map `{String: Any}` | Yes      |              |
-| [Nonce]     | `nnc` | String              | Yes      | May be empty |
+| Name        | Field | Type                | Required |
+|-------------|-------|---------------------|----------|
+| [Subject]   | `sub` | DID                 | No       |
+| [Command]   | `cmd` | String              | Yes      |
+| [Arguments] | `arg` | Map `{String: Any}` | Yes      |
+| [Nonce]     | `nnc` | String              | Yes      |
 
-### 3.1.3 Command
+#### 3.1.1.1 Command
 
 The Command (`cmd`) field MUST contain a concrete operation that can be sent to the Resource. This field can be thought of as the message or trait being sent to the resource. Note that _unlike_ a [UCAN Ability], which includes heirarchy, an Operation MUST be fully concrete.
 
-### 3.1.4 Arguments
+#### 3.1.1.2 Arguments
 
 The Arguments (`arg`) field, MAY contain any parameters expected by the Resource/Operation pair, which MAY be different between different Resources and Operations, and is thus left to the executor to define the shape of this data. This field MUST be representable as a map or keyword list.
 
@@ -258,18 +269,20 @@ UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type
 
 If the `input` field is not present, it is implicitly a `unit` represented as empty map.
 
-### 3.1.5 Subject
+#### 3.1.1.3 Subject
 
 The OPTIONAL `sub` field is intended for cases where parametrizing a specific agent is important. This is especially critical for two parts of the lifecycle:
 
 1. Specifying a particular `sub` (and thus `aud`) when [enqueuing new Tasks][enqueue] in a Receipt
 2. Indexing Receipts for reverse lookup and memoization
 
-### 3.1.6 Nonce
+#### 3.1.1.4 Nonce
 
 If present, the REQUIRED `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple (non-idempotent) invocations are unique. The nonce SHOULD be `""` for Commands that are idempotent.
 
-### 3.2.1 Interacting with an HTTP API
+### 3.1.2 Exmaples
+
+Interacting with an HTTP API
 
 ```json
 {
@@ -296,7 +309,7 @@ If present, the REQUIRED `nnc` field MUST include a random nonce expressed in AS
 }
 ```
 
-### 3.2.2 Sending Email
+Sending Email:
 
 ```json
 {
@@ -314,9 +327,7 @@ If present, the REQUIRED `nnc` field MUST include a random nonce expressed in AS
 }
 ```
 
-### 3.2.3 Running WebAssembly
-
-In this case, the Wasm module is inlined.
+Running WebAssembly. In this case, the Wasm module is inlined.
 
 ```json
 {
@@ -330,15 +341,13 @@ In this case, the Wasm module is inlined.
 }
 ```
 
-# 4 Task
+## 3.2 Task
 
 As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation]s are not executable until they have been provided provable authority (in form of UCANs in the `prf` field) and an [Authorization] (in the `auth` field) from the [Invoker].
 
 The `auth` field MUST be contain an [Authorization] which signs over the `&Task` in `run`.
 
 Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. A `Receipt` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
-
-## 4.1 Task
 
 Tasks wrap a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits.
 
@@ -349,9 +358,21 @@ Tasks wrap a [Command] with contextual information. This includes expiration tim
 | `prf` | `[&Delegation]`           | Links to any [UCAN Delegation]s that provide the authority to perform the enclosed [Command] | Yes      |
 | `exp` | `Integer | null`[^js-num] | The UTC Unix timestamp at which the Task expires                                             | Yes      |
 
-# 5 Invocation
+## 3.3 Invocation
 
-# 6 Result
+The Invocation attaches the authentication information required to authorize the [Task]. It consists of an InvocationPayload, and a signture envelope.
+
+### 3.3.1 InvocationPayload
+
+### 3.3.2 Invocation (Envelope)
+ 
+| Field | Type | Required | Description |
+|------|-------|--------|-------------|
+| `uci` | `InvocationPayload` | Yes | 
+
+# 4 Response
+
+## 4.1 Result
 
 A Result records the output of the [Task], as well as its success or failure state. A Result MUST be formatted as map with a single `tag` field.
 
@@ -373,9 +394,7 @@ A Result records the output of the [Task], as well as its success or failure sta
 }
 ```
 
-
-
-# 8 Receipt
+# 4.2 Receipt
 
 A `Receipt` is an attestation of the [Result] and requested [Effect]s by a [Task] [Invocation]. A Receipt MUST be signed by the [Executor] or it's delegate. If signed by the delegate, the proof of delegation from the [Executor] to the delegate (the `iss` of the receipt) MUST be provided in `prf`.
 
@@ -385,17 +404,91 @@ Receipts MUST use the same version as the invocation that they contain.
 
 ## 8.1 Receipt
 
-| Field | Type             | Required | Description                                                                        |
-|-------|------------------|----------|------------------------------------------------------------------------------------|
-| `iss` | `DID`            | Yes      | The DID of the Executor                                                            |
-| `prf` | `[&Delegation]`  | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
-| `ran` | `&Invocation`    | Yes      | MUST be a link to the [Invocation] that the Receipt is for                         |
-| `out` | `Result`         | Yes      | MUST contain the value output of the invocation in [Result] format                 |
-| `enq` | `[&Task]`        | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
-| `mta` | `{String : Any}` | Yes      | Additional data about the receipt                                                  |
-| `rec` | `&Receipt`       | No       | Recursive `Signed<Receipt>`s if the Invocation was proxied to another Executor     |
+### 8.1.1 Receipt Payload
 
-## 8.3 DAG-JSON Examples
+| Field | Type               | Required | Description                                                                        |
+|-------|--------------------|----------|------------------------------------------------------------------------------------|
+| `iss` | `DID`              | Yes      | The DID of the Executor                                                            |
+| `ran` | `&Invocation`      | Yes      | MUST be a link to the [Invocation] that the Receipt is for                         |
+| `prf` | `[&Delegation]`    | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
+| `out` | `Result`           | Yes      | MUST contain the value output of the invocation in [Result] format                 |
+| `enq` | `[&Task]`          | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
+| `mta` | `{String : Any}`   | Yes      | Additional data about the receipt                                                  |
+| `rec` | `&Receipt`         | No       | Recursive `Signed<Receipt>`s if the Invocation was proxied to another Executor     |
+| `iat` | `Integer`[^js-num] | No       | The UTC Unix timestand at which the Receipt was issed                              |
+
+A couple of these fields warrant further comment below.
+
+#### 8.1.1.1 Proof
+
+If the Receipt Issuer is not identical to the `aud` field of Invocation referenced in the `ran` field, a [Delegation] proof chain SHOULD be included. If a chain is present, it MUST show that 
+
+``` js
+// Pseudocode
+
+const delegation = {
+  iss: "did:web:example.com",
+  aud: "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
+  can: "crud/update",
+  // ...
+}
+
+const workerDelegation = {
+  iss: "did:web:example.com",
+  aud: "did:web:worker.not-example.net"
+  sub: "did:web:example.com",
+  can: "ucan/execute",
+  // ...
+}
+
+const invocation = {
+  iss: "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
+  aud: "did:web:example.com",
+  prf: [ cid(delegation) ],
+  // ...
+}
+
+const receipt = {
+  iss: "did:web:worker.not-example.net",
+  ran: cid(invocation)
+  prf: [ cid(workerDelegation) ],
+  // ...
+}
+```
+
+For u
+
+#### 8.1.1.2 Enqueue
+
+The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
+
+Enqueued [Task]s describe requests for future work to be performed. The SHOULD come with [Delegation]s
+
+All [Invocation]s in an [Effect] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s. The `fx` block contains two fields: `fork` and `join`.
+
+[Task]s listed in the `fork` field are first-class and only ordered by promises; they otherwise SHOULD be considered independent and equal. As such, atomic guarantees such as failure of one effect implying failure of other effects if left undefined.
+
+The `join` field describes an OPTIONAL "special" [Invocation] which instruct the [Executor] that the [Task] [Invocation] is a continuation of the previous Invocation. This roughly emulates a virtual thread which terminates in an Invocation that produces Effect without a `join` field.
+
+Tasks in the `fork` field MAY be related to the Task in the `join` field if there exists a Promise referencing either Task. If such a promise does not exist, then they SHOULD be treated as entirely separate and MAY be scheduled, deferred, fail, retry, and so on entirely separately.
+
+## 7.1 Schema
+
+```
+# Represents a request to invoke enclosed set of tasks concurrently
+type Effects {
+  fx [&Invocation]
+}
+```
+
+### 8.1.2 Receipt Envelope
+
+| Field | Type              | Required | Description                                                              |
+|-------|-------------------|----------|--------------------------------------------------------------------------|
+| `uci` | `&ReceiptPayload` | Yes      | The CID for the [Receipt Payload]                                        |
+| `sig` | `Signature`       | Yes      | The [Signature] of the `uci` value, by the [Receipt Payload]'s `iss` DID |
+
+### 8.1.3 DAG-JSON Examples
 
 ### 8.3.1 Issued by Executor
 
@@ -478,55 +571,6 @@ Receipts MUST use the same version as the invocation that they contain.
   "sig": { "/": { "bytes": "7aEDQAHWabtCE+QikM3Np94TrA5T8n2yXqy8Uf35hgw0fe5c2Xi1O0h/JgrFmGl2Gsbhfm05zpdQmwfK2f/Sbe00YQE" } }
 }
 ```
-
-
-## 7 Effects
-
-The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
-
-Effects describe requests for future work to be performed. All [Invocation]s in an [Effect] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s. The `fx` block contains two fields: `fork` and `join`.
-
-[Task]s listed in the `fork` field are first-class and only ordered by promises; they otherwise SHOULD be considered independent and equal. As such, atomic guarantees such as failure of one effect implying failure of other effects if left undefined.
-
-The `join` field describes an OPTIONAL "special" [Invocation] which instruct the [Executor] that the [Task] [Invocation] is a continuation of the previous Invocation. This roughly emulates a virtual thread which terminates in an Invocation that produces Effect without a `join` field.
-
-Tasks in the `fork` field MAY be related to the Task in the `join` field if there exists a Promise referencing either Task. If such a promise does not exist, then they SHOULD be treated as entirely separate and MAY be scheduled, deferred, fail, retry, and so on entirely separately.
-
-## 7.1 Schema
-
-```
-# Represents a request to invoke enclosed set of tasks concurrently
-type Effects {
-  fx [&Invocation]
-}
-```
-
-## 7.2 Fields
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # 10 Prior Art
 
@@ -672,3 +716,46 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 
 
 NOTE TO SELF: keep aud field as optional. i.e. make it salient for ergonomic reasons / push it into the task writer's face. also aud & sub MAY diverge in the future.
+
+
+
+
+
+NOTE: can make great use of batrch signatures
+NOTE TO SELF: batch signatures need trees, too?
+
+``` mermaid
+sequenceDiagram
+    actor User
+
+    participant Service
+
+    participant WorkQueue
+    participant Worker1
+    participant Worker2
+
+    autonumber
+
+    Note over Service, Worker2: Service Setup
+        WorkQueue -->> Service: delegate(WorkQueue, queue/push)
+        Service   -->> WorkQueue: delegate(Service, ucan/proxy/sign)
+
+        WorkQueue -->> Worker1: delegate(WorkQueue, queue/pop)
+        WorkQueue -->> Worker1: delegate(Service, ucan/proxy/sign)
+
+        WorkQueue -->> Worker2: delegate(WorkQueue, queue/pop)
+        WorkQueue -->> Worker2: delegate(Service, ucan/proxy/sign)
+
+    Note over User, Service: Delegates to User
+        Service -->> User: delegate(Service, crud/update)
+
+    Note over User, Worker2: Invocation with Proxy Execution
+        User ->> Service: invoke(Service, [crud/update, "foo", 42], prf: [➐])
+        Service -) WorkQueue: invoke(WorkQueue, queue/push, [➑], prf: [➊])
+
+        Note over WorkQueue, Worker2: Work Stealing
+        Worker2 ->>+ WorkQueue: invoke(WorkQueue, queue/pop, prf: [➎])
+        WorkQueue ->>- Worker2: receipt(inv: ➓, out: ➒)
+        Worker2 ->> Worker2: Execute!(➒)
+        Worker2 -) User: receipt(out: ok, inv: ➒, prf: [➏,➋])
+```
