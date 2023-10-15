@@ -14,7 +14,7 @@ type InvocationPayload struct {
 }
 
 type Task struct {
-  run &Command
+  act &Command
   mta {String : Any}
   prf [&Delegation]
   exp optional Integer

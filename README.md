@@ -185,9 +185,16 @@ flowchart RL
 
 ## 3.1 Command
 
-A Command is the smallest unit of work that can be Invoked. It is akin to a function call or actor message.
+A Command is the smallest unit of work that can be Invoked. It is akin to a function call or actor message. It MUST conform to the following struct shape:
 
-The `input` field is free form, and depend on the specific resource and ability being interacted with, and is not described in this specification.
+| Name        | Field | Type                | Required |
+|-------------|-------|---------------------|----------|
+| [Subject]   | `sub` | DID                 | No       |
+| [Command]   | `cmd` | String              | Yes      |
+| [Arguments] | `arg` | Map `{String: Any}` | Yes      |
+| [Nonce]     | `nnc` | String              | Yes      |
+
+The `arg` field MUST be defined by the `cmd` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively.
 
 Using the JavaScript analogy from the introduction, an Instruction is similar to wrapping a call in a closure:
 
@@ -217,20 +224,11 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
   })
 ```
 
-### 3.1.1 Fields
-
-| Name        | Field | Type                | Required |
-|-------------|-------|---------------------|----------|
-| [Subject]   | `sub` | DID                 | No       |
-| [Command]   | `cmd` | String              | Yes      |
-| [Arguments] | `arg` | Map `{String: Any}` | Yes      |
-| [Nonce]     | `nnc` | String              | Yes      |
-
-#### 3.1.1.1 Command
+### 3.1.1 Command
 
 The Command (`cmd`) field MUST contain a concrete operation that can be sent to the Resource. This field can be thought of as the message or trait being sent to the resource. Note that _unlike_ a [UCAN Ability], which includes heirarchy, an Operation MUST be fully concrete.
 
-#### 3.1.1.2 Arguments
+### 3.1.2 Arguments
 
 The Arguments (`arg`) field, MAY contain any parameters expected by the Resource/Operation pair, which MAY be different between different Resources and Operations, and is thus left to the executor to define the shape of this data. This field MUST be representable as a map or keyword list.
 
@@ -238,44 +236,86 @@ UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type
 
 If the `input` field is not present, it is implicitly a `unit` represented as empty map.
 
-#### 3.1.1.3 Subject
+### 3.1.3 Subject
 
 The OPTIONAL `sub` field is intended for cases where parametrizing a specific agent is important. This is especially critical for two parts of the lifecycle:
 
 1. Specifying a particular `sub` (and thus `aud`) when [enqueuing new Tasks][enqueue] in a Receipt
 2. Indexing Receipts for reverse lookup and memoization
 
-#### 3.1.1.4 Nonce
+### 3.1.4 Nonce
 
 If present, the REQUIRED `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple (non-idempotent) invocations are unique. The nonce SHOULD be `""` for Commands that are idempotent.
 
-### 3.1.2 Exmaples
+## 3.2 Task
 
-Interacting with an HTTP API
+As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation]s are not executable until they have been provided provable authority (in form of UCANs in the `prf` field) and an [Authorization] (in the `auth` field) from the [Invoker].
 
-```json
-{
-  // ...
-  run: {
-    "act": "crud/create",
-    "arg": {
-      "uri" "https://example.com/blog/posts",
-      "headers": {
-        "content-type": "application/json"
-      },
-      "payload": {
-        "title": "How UCAN Tasks Changed My Life",
-        "body": "This is the story of how one spec changed everything...",
-        "topics": [
-          "authz",
-          "journal"
-        ],
-        "draft": true
-      }
-    },
-    "nnc": "&NCC-1701-D*"
-  }
-}
+The `auth` field MUST be contain an [Authorization] which signs over the `&Task` in `run`.
+
+Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. A `Receipt` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
+
+Tasks wrap a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits.
+
+| Field | Type                      | Description                                                                                  | Required |
+|-------|---------------------------|----------------------------------------------------------------------------------------------|----------|
+| `run` | `&Command`                | The `run` field MUST contain a link to the [Task] to be run                                  | Yes      |
+| `mta` | `{String : Any}`          | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on               | Yes      |
+| `prf` | `[&Delegation]`           | Links to any [UCAN Delegation]s that provide the authority to perform the enclosed [Command] | Yes      |
+| `exp` | `Integer | null`[^js-num] | The UTC Unix timestamp at which the Task expires                                             | Yes      |
+
+## 3.3 Invocation
+
+The Invocation attaches the authentication information required to authorize the [Task]. It consists of an InvocationPayload, and a signture envelope.
+
+### 3.3.1 InvocationPayload
+
+### 3.3.2 Invocation (Envelope)
+ 
+| Field | Type | Required | Description |
+|------|-------|--------|-------------|
+| `uci` | `InvocationPayload` | Yes | 
+
+## 3.4 Examples
+
+### 3.4.1 Interacting with an HTTP API
+
+```js
+{                                               //                                                      ┐
+  sig: "FIXME",                                 //                                                      │
+  inv: {                                        //                                         ┐            │
+    iss: "did:web:example.com",                 //                                         │            │
+    aud: "did:......FIXME",                     //                                         │            │
+    run: {                                      //                                ┐        │            │
+      act: {                                    // ┐                              │        │            │
+        nnc: "&NCC-1701-D*",                    // │                              │        │            │
+        cmd: "crud/create",                     // │                              │        │            │
+        arg: {                                  // │                              │        │            │
+          uri "https://example.com/blog/posts", // │                              │        │            │
+          headers: {                            // │                              │        │            │
+            content-type: "application/json"    // │                              │        │            │
+          },                                    // ├── Action                     │        │            │
+          payload: {                            // │                              │        │            │
+            title: "UCAN for Fun an Profit",    // │                              │        │            │
+            body: "UCAN is great!",             // │                              ├── Task ├── Payload  ├── Invocation
+            topics: ["authz", "journal"],       // │                              │        │            │
+            draft": true                        // │                              │        │            │
+          }                                     // │                              │        │            │
+        }                                       // │                              │        │            │
+      },                                        // ┘                              │        │            │
+      mta: {                                    //                                │        │            │
+        env: "development",                     //                                │        │            │
+        tags: ["blog", "post", "pr#123"]        //                                │        │            │
+      },                                        //                                │        │            │
+      prf: [                                    //                                │        │            │
+        {"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"}, //  │        │            │
+        {"/": "bafkr4idnrqfouibxdqpvh2lmkhgsbw5yabvjbiaea3fplrb4vxifaphvgy"}, //  │        │            │
+        {"/": "bafkr4ig4o5mwufavfewt4jurycn7g7dby2tcwg5q2ii2y6idnwguoyeruq"}, //  │        │            │
+      ],                                                                      //  │        │            │
+      exp: 1697409438                                                         //  │        │            │
+    }                                                                         //  ┘        │            │
+  }                                                                           //           ┘            │
+}                                                                             //                        ┘
 ```
 
 Sending Email:
@@ -310,34 +350,6 @@ Running WebAssembly. In this case, the Wasm module is inlined.
 }
 ```
 
-## 3.2 Task
-
-As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation]s are not executable until they have been provided provable authority (in form of UCANs in the `prf` field) and an [Authorization] (in the `auth` field) from the [Invoker].
-
-The `auth` field MUST be contain an [Authorization] which signs over the `&Task` in `run`.
-
-Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. A `Receipt` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
-
-Tasks wrap a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits.
-
-| Field | Type                      | Description                                                                                  | Required |
-|-------|---------------------------|----------------------------------------------------------------------------------------------|----------|
-| `run` | `&Command`                | The `run` field MUST contain a link to the [Task] to be run                                  | Yes      |
-| `mta` | `{String : Any}`          | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on               | Yes      |
-| `prf` | `[&Delegation]`           | Links to any [UCAN Delegation]s that provide the authority to perform the enclosed [Command] | Yes      |
-| `exp` | `Integer | null`[^js-num] | The UTC Unix timestamp at which the Task expires                                             | Yes      |
-
-## 3.3 Invocation
-
-The Invocation attaches the authentication information required to authorize the [Task]. It consists of an InvocationPayload, and a signture envelope.
-
-### 3.3.1 InvocationPayload
-
-### 3.3.2 Invocation (Envelope)
- 
-| Field | Type | Required | Description |
-|------|-------|--------|-------------|
-| `uci` | `InvocationPayload` | Yes | 
 
 # 4 Response
 
