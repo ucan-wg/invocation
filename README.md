@@ -282,37 +282,37 @@ The Invocation attaches the authentication information required to authorize the
 
 ```js
 {
-  sig: {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
-  inv: {                                                                      //           ┐
-    iss: "did:plc:ewvi7nxzyoun6zhxrhs64oiz",                                  //           │
-    aud: "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",          //           │
-    run: {                                                                    //  ┐        │
-      act: {                                     // ┐                             │        │
-        nnc: "&NCC-1701-D*",                     // │                             │        │
-        cmd: "crud/create",                      // │                             │        │
-        arg: {                                   // │                             │        │
-          uri: "https://example.com/blog/posts", // │                             │        │
-          headers: {                             // │                             │        │
-            content-type: "application/json"     // │                             │        │
-          },                                     // ├── Action                    │        │
-          payload: {                             // │                             │        │
-            title: "UCAN for Fun an Profit",     // │                             │        │
-            body: "UCAN is great!",              // │                             ├── Task ├── Payload
-            topics: ["authz", "journal"],        // │                             │        │
-            draft": true                         // │                             │        │
-          }                                      // │                             │        │
-        }                                        // │                             │        │
-      },                                         // ┘                             │        │
-      mta: {                                                                  //  │        │
-        env: "development",                                                   //  │        │
-        tags: ["blog", "post", "pr#123"]                                      //  │        │
+  "sig": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
+  "inv": {                                                                    //           ┐
+    "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",                                //           │
+    "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",        //           │
+    "run": {                                                                  //  ┐        │
+      "act": {                                     // ┐                           │        │
+        "nnc": "&NCC-1701-D*",                     // │                           │        │
+        "cmd": "crud/create",                      // │                           │        │
+        "arg": {                                   // │                           │        │
+          "uri": "https://example.com/blog/posts", // │                           │        │
+          "headers": {                             // │                           │        │
+            "content-type": "application/json"     // │                           │        │
+          },                                       // ├── Action                  │        │
+          "payload": {                             // │                           │        │
+            "title": "UCAN for Fun an Profit",     // │                           │        │
+            "body": "UCAN is great!",              // │                           ├── Task ├── Payload
+            "topics": ["authz", "journal"],        // │                           │        │
+            "draft": true                          // │                           │        │
+          }                                        // │                           │        │
+        }                                          // │                           │        │
+      },                                           // ┘                           │        │
+      "mta": {                                                                //  │        │
+        "env": "development",                                                 //  │        │
+        "tags": ["blog", "post", "pr#123"]                                    //  │        │
       },                                                                      //  │        │
-      prf: [                                                                  //  │        │
+      "prf": [                                                                //  │        │
         {"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"}, //  │        │
         {"/": "bafkr4idnrqfouibxdqpvh2lmkhgsbw5yabvjbiaea3fplrb4vxifaphvgy"}, //  │        │
         {"/": "bafkr4ig4o5mwufavfewt4jurycn7g7dby2tcwg5q2ii2y6idnwguoyeruq"}, //  │        │
       ],                                                                      //  │        │
-      exp: 1697409438                                                         //  │        │
+      "exp": 1697409438                                                       //  │        │
     }                                                                         //  ┘        │
   }                                                                           //           ┘
 }
@@ -320,27 +320,36 @@ The Invocation attaches the authentication information required to authorize the
 
 Sending Email:
 
-```json
+```js
 {
-  "act": "msg/send",
-  "arg": {
-    "from" "mailto:akiko@example.com",
-    "to": [
-      "boris@example.com",
-      "carol@example.com"
-    ],
-    "subject": "Coffee",
-    "body": "Hey you two, I'd love to get coffee sometime and talk about UCAN Invocations!"
-  },
-  "nnc": "1234567890"
+  "sig": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
+  "inv": {
+    "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
+    "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
+    "run": {
+      "act": {
+        "nnc": "email-akiko#1234567890"
+        "cmd": "msg/send",
+        "arg": {
+          "from": "mailto:akiko@example.com",
+          "to": [ "boris@example.com", "carol@example.com" ],
+          "subject": "Coffee",
+          "body": "Let get coffee sometime and talk about UCAN Invocations!"
+        }
+      },
+      "mta": {},
+      "prf": [{"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"}],
+      "exp": 1697409438
+    }
+  }
 }
 ```
 
-Running WebAssembly. In this case, the Wasm module is inlined.
+Running an inlined WebAssembly module:
 
-```json
+```js
 {
-  "nnc": "", // FIXME infers idempotence
+  "nnc": "", // NOTE! Deterministic Wasm should always have the same nonce
   "act": "wasm/run",
   "arg": {
     "mod": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
@@ -349,7 +358,6 @@ Running WebAssembly. In this case, the Wasm module is inlined.
   }
 }
 ```
-
 
 # 4 Response
 
@@ -377,18 +385,17 @@ A Result records the output of the [Task], as well as its success or failure sta
 
 # 4.2 Receipt
 
-A `Receipt` is an attestation of the [Result] and requested [Effect]s by a [Task] [Invocation]. A Receipt MUST be signed by the [Executor] or it's delegate. If signed by the delegate, the proof of delegation from the [Executor] to the delegate (the `iss` of the receipt) MUST be provided in `prf`.
+A `Receipt` is an attestation of the [Result] and requested [enqueued Task]s. A Receipt MUST be signed by the [Executor] (including by [Execution Proxy]).
 
 **NB: a Receipt does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
-Receipts MUST use the same version as the invocation that they contain.
+Receipts MUST use the same-or-higher version number as the Invocation that they reference.
 
-## 8.1 Receipt
-
-### 8.1.1 Receipt Payload
+### 8.1 Receipt Payload
 
 | Field | Type               | Required | Description                                                                        |
 |-------|--------------------|----------|------------------------------------------------------------------------------------|
+| `ucr` | `SemVer`           | Yes      | The version of this spec that the Receipt conforms to                              |
 | `iss` | `DID`              | Yes      | The DID of the Executor                                                            |
 | `ran` | `&Invocation`      | Yes      | MUST be a link to the [Invocation] that the Receipt is for                         |
 | `prf` | `[&Delegation]`    | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
@@ -398,9 +405,19 @@ Receipts MUST use the same version as the invocation that they contain.
 | `rec` | `&Receipt`         | No       | Recursive `Signed<Receipt>`s if the Invocation was proxied to another Executor     |
 | `iat` | `Integer`[^js-num] | No       | The UTC Unix timestand at which the Receipt was issed                              |
 
-A couple of these fields warrant further comment below.
+A few of these fields warrant further comment below.
 
-#### 8.1.1.1 Proof
+### 8.1.1 Enqueue
+
+FIXME
+
+The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
+
+Enqueued [Task]s describe requests for future work to be performed. The SHOULD come with [Delegation]s
+
+All [Invocation]s in an [Effect] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s. The `fx` block contains two fields: `fork` and `join`.
+
+### 8.1.1 Proxy Execution Proof
 
 If the Receipt Issuer is not identical to the `aud` field of Invocation referenced in the `ran` field, a [Delegation] proof chain SHOULD be included. If a chain is present, it MUST show that 
 
@@ -437,123 +454,32 @@ const receipt = {
 }
 ```
 
-For u
-
-#### 8.1.1.2 Enqueue
-
-The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
-
-Enqueued [Task]s describe requests for future work to be performed. The SHOULD come with [Delegation]s
-
-All [Invocation]s in an [Effect] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s. The `fx` block contains two fields: `fork` and `join`.
-
-[Task]s listed in the `fork` field are first-class and only ordered by promises; they otherwise SHOULD be considered independent and equal. As such, atomic guarantees such as failure of one effect implying failure of other effects if left undefined.
-
-The `join` field describes an OPTIONAL "special" [Invocation] which instruct the [Executor] that the [Task] [Invocation] is a continuation of the previous Invocation. This roughly emulates a virtual thread which terminates in an Invocation that produces Effect without a `join` field.
-
-Tasks in the `fork` field MAY be related to the Task in the `join` field if there exists a Promise referencing either Task. If such a promise does not exist, then they SHOULD be treated as entirely separate and MAY be scheduled, deferred, fail, retry, and so on entirely separately.
-
-## 7.1 Schema
-
-```
-# Represents a request to invoke enclosed set of tasks concurrently
-type Effects {
-  fx [&Invocation]
-}
-```
-
-### 8.1.2 Receipt Envelope
+## 8.2 Receipt Envelope
 
 | Field | Type              | Required | Description                                                              |
 |-------|-------------------|----------|--------------------------------------------------------------------------|
-| `uci` | `&ReceiptPayload` | Yes      | The CID for the [Receipt Payload]                                        |
+| `ucr` | `&ReceiptPayload` | Yes      | The CID for the [Receipt Payload]                                        |
 | `sig` | `Signature`       | Yes      | The [Signature] of the `uci` value, by the [Receipt Payload]'s `iss` DID |
 
-### 8.1.3 DAG-JSON Examples
-
-### 8.3.1 Issued by Executor
+## 8.3 DAG-JSON Examples
 
 ``` js
 {
-  "ran": {"/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu"}
-  "out": {
-    "ok": {
-      "members": [
-        "bob@example.com",
-        "alice@web.mail"
-      ]
+  "ucr": {
+    "ran": {"/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu"}
+    "out": {
+      "ok": ["bob@example.com", "alice@example.com"]
+    },
+    "mta": {
+      "retry-count": 2,
+      "total-time": [400, "hours"]
     }
   },
-  "mta": {
-    "retries": 2,
-    "time": [
-      400,
-      "hours"
-    ]
-  },
-  "sig": {
-    "/": {
-      "bytes": "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU"
-    }
-  }
+  "sig": {"/": {bytes: "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU"}}
 }
 ```
 
-```json
-{
-  "ran": { "/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu" },
-  "out": {
-    "ok": {
-      "members": [ "bob@example.com", "alice@web.mail" ]
-    }
-  },
-  "meta": {
-    "retries": 2,
-    "time": [ 400, "hours" ]
-  },
-  "sig": { "/": { "bytes": "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU" } }
-}
-```
-
-### 8.3.2 Issued by Delegate
-
-```json
-{
-  "iss": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
-  "prf": [
-    { "/": "bafyreihfgvlol74ugosa5gkzvbsghmq7wiqn4xvgack4uwn4qagrml6p74" },
-    { "/": "SOME OTHER CID FIXME" }
-  ],
-  "ran": { "/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu" },
-  "out": {
-    "ok": {
-      "members": [ "bob@example.com", "alice@web.mail" ]
-    }
-  },
-  "mta": {
-    "retries": 2,
-    "time": [ 400, "hours" ]
-  },
-  "sig": { "/": { "bytes": "7aEDQKxIrga+88HNDd69Ho4Ggz8zkf+GxWC6dAGYua6l85YgiL3NqGxyGAygiSZtWrWUo6SokgOys2wYE7N+novtcwo" } }
-}
-```
-
-### 8.3.3 Receipt with Enqueued Tasks
-
-```json
-{
-  "ran": { "/": "bafyreig3qnao4suz3lchh4joof7fhlobmgxhaal3vw4vtcghtlgtp7u4xy" },
-  "out": { "ok": { "status": 200 } },
-  "fx": [
-      { "/": "bafyreievhy7rnzot7mnzbnqtiajhxx7fyn7y2wkjtuzwtmnflty3767dny" },
-      { "/": "bafyreigmmdzix2vxboojvv6j6h7sgvxnrecdxtglwtqpxw7hybebzlsax4" },
-      { "/": "bafyreif6gfpzgxnii4ys6a4bjenefg737fb5bgam3onrbmhnoa4llk244q" }
-  ],
-  "sig": { "/": { "bytes": "7aEDQAHWabtCE+QikM3Np94TrA5T8n2yXqy8Uf35hgw0fe5c2Xi1O0h/JgrFmGl2Gsbhfm05zpdQmwfK2f/Sbe00YQE" } }
-}
-```
-
-# 10 Prior Art
+# 9 Prior Art
 
 [ucanto RPC] from [DAG House] is a production system that uses UCAN as the basis for an RPC layer.
 
@@ -565,7 +491,7 @@ The [Object Capability Network (OCapN)] protocol extends CapTP with a generalize
 
 [Cap 'n Proto RPC] is an influential RPC framework [based on concepts from CapTP].
 
-# 11 Acknowledgements
+# 10 Acknowledgements
 
 Many thanks to [Mark Miller] for his [pioneering work] on [capability systems].
 
@@ -610,181 +536,3 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 [eRights]: https:/erights.org
 [promise pipelines]: http://erights.org/elib/distrib/pipeline.html
 [ucanto RPC]: https://github.com/web3-storage/ucanto
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```json
-{
-  iss: "did:example:bob",
-  aud: "did:example:alice",
-  act: "msg/send",
-  nnc: "",
-  arg: {
-    from: "mailto:alice@example.com",
-    to: [
-      "bob@example.com",
-      "carol@example.com"
-    ],
-    subject: "hello",
-    body: "world"
-  }
-  meta: {
-    fuel: 100,
-    disk: "100GB"
-  },
-  prf: [bafy1, bafy2]
-}
-
-
-
-
-
-
-
-``` js
-{
-  iss: "did:example:bob",
-  aud: "did:example:alice", // Origoinally removed these because it's duplicated from prf, but important for e.g. CRDT
-  run: {
-    sub: "did:example:alice", // <- where, IFF the subject is relevant... only really useful for 
-    cmd: "counter/inc",
-    arg: {by: 4}
-  },
-  meta: {},
-  cause: {"/": "bafy...123"},
-  prf: [bafy1, bafy3],
-  exp: 999999 // Doubles as a handy timeout
-}
-```
-
-``` js
-{
-  iss: "did:example:bob",
-  aud: "did:example:alice", // NOTE: can be ANYONE in the delegation chain for proxying if you don't have a direct path?
-  exp: 999999,
-  run: {
-    act: "wasm/run",
-    arg: {
-      mod: "ipfs://...",
-      fun: "add_one",
-      arg: [42]
-    }
-  },
-  prf: [bafy1, bafy3]
-}
-```
-
-
-NOTE TO SELF: keep aud field as optional. i.e. make it salient for ergonomic reasons / push it into the task writer's face. also aud & sub MAY diverge in the future.
-
-
-
-
-
-NOTE: can make great use of batrch signatures
-NOTE TO SELF: batch signatures need trees, too?
-
-``` mermaid
-sequenceDiagram
-    actor User
-
-    participant Service
-
-    participant WorkQueue
-    participant Worker1
-    participant Worker2
-
-    autonumber
-
-    Note over Service, Worker2: Service Setup
-        WorkQueue -->> Service: delegate(WorkQueue, queue/push)
-        Service   -->> WorkQueue: delegate(Service, ucan/proxy/sign)
-
-        WorkQueue -->> Worker1: delegate(WorkQueue, queue/pop)
-        WorkQueue -->> Worker1: delegate(Service, ucan/proxy/sign)
-
-        WorkQueue -->> Worker2: delegate(WorkQueue, queue/pop)
-        WorkQueue -->> Worker2: delegate(Service, ucan/proxy/sign)
-
-    Note over User, Service: Delegates to User
-        Service -->> User: delegate(Service, crud/update)
-
-    Note over User, Worker2: Invocation with Proxy Execution
-        User ->> Service: invoke(Service, [crud/update, "foo", 42], prf: [➐])
-        Service -) WorkQueue: invoke(WorkQueue, queue/push, [➑], prf: [➊])
-
-        Note over WorkQueue, Worker2: Work Stealing
-        Worker2 ->>+ WorkQueue: invoke(WorkQueue, queue/pop, prf: [➎])
-        WorkQueue ->>- Worker2: receipt(inv: ➓, out: ➒)
-        Worker2 ->> Worker2: Execute!(➒)
-        Worker2 -) User: receipt(out: ok, inv: ➒, prf: [➏,➋])
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!--
-FOR PROMISE SPEC
-sequenceDiagram
-    participant Alice 💾
-    participant Bob
-    participant Carol 📧
-    participant Dan
-
-    autonumber
-
-    Note over Alice 💾, Dan: Delegations
-        Alice 💾 -->> Bob:      Delegate<Read from Alice's DB>
-        Bob      -->> Carol 📧: Delegate<Read from Alice's DB>
-        Carol 📧 -->> Dan:      Delegate<Read from Alice's DB>
-        Carol 📧 -->> Dan:      Delegate<Send email as Carol>
-
-    Note over Alice 💾, Dan: Single Invocation
-        Dan      ->>  Alice 💾: Read from Alice's DB!
-        Alice 💾 -->> Dan:      Result<➎>
-
-    Note over Alice 💾, Dan: Multiple Invocation Flow
-        Dan      ->>  Alice 💾: Read from Alice's DB!
-        Alice 💾 -->> Dan:      Result<➐>
-        Dan      ->>  Carol 📧: Send email containing Result<➐> as Carol!
-        Carol 📧 ->>  Carol 📧: Send email!
-
-    Note over Alice 💾, Dan: Promise Pipeline
-        Dan      ->>  Alice 💾: Read from Alice's DB!
-        Dan      ->>  Carol 📧: Send email containing Result<⓫> as Carol!
-        Alice 💾 -->> Carol 📧: Result<⓫>
-        Carol 📧 ->>  Carol 📧: Send email containing Result<⓫> as Carol!
--->
