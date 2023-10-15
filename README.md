@@ -79,49 +79,11 @@ For example, if `alice@example.com` delegates her `web3.storage` storage quota t
 
 By distinguishing invocation from delegation, agents are able to understand the user intention, and handle such messages accordingly. Receipt of an invocation with misaligned principles will fail, but a delegation may be held in e.g. Bob's proxy inbox to be acted on when he comes online or widely distributed across the `web3.storage` infrastructure.
 
-## 1.3 Separation of Concerns
-
-Information about the scheduling, order, and pipelining of tasks is orthogonal to the flow of authority. An agent collaborating with the original executor does not need to know that their call is 3 invocations deep; they only need to know that they been asked to perform some task by the latest invoker.
-
-As we shall see in the [discussion of promise pipelining][Pipeline], asking an agent to perform a sequence of tasks before you know the exact parameters requires delegating capabilities for all possible steps in the pipeline. Pulling pipelining detail out of the core UCAN spec serves two functions: it keeps the UCAN spec focused on the flow of authority, and makes salient the level of de facto authority that the executor has (since they can claim any value as having returned for any step).
-
-``` mermaid
-sequenceDiagram
-    participant Alice 💾
-    participant Bob
-    participant Carol 📧
-    participant Dan
-
-    autonumber
-
-    Note over Alice 💾, Dan: Delegations
-        Alice 💾 -->> Bob:      Delegate<Read from Alice's DB>
-        Bob      -->> Carol 📧: Delegate<Read from Alice's DB>
-        Carol 📧 -->> Dan:      Delegate<Read from Alice's DB>
-        Carol 📧 -->> Dan:      Delegate<Send email as Carol>
-
-    Note over Alice 💾, Dan: Single Invocation
-        Dan      ->>  Alice 💾: Read from Alice's DB!
-        Alice 💾 -->> Dan:      Result<➎>
-
-    Note over Alice 💾, Dan: Multiple Invocation Flow
-        Dan      ->>  Alice 💾: Read from Alice's DB!
-        Alice 💾 -->> Dan:      Result<➐>
-        Dan      ->>  Carol 📧: Send email containing Result<➐> as Carol!
-        Carol 📧 ->>  Carol 📧: Send email!
-
-    Note over Alice 💾, Dan: Promise Pipeline
-        Dan      ->>  Alice 💾: Read from Alice's DB!
-        Dan      ->>  Carol 📧: Send email containing Result<⓫> as Carol!
-        Alice 💾 -->> Carol 📧: Result<⓫>
-        Carol 📧 ->>  Carol 📧: Send email containing Result<⓫> as Carol!
-```
-
-## 1.4 Serialization
+## 1.3 Serialization
 
 Unlike [UCAN Delegation]s, Invocations are point-to-point. This means that — aside from an Instruction ID — the exact format need only be agreed on by the two parties directly communicating. The examples in this document are given as [JWT], but others (such as [`invocation-ipld`]) MAY be used as long as it's accepted by both parties.
 
-## 1.5 Public Resources
+## 1.4 Public Resources
 
 A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible, and a hard required for initiating flow (e.g. signup). These cases typically involve a reference passed out of band (such as a web link). Due to [designation without authorization], knowing the URI of a public resource is often sufficient for interacting with it. In these cases, the Executor MAY accept Invocations without having a "closed-loop" proof chain , but this SHOULD NOT be the default behaviour.
 
@@ -766,3 +728,51 @@ sequenceDiagram
         Worker2 ->> Worker2: Execute!(➒)
         Worker2 -) User: receipt(out: ok, inv: ➒, prf: [➏,➋])
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--
+FOR PROMISE SPEC
+sequenceDiagram
+    participant Alice 💾
+    participant Bob
+    participant Carol 📧
+    participant Dan
+
+    autonumber
+
+    Note over Alice 💾, Dan: Delegations
+        Alice 💾 -->> Bob:      Delegate<Read from Alice's DB>
+        Bob      -->> Carol 📧: Delegate<Read from Alice's DB>
+        Carol 📧 -->> Dan:      Delegate<Read from Alice's DB>
+        Carol 📧 -->> Dan:      Delegate<Send email as Carol>
+
+    Note over Alice 💾, Dan: Single Invocation
+        Dan      ->>  Alice 💾: Read from Alice's DB!
+        Alice 💾 -->> Dan:      Result<➎>
+
+    Note over Alice 💾, Dan: Multiple Invocation Flow
+        Dan      ->>  Alice 💾: Read from Alice's DB!
+        Alice 💾 -->> Dan:      Result<➐>
+        Dan      ->>  Carol 📧: Send email containing Result<➐> as Carol!
+        Carol 📧 ->>  Carol 📧: Send email!
+
+    Note over Alice 💾, Dan: Promise Pipeline
+        Dan      ->>  Alice 💾: Read from Alice's DB!
+        Dan      ->>  Carol 📧: Send email containing Result<⓫> as Carol!
+        Alice 💾 -->> Carol 📧: Result<⓫>
+        Carol 📧 ->>  Carol 📧: Send email containing Result<⓫> as Carol!
+-->
