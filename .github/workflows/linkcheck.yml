@@ -17,6 +17,3 @@ jobs:
           check-modified-files-only: "yes"
           base-branch: "main"
           config-file: "./.github/workflows/linkcheck.cfg.json"
-      - uses: DavidAnson/markdownlint-cli2-action@v9
-        with:
-          globs: "README.md"
