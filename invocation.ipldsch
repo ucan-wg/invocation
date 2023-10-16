@@ -1,6 +1,6 @@
 type Invocation struct {
   inv &InvocationPayload
-  sig &Signature
+  sig Signature
 }
 
 type InvocationPayload struct {

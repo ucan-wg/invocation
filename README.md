@@ -305,7 +305,7 @@ The Invocation Payload attaches sender, receiver, and provenanial information to
       "prf": [                                                                //  │        │
         {"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"}, //  │        │
         {"/": "bafkr4idnrqfouibxdqpvh2lmkhgsbw5yabvjbiaea3fplrb4vxifaphvgy"}, //  │        │
-        {"/": "bafkr4ig4o5mwufavfewt4jurycn7g7dby2tcwg5q2ii2y6idnwguoyeruq"}, //  │        │
+        {"/": "bafkr4ig4o5mwufavfewt4jurycn7g7dby2tcwg5q2ii2y6idnwguoyeruq"}  //  │        │
       ],                                                                      //  │        │
       "exp": 1697409438                                                       //  │        │
     })                                                                        //  ┘        │
