@@ -1,8 +1,5 @@
 # UCAN Invocation Specification v1.0.0-rc. 1
 
-FIXME ZL: pls mention that the cmd defines a shape for arg
-FIXME ZL: run field for feed-forward
-
 ## Editors
 
 - [Brooklyn Zelenka], [Fission]
@@ -370,7 +367,36 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
 
 # 4 Response
 
-## 4.1 Result
+## 4.1 Receipt (Envelope)
+
+A `Receipt` is an attestation of the [Result Payload]. A Receipt MUST be signed by the [Executor] (including by [Execution Proxy]).
+
+**NB: a Receipt does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
+
+Receipts MUST use the same-or-higher version number as the [Invocation] that they reference.
+
+| Field | Type              | Required | Description                                                              |
+|-------|-------------------|----------|--------------------------------------------------------------------------|
+| `ucr` | `&ReceiptPayload` | Yes      | The CID for the [Receipt Payload]                                        |
+| `sig` | `Signature`       | Yes      | The [Signature] of the `uci` value, by the [Receipt Payload]'s `iss` DID |
+
+## 4.2 Receipt Payload
+
+| Field | Type                      | Required | Description                                                                        |
+|-------|---------------------------|----------|------------------------------------------------------------------------------------|
+| `ucr` | `SemVer`                  | Yes      | The version of this spec that the Receipt conforms to                              |
+| `iss` | `DID`                     | Yes      | The DID of the Executor                                                            |
+| `ran` | `&Invocation`             | Yes      | MUST be a link to the [Invocation] that the Receipt is for                         |
+| `prf` | `[&Delegation]`           | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
+| `out` | `Result`                  | Yes      | MUST contain the value output of the invocation in [Result] format                 |
+| `enq` | `[&Task]`                 | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
+| `mta` | `{String : Any}`          | Yes      | Additional data about the receipt                                                  |
+| `rec` | `&Receipt`                | No       | Recursive `Receipt`s if the Invocation was proxied to another Executor             |
+| `iat` | `Integer | null`[^js-num] | No       | The UTC Unix timestand at which the Receipt was issed                              |
+
+A few of these fields warrant further comment below.
+
+### 4.2.1 Result
 
 A Result records the output of the [Task], as well as its success or failure state. A Result MUST be formatted as map with a single `tag` field.
 
@@ -392,31 +418,7 @@ A Result records the output of the [Task], as well as its success or failure sta
 }
 ```
 
-# 4.2 Receipt
-
-A `Receipt` is an attestation of the [Result] and requested [enqueued Tasks][enqueue]. A Receipt MUST be signed by the [Executor] (including by [Execution Proxy]).
-
-**NB: a Receipt does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
-
-Receipts MUST use the same-or-higher version number as the Invocation that they reference.
-
-### 4.1.1 Receipt Payload
-
-| Field | Type                      | Required | Description                                                                        |
-|-------|---------------------------|----------|------------------------------------------------------------------------------------|
-| `ucr` | `SemVer`                  | Yes      | The version of this spec that the Receipt conforms to                              |
-| `iss` | `DID`                     | Yes      | The DID of the Executor                                                            |
-| `ran` | `&Invocation`             | Yes      | MUST be a link to the [Invocation] that the Receipt is for                         |
-| `prf` | `[&Delegation]`           | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
-| `out` | `Result`                  | Yes      | MUST contain the value output of the invocation in [Result] format                 |
-| `enq` | `[&Task]`                 | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
-| `mta` | `{String : Any}`          | Yes      | Additional data about the receipt                                                  |
-| `rec` | `&Receipt`                | No       | Recursive `Receipt`s if the Invocation was proxied to another Executor             |
-| `iat` | `Integer | null`[^js-num] | No       | The UTC Unix timestand at which the Receipt was issed                              |
-
-A few of these fields warrant further comment below.
-
-### 4.1.1.1 Enqueue
+### 4.2.2 Enqueue
 
 The result of an [Invocation] MAY include a request for further actions to be performed. This is a process of requesting that the invoker "enqueue" a new Task. This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
 
@@ -424,7 +426,7 @@ Enqueued [Task]s describe requests for future work to be performed. They SHOULD 
 
 All [Tasks]s in an [enqueue] array MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s.
 
-### 4.1.1.2 Proxy Execution
+### 4.2.3 Proxy Execution
 
 If the Receipt Issuer is not identical to the `aud` field of Invocation referenced in the `ran` field, a [Delegation] proof chain SHOULD be included. If a chain is present, it MUST show that such a proxy execution was authorized by the original listed `aud` Agent.
 
@@ -460,13 +462,6 @@ const receipt = {
   // ...
 }
 ```
-
-## 4.2 Receipt (Envelope)
-
-| Field | Type              | Required | Description                                                              |
-|-------|-------------------|----------|--------------------------------------------------------------------------|
-| `ucr` | `&ReceiptPayload` | Yes      | The CID for the [Receipt Payload]                                        |
-| `sig` | `Signature`       | Yes      | The [Signature] of the `uci` value, by the [Receipt Payload]'s `iss` DID |
 
 ## 4.3 DAG-JSON Examples
 
@@ -524,20 +519,20 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 
 [Arguments]: #312-arguments
 [Command]: #311-command
-[Execution Proxy]: #41112-proxy-execution
+[Execution Proxy]: #423-proxy-execution
 [Executor]: #212-executor
 [Invocation Payload]: #331-invocation-payload
 [Invocation Signature]: #331-invocation-envelope
 [Invocation]: #33-invocation
 [Invoker]: #211-invoker
 [Nonce]: #314-nonce
-[Receipt Payload]: #411-receipt-payload
-[Receipt]: #42-receipt
+[Receipt Payload]: #42-receipt-payload
+[Receipt]: #41-receipt-envelope
 [Response]: #4-response
-[Result]: #41-result
+[Result]: #421-result
 [Subject]: #313-subject
 [Task]: #32-task
-[enqueue]: #4111-enqueue
+[enqueue]: #422-enqueue
 [lazy-vs-eager]: #112-lazy-vs-eager-evaluation
 
 <!-- External Links -->
