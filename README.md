@@ -187,12 +187,12 @@ flowchart RL
 
 A Command is the smallest unit of work that can be Invoked. It is akin to a function call or actor message. It MUST conform to the following struct shape:
 
-| Name        | Field | Type                | Required |
-|-------------|-------|---------------------|----------|
-| [Subject]   | `sub` | DID                 | No       |
-| [Command]   | `cmd` | String              | Yes      |
-| [Arguments] | `arg` | Map `{String: Any}` | Yes      |
-| [Nonce]     | `nnc` | String              | Yes      |
+| Name        | Field | Type             | Required |
+|-------------|-------|------------------|----------|
+| [Subject]   | `sub` | `DID`            | No       |
+| [Command]   | `cmd` | `String`         | Yes      |
+| [Arguments] | `arg` | `{String : Any}` | Yes      |
+| [Nonce]     | `nnc` | `String`         | Yes      |
 
 The `arg` field MUST be defined by the `cmd` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively.
 
@@ -200,13 +200,10 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 
 ```json
 {
-  "act": "msg/send",
+  "cmd": "msg/send",
   "arg": {
     "from": "mailto:alice@example.com",
-    "to": [
-      "bob@example.com",
-      "carol@example.com"
-    ],
+    "to": [ "bob@example.com", "carol@example.com" ],
     "subject": "hello",
     "body": "world"
   }
@@ -215,13 +212,12 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 
 ```js
 // Pseudocode
-() =>
-  msg.send({
-    from: "mailto:alice@example.com",
-    to: ["bob@example.com", "carol@example.com"],
-    subject: "hello",
-    body: "world"
-  })
+() => msg.send({
+  from: "mailto:alice@example.com",
+  to: ["bob@example.com", "carol@example.com"],
+  subject: "hello",
+  body: "world"
+})
 ```
 
 ### 3.1.1 Command
@@ -266,15 +262,18 @@ Tasks wrap a [Command] with contextual information. This includes expiration tim
 
 ## 3.3 Invocation
 
-The Invocation attaches the authentication information required to authorize the [Task]. It consists of an InvocationPayload, and a signture envelope.
+The Invocation attaches the authentication information required to authorize the [Task]. It consists of an [Invocation Payload], and a signture envelope.
 
-### 3.3.1 InvocationPayload
+### 3.3.1 Invocation Payload
+
+FIXME
 
 ### 3.3.2 Invocation (Envelope)
  
-| Field | Type | Required | Description |
-|------|-------|--------|-------------|
-| `uci` | `InvocationPayload` | Yes | 
+| Field | Type                 | Required | Description |
+|-------|----------------------|----------|-------------|
+| `uci` | `&InvocationPayload` | Yes      |             |
+| `sig` | `&Signature`         | Yes      |  FIXME           |
 
 ## 3.4 Examples
 
@@ -286,8 +285,8 @@ The Invocation attaches the authentication information required to authorize the
   "inv": {                                                                    //           ┐
     "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",                                //           │
     "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",        //           │
-    "run": {                                                                  //  ┐        │
-      "act": {                                     // ┐                           │        │
+    "run": cid({                                                              //  ┐        │
+      "act": cid({                                 // ┐                           │        │
         "nnc": "&NCC-1701-D*",                     // │                           │        │
         "cmd": "crud/create",                      // │                           │        │
         "arg": {                                   // │                           │        │
@@ -302,7 +301,7 @@ The Invocation attaches the authentication information required to authorize the
             "draft": true                          // │                           │        │
           }                                        // │                           │        │
         }                                          // │                           │        │
-      },                                           // ┘                           │        │
+      }),                                          // ┘                           │        │
       "mta": {                                                                //  │        │
         "env": "development",                                                 //  │        │
         "tags": ["blog", "post", "pr#123"]                                    //  │        │
@@ -313,12 +312,12 @@ The Invocation attaches the authentication information required to authorize the
         {"/": "bafkr4ig4o5mwufavfewt4jurycn7g7dby2tcwg5q2ii2y6idnwguoyeruq"}, //  │        │
       ],                                                                      //  │        │
       "exp": 1697409438                                                       //  │        │
-    }                                                                         //  ┘        │
+    })                                                                        //  ┘        │
   }                                                                           //           ┘
 }
 ```
 
-Sending Email:
+### 3.4.2 Sending Email
 
 ```js
 {
@@ -345,7 +344,7 @@ Sending Email:
 }
 ```
 
-Running an inlined WebAssembly module:
+### 3.4.3 Remote Execution of Inline WebAssembly
 
 ```js
 {
@@ -393,17 +392,17 @@ Receipts MUST use the same-or-higher version number as the Invocation that they 
 
 ### 8.1 Receipt Payload
 
-| Field | Type               | Required | Description                                                                        |
-|-------|--------------------|----------|------------------------------------------------------------------------------------|
-| `ucr` | `SemVer`           | Yes      | The version of this spec that the Receipt conforms to                              |
-| `iss` | `DID`              | Yes      | The DID of the Executor                                                            |
-| `ran` | `&Invocation`      | Yes      | MUST be a link to the [Invocation] that the Receipt is for                         |
-| `prf` | `[&Delegation]`    | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
-| `out` | `Result`           | Yes      | MUST contain the value output of the invocation in [Result] format                 |
-| `enq` | `[&Task]`          | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
-| `mta` | `{String : Any}`   | Yes      | Additional data about the receipt                                                  |
-| `rec` | `&Receipt`         | No       | Recursive `Signed<Receipt>`s if the Invocation was proxied to another Executor     |
-| `iat` | `Integer`[^js-num] | No       | The UTC Unix timestand at which the Receipt was issed                              |
+| Field | Type                      | Required | Description                                                                        |
+|-------|---------------------------|----------|------------------------------------------------------------------------------------|
+| `ucr` | `SemVer`                  | Yes      | The version of this spec that the Receipt conforms to                              |
+| `iss` | `DID`                     | Yes      | The DID of the Executor                                                            |
+| `ran` | `&Invocation`             | Yes      | MUST be a link to the [Invocation] that the Receipt is for                         |
+| `prf` | `[&Delegation]`           | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
+| `out` | `Result`                  | Yes      | MUST contain the value output of the invocation in [Result] format                 |
+| `enq` | `[&Task]`                 | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
+| `mta` | `{String : Any}`          | Yes      | Additional data about the receipt                                                  |
+| `rec` | `&Receipt`                | No       | Recursive `Signed<Receipt>`s if the Invocation was proxied to another Executor     |
+| `iat` | `Integer | null`[^js-num] | No       | The UTC Unix timestand at which the Receipt was issed                              |
 
 A few of these fields warrant further comment below.
 
@@ -507,6 +506,10 @@ Thanks to [Philipp Krüger] for the enthusiastic feedback on the overall design 
 
 Thanks to [Christine Lemmer-Webber] for the many conversations about capability systems and the programming models that they enable.
 
+<!-- Footnotes -->
+
+[^js-num]: JavaScript has a single numeric type ([`Number`][JS Number]) for both integers and floats. This representation is defined as a [IEEE-754] double-precision floating point number, which has a 53-bit significand.
+
 <!-- Internal Links -->
 
 [Arguments]: #312-arguments
@@ -531,6 +534,7 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 [Haskell]: https://en.wikipedia.org/wiki/Haskell
 [IPVM]: https://github.com/ipvm-wg
 [Irakli Gozalishvili]: https://github.com/Gozala
+[JS Number]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number
 [Luke Marsen]: https://github.com/lukemarsden
 [Mark Miller]: https://github.com/erights
 [Philipp Krüger]: https://github.com/matheus23/
@@ -545,5 +549,5 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 [`ipfs`]: https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls
 [`magnet`]: https://en.wikipedia.org/wiki/Magnet_URI_scheme
 [eRights]: https:/erights.org
-[promise pipelines]: http://erights.org/elib/distrib/pipeline.html
+[distributed promise pipelines]: http://erights.org/elib/distrib/pipeline.html
 [ucanto RPC]: https://github.com/web3-storage/ucanto
