@@ -18,13 +18,13 @@ FIXME reverse lookup secion
 
 - [UCAN Delegation]
 
-# 0 Abstract
-
-UCAN Invocation defines a format for expressing the intention to execute delegated UCAN capabilities, and the attested receipts from an execution.
-
 ## Language
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [BCP 14] when, and only when, they appear in all capitals, as shown here.
+
+# 0 Abstract
+
+UCAN Invocation defines a format for expressing the intention to execute delegated UCAN capabilities, and the attested receipts from an execution.
 
 # 1 Introduction
 
@@ -224,7 +224,7 @@ The Command (`cmd`) field MUST contain a concrete operation that can be sent to 
 
 The Arguments (`arg`) field, MAY contain any parameters expected by the Resource/Operation pair, which MAY be different between different Resources and Operations, and is thus left to the executor to define the shape of this data. This field MUST be representable as a map or keyword list.
 
-UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type of `input`s allowed.
+UCAN capabilities provided in proofs MAY impose certain constraint on the type of Arguments allowed.
 
 ### 3.1.3 Subject
 
@@ -241,22 +241,22 @@ If present, the REQUIRED `nnc` field MUST include a random nonce expressed in AS
 
 A Task wraps a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits.
 
-| Field | Type                      | Description                                                                                  | Required |
-|-------|---------------------------|----------------------------------------------------------------------------------------------|----------|
-| `run` | `&Command`                | The `run` field MUST contain a link to the [Task] to be run                                  | Yes      |
-| `mta` | `{String : Any}`          | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on               | Yes      |
-| `prf` | `[&Delegation]`           | Links to any [UCAN Delegation]s that provide the authority to perform the enclosed [Command] | Yes      |
-| `exp` | `Integer | null`[^js-num] | The UTC Unix timestamp at which the Task expires                                             | Yes      |
+| Field | Type                       | Description                                                                                  | Required |
+|-------|----------------------------|----------------------------------------------------------------------------------------------|----------|
+| `run` | `&Command`                 | The `run` field MUST contain a link to the [Task] to be run                                  | Yes      |
+| `mta` | `{String : Any}`           | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on               | Yes      |
+| `prf` | `[&Delegation]`            | Links to any [UCAN Delegation]s that provide the authority to perform the enclosed [Command] | Yes      |
+| `exp` | `Integer \| null`[^js-num] | The UTC Unix timestamp at which the Task expires                                             | Yes      |
 
 The CID of a Task is useful for reverse lookups in [Receipt]-sharing networks to check if someone else has run this Task before, and in [UCAN Promise] to connect Tasks together.
 
 ## 3.3 Invocation
 
-As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation Payloads]s are not executable until they have been 1. signed, and 2. checked that the [Delegation] proofs are correct.
+As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation Payload]s are not executable until they have been signed and [Delegation] proofs validated.
 
 ### 3.3.1 Invocation Payload
 
-The Invocation Payload attaches sender, receiver, and provenanial information to the [Task]
+The Invocation Payload attaches sender, receiver, and provenanial information to the [Task].
  
 | Field | Type       | Required | Description                                               |
 |-------|------------|----------|-----------------------------------------------------------|
@@ -390,13 +390,13 @@ A Result records the output of the [Task], as well as its success or failure sta
 
 # 4.2 Receipt
 
-A `Receipt` is an attestation of the [Result] and requested [enqueued Task]s. A Receipt MUST be signed by the [Executor] (including by [Execution Proxy]).
+A `Receipt` is an attestation of the [Result] and requested [enqueued Tasks][enqueue]. A Receipt MUST be signed by the [Executor] (including by [Execution Proxy]).
 
 **NB: a Receipt does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
 Receipts MUST use the same-or-higher version number as the Invocation that they reference.
 
-### 8.1 Receipt Payload
+### 4.1.1 Receipt Payload
 
 | Field | Type                      | Required | Description                                                                        |
 |-------|---------------------------|----------|------------------------------------------------------------------------------------|
@@ -412,7 +412,7 @@ Receipts MUST use the same-or-higher version number as the Invocation that they 
 
 A few of these fields warrant further comment below.
 
-### 8.1.1 Enqueue
+### 4.1.1.1 Enqueue
 
 FIXME
 
@@ -420,9 +420,9 @@ The result of an [Invocation] MAY include a request for further actions to be pe
 
 Enqueued [Task]s describe requests for future work to be performed. The SHOULD come with [Delegation]s
 
-All [Invocation]s in an [Effect] block MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s. The `fx` block contains two fields: `fork` and `join`.
+All [Tasks]s in an [enqueue] array MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s.
 
-### 8.1.1 Proxy Execution Proof
+### 4.1.1.2 Proxy Execution
 
 If the Receipt Issuer is not identical to the `aud` field of Invocation referenced in the `ran` field, a [Delegation] proof chain SHOULD be included. If a chain is present, it MUST show that 
 
@@ -459,14 +459,14 @@ const receipt = {
 }
 ```
 
-## 8.2 Receipt Envelope
+## 4.2 Receipt Envelope
 
 | Field | Type              | Required | Description                                                              |
 |-------|-------------------|----------|--------------------------------------------------------------------------|
 | `ucr` | `&ReceiptPayload` | Yes      | The CID for the [Receipt Payload]                                        |
 | `sig` | `Signature`       | Yes      | The [Signature] of the `uci` value, by the [Receipt Payload]'s `iss` DID |
 
-## 8.3 DAG-JSON Examples
+## 4.3 DAG-JSON Examples
 
 ``` js
 {
@@ -484,21 +484,21 @@ const receipt = {
 }
 ```
 
-# 9 Prior Art
+# 5 Prior Art
 
 [ucanto RPC] from [DAG House] is a production system that uses UCAN as the basis for an RPC layer.
 
 The [Capability Transport Protocol (CapTP)] is one of the most influential object-capability systems, and forms the basis for much of the rest of the items on this list.
 
-The [Object Capability Network (OCapN)] protocol extends CapTP with a generalized networking layer. It has implementations from the [Spritely Institute] and [Agoric]. At time of writing, it is in the process of being standardized.
+The Object Capability Network ([OCapN]) protocol extends [CapTP] with a generalized networking layer. It has implementations from the [Spritely Institute] and [Agoric]. At time of writing, it is in the process of being standardized.
 
-[Electronic Rights Transfer Protocol (ERTP)] builds on top of CapTP for blockchain & digital asset use cases.
+[Electronic Rights Transfer Protocol (ERTP)] builds on top of [CapTP] concepts for blockchain & digital asset use cases.
 
-[Cap 'n Proto RPC] is an influential RPC framework [based on concepts from CapTP].
+[Cap 'n Proto RPC] is an influential RPC framework based on concepts from [CapTP].
 
-# 10 Acknowledgements
+# 6 Acknowledgements
 
-Many thanks to [Mark Miller] for his [pioneering work] on [capability systems].
+Many thanks to [Mark Miller] for his [trail blazing work][erights] on [capability systems].
 
 Many thanks to [Luke Marsen] and [Simon Worthington] for their feedback on invocation model from their work on [Bacalhau] and [IPVM].
 
@@ -512,40 +512,61 @@ Thanks to [Philipp Krüger] for the enthusiastic feedback on the overall design 
 
 Thanks to [Christine Lemmer-Webber] for the many conversations about capability systems and the programming models that they enable.
 
+Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the general IPLD worldview
+
 <!-- Footnotes -->
 
 [^js-num]: JavaScript has a single numeric type ([`Number`][JS Number]) for both integers and floats. This representation is defined as a [IEEE-754] double-precision floating point number, which has a 53-bit significand.
-
+ 
 <!-- Internal Links -->
 
 [Arguments]: #312-arguments
 [Command]: #311-command
+[Execution Proxy]: #41112-proxy-execution
+[Executor]: #212-executor
+[Invocation Payload]: #331-invocation-payload
+[Invocation Signature]: #331-invocation-envelope
 [Invocation]: #33-invocation
+[Invoker]: #211-invoker
 [Nonce]: #314-nonce
+[Receipt Payload]: #411-receipt-payload
 [Receipt]: #42-receipt
 [Response]: #4-response
 [Result]: #41-result
 [Subject]: #313-subject
 [Task]: #32-task
+[enqueue]: #4111-enqueue
+[lazy-vs-eager]: #112-lazy-vs-eager-evaluation
 
 <!-- External Links -->
 
+[Ability]: https://github.com/ucan-wg/delegation#33-abilities
+[Agoric]: https://agoric.com/
 [BCP 14]: https://www.rfc-editor.org/info/bcp14
 [Bacalhau]: https://www.bacalhau.org/
+[Blaine Cook]: https://github.com/blaine
 [Brooklyn Zelenka]: https://github.com/expede/
+[CapTP]: https://capnproto.org/rpc.html#specification
+[Christine Lemmer-Webber]: https://github.com/cwebber
 [DAG House]: https://dag.house
 [Delegation]: https://github.com/ucan-wg/delegation
 [E-lang Mailing List, 2000 Oct 18]: http://wiki.erights.org/wiki/Capability-based_Active_Invocation_Certificates
+[Electronic Rights Transfer Protocol (ERTP)]: https://docs.agoric.com/guides/ertp/
 [Fission]: https://fission.codes/
 [Haskell]: https://en.wikipedia.org/wiki/Haskell
 [IPVM]: https://github.com/ipvm-wg
 [Irakli Gozalishvili]: https://github.com/Gozala
 [JS Number]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number
 [Luke Marsen]: https://github.com/lukemarsden
+[Marc-Antoine Parent]: https://github.com/maparent
 [Mark Miller]: https://github.com/erights
+[OCapN]: https://github.com/ocapn/
 [Philipp Krüger]: https://github.com/matheus23/
+[Quinn Wilton]: https://github.com/QuinnWilton
 [Robust Composition]: http://www.erights.org/talks/thesis/markm-thesis.pdf
+[Rod Vagg]: https://github.com/rvagg/
 [Simon Worthington]: https://github.com/simonwo
+[Spritely Institute]: https://spritely.institute/news/introducing-a-distributed-debugger-for-goblins-with-time-travel.html
 [UCAN Ability]: https://github.com/ucan-wg/delegation/#23-ability
 [UCAN Delegation]: https://github.com/ucan-wg/delegation/
 [UCAN Promise]: https://github.com/ucan-wg/promise/
@@ -554,6 +575,8 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 [`data`]: https://en.wikipedia.org/wiki/Data_URI_scheme
 [`ipfs`]: https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls
 [`magnet`]: https://en.wikipedia.org/wiki/Magnet_URI_scheme
-[eRights]: https:/erights.org
+[capability systems]: https://en.wikipedia.org/wiki/Capability-based_security
 [distributed promise pipelines]: http://erights.org/elib/distrib/pipeline.html
+[eRights]: https:/erights.org
+[erights]: https://erights.org
 [ucanto RPC]: https://github.com/web3-storage/ucanto
