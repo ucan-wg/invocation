@@ -1,6 +1,6 @@
 type Signature union {
   | inline Bytes
-  | batch  BatchSignature
+  | batch  &BatchSignature
 }
 
 type BatchSignature struct {

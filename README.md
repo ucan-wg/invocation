@@ -1,5 +1,8 @@
 # UCAN Invocation Specification v1.0.0-rc. 1
 
+FIXME ZL: pls mention that the cmd defines a shape for arg
+FIXME ZL: run field for feed-forward
+
 ## Editors
 
 - [Brooklyn Zelenka], [Fission]
@@ -217,11 +220,13 @@ Using the JavaScript analogy from the introduction, an Action is similar to wrap
 
 ### 3.1.1 Command
 
-The Command (`cmd`) field MUST contain a concrete operation that can be sent to the Resource. This field can be thought of as the message or trait being sent to the resource. Note that _unlike_ a UCAN Delegation [Ability], which includes hierarchy, an Operation MUST be fully concrete.
+The Command (`cmd`) field MUST contain a concrete, dispatchable message that can be sent to the Executor. The Command MUST define the shape of the data in the [Arguments].
+
+This field can be thought of as the method, message, or trait being sent to the resource. Note that _unlike_ a UCAN Delegation [Ability], which includes hierarchy, a Command MUST be fully concrete.
 
 ### 3.1.2 Arguments
 
-The Arguments (`arg`) field, MAY contain any parameters expected by the Resource/Operation pair, which MAY be different between different Resources and Operations, and is thus left to the executor to define the shape of this data. This field MUST be representable as a map or keyword list.
+The Arguments (`arg`) field, MAY contain any parameters expected by the Command. The Subject MUST be considered the authority on the shape of this data. This field MUST be representable as a map or keyword list.
 
 UCAN capabilities provided in proofs MAY impose certain constraint on the type of Arguments allowed.
 
@@ -240,18 +245,18 @@ If present, the REQUIRED `nnc` field MUST include a random nonce expressed in AS
 
 A Task wraps a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits.
 
-| Field | Type                       | Description                                                                     | Required |
-|-------|----------------------------|---------------------------------------------------------------------------------|----------|
-| `run` | `&Command`                 | The `run` field MUST contain a link to the [Task] to be run                     | Yes      |
-| `mta` | `{String : Any}`           | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on  | Yes      |
-| `prf` | `[&Delegation]`            | [UCAN Delegation]s that provide the authority to perform the enclosed [Command] | Yes      |
-| `exp` | `Integer \| null`[^js-num] | The UTC Unix timestamp at which the Task expires                                | Yes      |
+| Field | Type                       | Required | Description                                                                    |
+|-------|----------------------------|----------|--------------------------------------------------------------------------------|
+| `act` | `&Command`                 | Yes      | The CID of the [Task] to be run                                                |
+| `mta` | `{String : Any}`           | Yes      | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on |
+| `prf` | `[&Delegation]`            | Yes      | [UCAN Delegation]s that provide the authority to perform the `act` [Action]    |
+| `exp` | `Integer \| null`[^js-num] | Yes      | The UTC Unix timestamp at which the Task expires                               |
 
 The CID of a Task is useful for reverse look-ups in [Receipt]-sharing networks to check if someone else has run this Task before, and in [UCAN Promise] to connect Tasks together.
 
 ## 3.3 Invocation
 
-As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation Payload]s are not executable until they have been signed and [Delegation] proofs validated.
+As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is a request to the [Executor] to perform the enclosed [Task]. [Invocation Payload]s are not executable until they have been signed and [Delegation] proofs validated.
 
 ### 3.3.1 Invocation Payload
 
@@ -351,7 +356,7 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
     "run": ({
       "act": {
         "nnc": "", // NOTE: as stated above, idempotent Actions should always have the same nonce
-        "act": "wasm/run",
+        "cmd": "wasm/run",
         "arg": {
           "mod": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
           "fun": "add_one",
@@ -406,7 +411,7 @@ Receipts MUST use the same-or-higher version number as the Invocation that they 
 | `out` | `Result`                  | Yes      | MUST contain the value output of the invocation in [Result] format                 |
 | `enq` | `[&Task]`                 | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
 | `mta` | `{String : Any}`          | Yes      | Additional data about the receipt                                                  |
-| `rec` | `&Receipt`                | No       | Recursive `Signed<Receipt>`s if the Invocation was proxied to another Executor     |
+| `rec` | `&Receipt`                | No       | Recursive `Receipt`s if the Invocation was proxied to another Executor             |
 | `iat` | `Integer | null`[^js-num] | No       | The UTC Unix timestand at which the Receipt was issed                              |
 
 A few of these fields warrant further comment below.
@@ -456,7 +461,7 @@ const receipt = {
 }
 ```
 
-## 4.2 Receipt Envelope
+## 4.2 Receipt (Envelope)
 
 | Field | Type              | Required | Description                                                              |
 |-------|-------------------|----------|--------------------------------------------------------------------------|
