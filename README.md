@@ -77,7 +77,7 @@ By distinguishing invocation from delegation, agents are able to understand the 
 
 ## 1.3 Public Resources
 
-A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible, and a hard required for initiating flow (e.g. signup). These cases typically involve a reference passed out of band (such as a web link). Due to [designation without authorization], knowing the URI of a public resource is often sufficient for interacting with it. In these cases, the Executor MAY accept Invocations without having a "closed-loop" proof chain , but this SHOULD NOT be the default behaviour.
+A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible, and a hard required for initiating flow (e.g. sign up). These cases typically involve a reference passed out of band (such as a web link). Due to [designation without authorization], knowing the URI of a public resource is often sufficient for interacting with it. In these cases, the Executor MAY accept Invocations without having a "closed-loop" proof chain , but this SHOULD NOT be the default behavior.
 
 ## 1.4 Promise Pipelining
 
@@ -104,11 +104,11 @@ The invoker MUST be the UCAN delegator. Their DID MUST be authenticated in the `
 
 The executor is directed to perform some task described in the UCAN by the invoker.
 
-## 2.2 Lifecycle
+## 2.2 Life Cycle
 
 At a very high level:
 
-- A [Task] absractly requests some action
+- A [Task] abstractly requests some action
 - An [Invocation] attaches proven ([delegated][Delegation]) authority to a [Task]
 - A [Receipt] MAY request that the Invoker enqueue more [Task]s
 
@@ -217,7 +217,7 @@ Using the JavaScript analogy from the introduction, an Action is similar to wrap
 
 ### 3.1.1 Command
 
-The Command (`cmd`) field MUST contain a concrete operation that can be sent to the Resource. This field can be thought of as the message or trait being sent to the resource. Note that _unlike_ a UCAN Delegation [Ability], which includes heirarchy, an Operation MUST be fully concrete.
+The Command (`cmd`) field MUST contain a concrete operation that can be sent to the Resource. This field can be thought of as the message or trait being sent to the resource. Note that _unlike_ a UCAN Delegation [Ability], which includes hierarchy, an Operation MUST be fully concrete.
 
 ### 3.1.2 Arguments
 
@@ -227,14 +227,14 @@ UCAN capabilities provided in proofs MAY impose certain constraint on the type o
 
 ### 3.1.3 Subject
 
-The OPTIONAL `sub` field is intended for cases where parametrizing a specific agent is important. This is especially critical for two parts of the lifecycle:
+The OPTIONAL `sub` field is intended for cases where parameterizing a specific agent is important. This is especially critical for two parts of the life cycle:
 
 1. Specifying a particular `sub` (and thus `aud`) when [enqueuing new Tasks][enqueue] in a Receipt
 2. Indexing Receipts for reverse lookup and memoization
 
 ### 3.1.4 Nonce
 
-If present, the REQUIRED `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple (non-idempotent) invocations are unique. The nonce SHOULD be `""` for Commands that are idempotent (such as determinstic Wasm modules or standards-abiding HTTP PUT requests).
+If present, the REQUIRED `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple (non-idempotent) invocations are unique. The nonce SHOULD be `""` for Commands that are idempotent (such as deterministic Wasm modules or standards-abiding HTTP PUT requests).
 
 ## 3.2 Task
 
@@ -255,7 +255,7 @@ As [noted in the introduction][lazy-vs-eager], there is a difference between a r
 
 ### 3.3.1 Invocation Payload
 
-The Invocation Payload attaches sender, receiver, and provenanial information to the [Task].
+The Invocation Payload attaches sender, receiver, and provenance to the [Task].
  
 | Field | Type       | Required | Description                                               |
 |-------|------------|----------|-----------------------------------------------------------|
