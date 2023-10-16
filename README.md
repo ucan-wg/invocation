@@ -1,8 +1,5 @@
 # UCAN Invocation Specification v1.0.0-rc. 1
 
-FIXME explain in FAQ why we don't need `join` (i.e. use promises, since the model is inverted)
-FIXME reverse lookup secion
-
 ## Editors
 
 - [Brooklyn Zelenka], [Fission]
@@ -16,6 +13,8 @@ FIXME reverse lookup secion
 
 ## Depends On
 
+- [DAG-CBOR]
+- [DID]
 - [UCAN Delegation]
 
 ## Language
@@ -549,6 +548,8 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [CapTP]: https://capnproto.org/rpc.html#specification
 [Christine Lemmer-Webber]: https://github.com/cwebber
 [DAG House]: https://dag.house
+[DAG-CBOR]: https://ipld.io/specs/codecs/dag-cbor/spec/
+[DID]: https://www.w3.org/TR/did-core/
 [Delegation]: https://github.com/ucan-wg/delegation
 [E-lang Mailing List, 2000 Oct 18]: http://wiki.erights.org/wiki/Capability-based_Active_Invocation_Certificates
 [Electronic Rights Transfer Protocol (ERTP)]: https://docs.agoric.com/guides/ertp/
