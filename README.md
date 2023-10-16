@@ -31,7 +31,7 @@ UCAN Invocation defines a format for expressing the intention to execute delegat
 >
 > — Anonymous
 
-> When authorizaton is communicated without such context, it's like receiving a key in the mail with no hint about what to do with it [...] After an object receives this message, she can invoke arg if she chooses, but why would she ever choose to do so?
+> When authorization is communicated without such context, it's like receiving a key in the mail with no hint about what to do with it [...] After an object receives this message, she can invoke arg if she chooses, but why would she ever choose to do so?
 >
 > Mark Miller, [E-lang Mailing List, 2000 Oct 18]
 
@@ -247,7 +247,7 @@ A Task wraps a [Command] with contextual information. This includes expiration t
 | `prf` | `[&Delegation]`            | Links to any [UCAN Delegation]s that provide the authority to perform the enclosed [Command] | Yes      |
 | `exp` | `Integer \| null`[^js-num] | The UTC Unix timestamp at which the Task expires                                             | Yes      |
 
-The CID of a Task is useful for reverse lookups in [Receipt]-sharing networks to check if someone else has run this Task before, and in [UCAN Promise] to connect Tasks together.
+The CID of a Task is useful for reverse look-ups in [Receipt]-sharing networks to check if someone else has run this Task before, and in [UCAN Promise] to connect Tasks together.
 
 ## 3.3 Invocation
 

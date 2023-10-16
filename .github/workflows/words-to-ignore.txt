@@ -11,7 +11,7 @@ Cap'n
 CapTP
 DAG-CBOR
 DAG-JSON
-E-Lang
+E-lang
 ERTP
 Enum
 Gozalishvili
@@ -53,7 +53,7 @@ WebAssembly
 Worthington
 Zeeshan
 Zelenka
-args
+arg
 atomicity
 auth
 backend
@@ -77,6 +77,7 @@ memoization
 multiformat
 outmost
 parallelize
+parameterizing
 pipelined
 pipelining
 pre-vacation
