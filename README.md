@@ -1,8 +1,5 @@
 # UCAN Invocation Specification v1.0.0-rc. 1
 
-FIXME show proxy invocation
-FIXME show delegated execution (work stealing) example
-FIXME move pipelines, await, etc to own spec
 FIXME explain in FAQ why we don't need `join` (i.e. use promises, since the model is inverted)
 FIXME reverse lookup secion
 
@@ -108,14 +105,12 @@ The invoker MUST be the UCAN delegator. Their DID MUST be authenticated in the `
 
 The executor is directed to perform some task described in the UCAN by the invoker.
 
-The executor MUST be the UCAN delegate. Their DID MUST be set the in `aud` field of the contained UCAN.
-
 ## 2.2 Lifecycle
 
 At a very high level:
 
 - A [Task] absractly requests some action
-- An [Invocation] attaches proven ([Delegation]) authority to a [Task]
+- An [Invocation] attaches proven ([delegated][Delegation]) authority to a [Task]
 - A [Receipt] MAY request that the Invoker enqueue more [Task]s
 
 ``` mermaid
@@ -183,7 +178,7 @@ flowchart RL
 
 # 3 Request
 
-## 3.1 Command
+## 3.1 Action
 
 A Command is the smallest unit of work that can be Invoked. It is akin to a function call or actor message. It MUST conform to the following struct shape:
 
@@ -196,9 +191,10 @@ A Command is the smallest unit of work that can be Invoked. It is akin to a func
 
 The `arg` field MUST be defined by the `cmd` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively.
 
-Using the JavaScript analogy from the introduction, an Instruction is similar to wrapping a call in a closure:
+Using the JavaScript analogy from the introduction, an Action is similar to wrapping a call in a closure:
 
-```json
+```js
+// Command
 {
   "cmd": "msg/send",
   "arg": {
@@ -211,7 +207,7 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 ```
 
 ```js
-// Pseudocode
+// Pseudocode JS Analogy
 () => msg.send({
   from: "mailto:alice@example.com",
   to: ["bob@example.com", "carol@example.com"],
@@ -222,15 +218,13 @@ Using the JavaScript analogy from the introduction, an Instruction is similar to
 
 ### 3.1.1 Command
 
-The Command (`cmd`) field MUST contain a concrete operation that can be sent to the Resource. This field can be thought of as the message or trait being sent to the resource. Note that _unlike_ a [UCAN Ability], which includes heirarchy, an Operation MUST be fully concrete.
+The Command (`cmd`) field MUST contain a concrete operation that can be sent to the Resource. This field can be thought of as the message or trait being sent to the resource. Note that _unlike_ a UCAN Delegation [Ability], which includes heirarchy, an Operation MUST be fully concrete.
 
 ### 3.1.2 Arguments
 
 The Arguments (`arg`) field, MAY contain any parameters expected by the Resource/Operation pair, which MAY be different between different Resources and Operations, and is thus left to the executor to define the shape of this data. This field MUST be representable as a map or keyword list.
 
 UCAN capabilities provided in [Proofs] MAY impose certain constraint on the type of `input`s allowed.
-
-If the `input` field is not present, it is implicitly a `unit` represented as empty map.
 
 ### 3.1.3 Subject
 
@@ -241,17 +235,11 @@ The OPTIONAL `sub` field is intended for cases where parametrizing a specific ag
 
 ### 3.1.4 Nonce
 
-If present, the REQUIRED `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple (non-idempotent) invocations are unique. The nonce SHOULD be `""` for Commands that are idempotent.
+If present, the REQUIRED `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple (non-idempotent) invocations are unique. The nonce SHOULD be `""` for Commands that are idempotent (such as determinstic Wasm modules or standards-abiding HTTP PUT requests).
 
 ## 3.2 Task
 
-As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation]s are not executable until they have been provided provable authority (in form of UCANs in the `prf` field) and an [Authorization] (in the `auth` field) from the [Invoker].
-
-The `auth` field MUST be contain an [Authorization] which signs over the `&Task` in `run`.
-
-Concretely, this means that the `&Task` MUST be present in the associated `auth`'s `scope` field. A `Receipt` where the associated [Authorization] does not include the [Task] in the `scope` MUST be considered invalid.
-
-Tasks wrap a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits.
+A Task wraps a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits.
 
 | Field | Type                      | Description                                                                                  | Required |
 |-------|---------------------------|----------------------------------------------------------------------------------------------|----------|
@@ -260,20 +248,29 @@ Tasks wrap a [Command] with contextual information. This includes expiration tim
 | `prf` | `[&Delegation]`           | Links to any [UCAN Delegation]s that provide the authority to perform the enclosed [Command] | Yes      |
 | `exp` | `Integer | null`[^js-num] | The UTC Unix timestamp at which the Task expires                                             | Yes      |
 
+The CID of a Task is useful for reverse lookups in [Receipt]-sharing networks to check if someone else has run this Task before, and in [UCAN Promise] to connect Tasks together.
+
 ## 3.3 Invocation
 
-The Invocation attaches the authentication information required to authorize the [Task]. It consists of an [Invocation Payload], and a signture envelope.
+As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is an instruction to the [Executor] to perform enclosed [Task]. [Invocation Payloads]s are not executable until they have been 1. signed, and 2. checked that the [Delegation] proofs are correct.
 
 ### 3.3.1 Invocation Payload
 
-FIXME
+The Invocation Payload attaches sender, receiver, and provenanial information to the [Task]
+ 
+| Field | Type       | Required | Description                                               |
+|-------|------------|----------|-----------------------------------------------------------|
+| `iss` | `DID`      | Yes      | The DID of the [Invoker]                                  |
+| `aud` | `DID`      | Yes      | The DID of the intended [Executor]                        |
+| `run` | `&Task`    | Yes      | The enclosed [Task]'s CID                                 |
+| `cau` | `&Receipt` | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task] |
 
 ### 3.3.2 Invocation (Envelope)
  
-| Field | Type                 | Required | Description |
-|-------|----------------------|----------|-------------|
-| `uci` | `&InvocationPayload` | Yes      |             |
-| `sig` | `&Signature`         | Yes      |  FIXME           |
+| Field | Type                 | Required | Description                                              |
+|-------|----------------------|----------|----------------------------------------------------------|
+| `uci` | `&InvocationPayload` | Yes      | The CID of the [Invocation Payload]                      |
+| `sig` | `&Signature`         | Yes      | A signature by the Payload's `iss` over the CID in `uci` |
 
 ## 3.4 Examples
 
@@ -344,16 +341,25 @@ FIXME
 }
 ```
 
-### 3.4.3 Remote Execution of Inline WebAssembly
+### 3.4.3 Inline WebAssembly
 
 ```js
 {
-  "nnc": "", // NOTE! Deterministic Wasm should always have the same nonce
-  "act": "wasm/run",
-  "arg": {
-    "mod": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
-    "fun": "add_one",
-    "params": [42]
+  "sig": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
+  "inv": {
+    "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
+    "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
+    "run": {
+      "act": {
+        "nnc": "", // NOTE: as stated above, idempotent Actions should always have the same nonce
+        "act": "wasm/run",
+        "arg": {
+          "mod": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+          "fun": "add_one",
+          "params": [42]
+        }
+      }
+    }
   }
 }
 ```
