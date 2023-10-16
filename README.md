@@ -495,7 +495,7 @@ The Object Capability Network ([OCapN]) protocol extends [CapTP] with a generali
 
 # 6 Acknowledgements
 
-Many thanks to [Mark Miller] for his [trail blazing work][erights] on [capability systems].
+Many thanks to [Mark Miller] for his [trail blazing work][eRights] on [capability systems].
 
 Many thanks to [Luke Marsen] and [Simon Worthington] for their feedback on invocation model from their work on [Bacalhau] and [IPVM].
 
@@ -576,6 +576,5 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [`magnet`]: https://en.wikipedia.org/wiki/Magnet_URI_scheme
 [capability systems]: https://en.wikipedia.org/wiki/Capability-based_security
 [distributed promise pipelines]: http://erights.org/elib/distrib/pipeline.html
-[eRights]: https:/erights.org
-[erights]: https://erights.org
+[eRights]: https://erights.org
 [ucanto RPC]: https://github.com/web3-storage/ucanto
