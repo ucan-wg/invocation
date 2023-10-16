@@ -318,10 +318,10 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
 ```js
 {
   "sig": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
-  "inv": {
+  "inv": cid({
     "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
     "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
-    "run": {
+    "run": cid({
       "act": {
         "nnc": "email-akiko#1234567890"
         "cmd": "msg/send",
@@ -331,12 +331,12 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
           "subject": "Coffee",
           "body": "Let get coffee sometime and talk about UCAN Invocations!"
         }
-      },
+      }),
       "mta": {},
       "prf": [{"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"}],
       "exp": 1697409438
     }
-  }
+  })
 }
 ```
 
@@ -345,10 +345,10 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
 ```js
 {
   "sig": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
-  "inv": {
+  "inv": cid({
     "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
     "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
-    "run": {
+    "run": ({
       "act": {
         "nnc": "", // NOTE: as stated above, idempotent Actions should always have the same nonce
         "act": "wasm/run",
@@ -358,8 +358,8 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
           "params": [42]
         }
       }
-    }
-  }
+    })
+  })
 }
 ```
 
