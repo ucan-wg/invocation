@@ -240,12 +240,12 @@ If present, the REQUIRED `nnc` field MUST include a random nonce expressed in AS
 
 A Task wraps a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits.
 
-| Field | Type                       | Description                                                                                  | Required |
-|-------|----------------------------|----------------------------------------------------------------------------------------------|----------|
-| `run` | `&Command`                 | The `run` field MUST contain a link to the [Task] to be run                                  | Yes      |
-| `mta` | `{String : Any}`           | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on               | Yes      |
-| `prf` | `[&Delegation]`            | Links to any [UCAN Delegation]s that provide the authority to perform the enclosed [Command] | Yes      |
-| `exp` | `Integer \| null`[^js-num] | The UTC Unix timestamp at which the Task expires                                             | Yes      |
+| Field | Type                       | Description                                                                     | Required |
+|-------|----------------------------|---------------------------------------------------------------------------------|----------|
+| `run` | `&Command`                 | The `run` field MUST contain a link to the [Task] to be run                     | Yes      |
+| `mta` | `{String : Any}`           | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on  | Yes      |
+| `prf` | `[&Delegation]`            | [UCAN Delegation]s that provide the authority to perform the enclosed [Command] | Yes      |
+| `exp` | `Integer \| null`[^js-num] | The UTC Unix timestamp at which the Task expires                                | Yes      |
 
 The CID of a Task is useful for reverse look-ups in [Receipt]-sharing networks to check if someone else has run this Task before, and in [UCAN Promise] to connect Tasks together.
 
