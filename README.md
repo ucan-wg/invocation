@@ -413,17 +413,15 @@ A few of these fields warrant further comment below.
 
 ### 4.1.1.1 Enqueue
 
-FIXME
+The result of an [Invocation] MAY include a request for further actions to be performed. This is a process of requesting that the invoker "enqueue" a new Task. This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
 
-The result of an [Invocation] MAY include a request for further actions to be performed via "effects". This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
-
-Enqueued [Task]s describe requests for future work to be performed. The SHOULD come with [Delegation]s
+Enqueued [Task]s describe requests for future work to be performed. They SHOULD come with [Delegation]s, but MAY be a simple request back to the Invoker.
 
 All [Tasks]s in an [enqueue] array MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s.
 
 ### 4.1.1.2 Proxy Execution
 
-If the Receipt Issuer is not identical to the `aud` field of Invocation referenced in the `ran` field, a [Delegation] proof chain SHOULD be included. If a chain is present, it MUST show that 
+If the Receipt Issuer is not identical to the `aud` field of Invocation referenced in the `ran` field, a [Delegation] proof chain SHOULD be included. If a chain is present, it MUST show that such a proxy execution was authorized by the original listed `aud` Agent.
 
 ``` js
 // Pseudocode
