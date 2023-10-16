@@ -382,17 +382,19 @@ Receipts MUST use the same-or-higher version number as the [Invocation] that the
 
 ## 4.2 Receipt Payload
 
-| Field | Type                      | Required | Description                                                                        |
-|-------|---------------------------|----------|------------------------------------------------------------------------------------|
-| `ucr` | `SemVer`                  | Yes      | The version of this spec that the Receipt conforms to                              |
-| `iss` | `DID`                     | Yes      | The DID of the Executor                                                            |
-| `ran` | `&Invocation`             | Yes      | MUST be a link to the [Invocation] that the Receipt is for                         |
-| `prf` | `[&Delegation]`           | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
-| `out` | `Result`                  | Yes      | MUST contain the value output of the invocation in [Result] format                 |
-| `enq` | `[&Task]`                 | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
-| `mta` | `{String : Any}`          | Yes      | Additional data about the receipt                                                  |
-| `rec` | `&Receipt`                | No       | Recursive `Receipt`s if the Invocation was proxied to another Executor             |
-| `iat` | `Integer | null`[^js-num] | No       | The UTC Unix timestand at which the Receipt was issed                              |
+Receipt Payloads MUST conform to the following shape:
+
+| Field | Type               | Required | Description                                                                        |
+|-------|--------------------|----------|------------------------------------------------------------------------------------|
+| `ucr` | `SemVer`           | Yes      | The version of this spec that the Receipt conforms to                              |
+| `iss` | `DID`              | Yes      | The DID of the Executor                                                            |
+| `ran` | `&Invocation`      | Yes      | A link to the [Invocation] that the Receipt is for                                 |
+| `prf` | `[&Delegation]`    | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
+| `out` | `Result`           | Yes      | The value output of the invocation in [Result] format                              |
+| `enq` | `[&Task]`          | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
+| `mta` | `{String : Any}`   | Yes      | Additional data about the receipt                                                  |
+| `rec` | `&Receipt`         | No       | Recursive `Receipt`s if the Invocation was proxied to another Executor             |
+| `iat` | `Integer`[^js-num] | No       | The UTC Unix timestand at which the Receipt was issed                              |
 
 A few of these fields warrant further comment below.
 
