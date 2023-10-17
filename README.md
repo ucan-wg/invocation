@@ -551,7 +551,7 @@ const receipt = {
 }
 ```
 
-## 4.3 DAG-JSON Examples
+## 4.3 Examples
 
 ``` json
 {
