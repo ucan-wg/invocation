@@ -573,7 +573,7 @@ const receipt = {
 
 [ucanto RPC] from [DAG House] is a production system that uses UCAN as the basis for an RPC layer.
 
-The [Capability Transport Protocol (CapTP)] is one of the most influential object-capability systems, and forms the basis for much of the rest of the items on this list.
+The Capability Transport Protocol ([CapTP]) is one of the most influential object-capability systems, and forms the basis for much of the rest of the items on this list.
 
 The Object Capability Network ([OCapN]) protocol extends [CapTP] with a generalized networking layer. It has implementations from the [Spritely Institute] and [Agoric]. At time of writing, it is in the process of being standardized.
 
@@ -633,7 +633,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Blaine Cook]: https://github.com/blaine
 [Brooklyn Zelenka]: https://github.com/expede/
 [Cap 'n Proto RPC]: https://capnproto.org/
-[CapTP]: https://capnproto.org/rpc.html#specification
+[CapTP]: http://erights.org/elib/distrib/captp/index.html
 [Christine Lemmer-Webber]: https://github.com/cwebber
 [DAG House]: https://dag.house
 [DAG-CBOR]: https://ipld.io/specs/codecs/dag-cbor/spec/
