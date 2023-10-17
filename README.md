@@ -512,7 +512,7 @@ The result of an [Invocation] MAY include a request for further actions to be pe
 
 Enqueued [Task]s describe requests for future work to be performed. They SHOULD come with [Delegation]s, but MAY be a simple request back to the Invoker.
 
-All [Tasks]s in an [enqueue] array MUST be treated as concurrent, unless explicit data dependencies between them exist via promise [Pipeline]s.
+All [Task]s in an [enqueue] array MUST be treated as concurrent, unless explicit data dependencies between them exist via [UCAN Promise]s.
 
 ### 4.2.3 Proxy Execution
 
@@ -591,7 +591,7 @@ Thanks to [Marc-Antoine Parent] for his discussions of the distinction between d
 
 Many thanks to [Quinn Wilton] for her discussion of speech acts, the dangers of signing canonicalized data, and ergonomics.
 
-Thanks to [Blaine Cook] for sharing their experiences with OAuth 1, irreversible design decisions, and advocating for keeping the spec simple-but-evolvable.
+Thanks to [Blaine Cook] for sharing their experiences with [OAuth 1], irreversible design decisions, and advocating for keeping the spec simple-but-evolvable.
 
 Thanks to [Philipp Krüger] for the enthusiastic feedback on the overall design and encoding.
 
@@ -651,6 +651,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Luke Marsen]: https://github.com/lukemarsden
 [Marc-Antoine Parent]: https://github.com/maparent
 [Mark Miller]: https://github.com/erights
+[OAuth 1]: https://oauth.net/1/
 [OCapN]: https://github.com/ocapn/
 [Philipp Krüger]: https://github.com/matheus23/
 [Quinn Wilton]: https://github.com/QuinnWilton
@@ -667,6 +668,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [`ipfs`]: https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls
 [`magnet`]: https://en.wikipedia.org/wiki/Magnet_URI_scheme
 [capability systems]: https://en.wikipedia.org/wiki/Capability-based_security
+[designation without authorization]: https://srl.cs.jhu.edu/pubs/SRL2003-02.pdf
 [distributed promise pipelines]: http://erights.org/elib/distrib/pipeline.html
 [eRights]: https://erights.org
 [ucanto RPC]: https://github.com/web3-storage/ucanto
