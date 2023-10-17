@@ -98,7 +98,7 @@ However, there is clearly a distinction between passing a function and invoking 
 
 ## 1.2 Public Resources
 
-A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible, and a hard required for initiating flow (e.g. sign up). These cases typically involve a reference passed out of band (such as a web link). Due to [designation without authorization], knowing the URI of a public resource is often sufficient for interacting with it. In these cases, the Executor MAY accept Invocations without having a "closed-loop" proof chain , but this SHOULD NOT be the default behavior.
+A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible, and a hard required for initiating flow (e.g. sign up). These cases typically involve a reference passed out of band (such as a web link). Due to [designation without authorization], knowing the URI of a public resource is often sufficient for interacting with it. In these cases, the Executor MAY accept Invocations without having a "closed-loop" proof chain, but this SHOULD NOT be the default behavior.
 
 ## 1.3 Promise Pipelining
 
@@ -111,7 +111,7 @@ A core part of UCAN's design is interacting with the wider, non-UCAN world. Many
 Task adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
 
 | UCAN Field | Delegation                             | Invocation                      |
-| ---------- | -------------------------------------- | ------------------------------- |
+|------------|----------------------------------------|---------------------------------|
 | `iss`      | Delegator: transfer authority (active) | Invoker: request task (active)  |
 | `aud`      | Delegate: gain authority (passive)     | Executor: perform task (active) |
 
@@ -272,11 +272,77 @@ A Task wraps a [Command] with contextual information. This includes expiration t
 
 The CID of a Task is useful for reverse look-ups in [Receipt]-sharing networks to check if someone else has run this Task before, and in [UCAN Promise] to connect Tasks together.
 
+### 3.2.1 Proof Chains
+
+A Task MUST include the entire [UCAN Delegation] proof chain in the `prf` field. The chain MUST form a direct line of authority, starting with the delegation with an `aud` that matches the Invoker, and ending with a delegation where the `iss` matches the `sub`. The `sub` throughout MUST match the `aud` of the Invocation.
+
+``` mermaid
+flowchart RL
+    invoker((&nbsp&nbsp&nbsp&nbspDan&nbsp&nbsp&nbsp&nbsp))
+    subject((&nbsp&nbsp&nbsp&nbspAlice&nbsp&nbsp&nbsp&nbsp))
+
+    subject -- controls --> resource[(Storage)]
+    rootCap -- references --> resource
+
+    subgraph Delegations
+        subgraph root [Root UCAN]
+            subgraph rooting [Root Issuer]
+                rootIss(iss: Alice)
+                rootSub(sub: Alice)
+            end
+
+            rootCap("cap: (Storage, crud/*)")
+            rootAud(aud: Bob)
+        end
+
+        subgraph del1 [Delegated UCAN]
+            del1Iss(iss: Bob) --> rootAud
+            del1Sub(sub: Alice)
+            del1Aud(aud: Carol)
+            del1Cap("cap: (Storage, crud/*)") --> rootCap
+
+
+            del1Sub --> rootSub
+        end
+
+        subgraph del2 [Delegated UCAN]
+            del2Iss(iss: Carol) --> del1Aud
+            del2Sub(sub: Alice)
+            del2Aud(aud: Dan)
+            del2Cap("cap: (Storage, crud/*)") --> del1Cap
+
+            del2Sub --> del1Sub
+        end
+    end
+
+     subgraph inv [Invocation]
+        invIss(iss: Dan)
+        args("args: [Storage, crud/update, (key, value)]")
+        invSub(sub: Alice)
+        prf("proofs")
+    end
+
+    invIss --> del2Aud
+    invoker --> invIss
+    args --> del2Cap
+    invSub --> del2Sub
+    rootIss --> subject
+    rootSub --> subject
+    prf --> Delegations
+```
+
 ## 3.3 Invocation
 
 As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is a request to the [Executor] to perform the enclosed [Task]. [Invocation Payload]s are not executable until they have been signed and [Delegation] proofs validated.
 
-### 3.3.1 Invocation Payload
+### 3.3.1 Invocation (Envelope)
+ 
+| Field | Type                 | Required | Description                                              |
+|-------|----------------------|----------|----------------------------------------------------------|
+| `uci` | `&InvocationPayload` | Yes      | The CID of the [Invocation Payload]                      |
+| `sig` | `&Signature`         | Yes      | A signature by the Payload's `iss` over the CID in `uci` |
+
+### 3.3.2 Invocation Payload
 
 The Invocation Payload attaches sender, receiver, and provenance to the [Task].
  
@@ -286,13 +352,6 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
 | `aud` | `DID`      | Yes      | The DID of the intended [Executor]                        |
 | `run` | `&Task`    | Yes      | The enclosed [Task]'s CID                                 |
 | `cau` | `&Receipt` | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task] |
-
-### 3.3.2 Invocation (Envelope)
- 
-| Field | Type                 | Required | Description                                              |
-|-------|----------------------|----------|----------------------------------------------------------|
-| `uci` | `&InvocationPayload` | Yes      | The CID of the [Invocation Payload]                      |
-| `sig` | `&Signature`         | Yes      | A signature by the Payload's `iss` over the CID in `uci` |
 
 ## 3.4 Examples
 
@@ -602,3 +661,4 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [distributed promise pipelines]: http://erights.org/elib/distrib/pipeline.html
 [eRights]: https://erights.org
 [ucanto RPC]: https://github.com/web3-storage/ucanto
+ 
