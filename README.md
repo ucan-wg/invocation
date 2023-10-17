@@ -47,6 +47,28 @@ Consider the following fictitious scenario:
 
 Akiko is going away for the weekend. Her good friend Boris is going to borrow her car while she's away. They meet at a nearby cafe, and Akiko hands Boris her car keys. Boris now has the capability to drive Akiko's car whenever he wants to. Depending on their plans for the rest of the day, Akiko may find Boris quite rude if he immediately leaves the cafe to go for a drive. On the other hand, if Akiko asks Boris to run some last minute pre-vacation errands for that require a car, she may expect Boris to immediately drive off.
 
+``` mermaid
+sequenceDiagram
+    participant 🚗
+    actor Akiko
+    actor Boris
+
+    autonumber
+
+    Note over 🚗, Akiko: Akiko buys a car
+    🚗 -->> Akiko: Delegate(Drive 🚗)    
+
+    Note over Akiko, Boris: Boris offers to run errands for Akiko
+    Boris -->> Akiko: Delegate(Boris to run errands)
+
+    Note over Akiko, Boris: Akiko give Boris access to her car
+    Akiko -->> Boris: Delegate(Drive 🚗)
+
+    Note over 🚗, Boris: Akiko asks Boris to use her car to run errands
+    Akiko ->> Boris: Invoke!(Boris to run errands, using 🚗)
+    Boris ->> 🚗: Invoke!(Drive 🚗)
+```
+
 ## 1.1.2 Lazy vs Eager Evaluation
 
 In a referentially transparent setting, the description of a task is equivalent to having done so: a function and its results are interchangeable. [Programming languages with call-by-need semantics][Haskell] have shown that this can be an elegant programming model, especially for pure functions. However, _when_ something will run can sometimes be unclear.
