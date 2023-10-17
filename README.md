@@ -356,6 +356,63 @@ flowchart RL
     prf --> Delegations
 ```
 
+### 3.4.1 Proof Paths with `ucan/*`
+
+Beyond [attenuation], [`ucan/*`] MAY be used to connect otherwise disjoint parts of an authorization network. The motivation is to express the intention of automatically redelegtaing (or "forwarding") authorioty to another agent if you are offline, while retaining the ability to [revoke] that link. The clear use case is linking user devices, but also has applications for PoLA "cold" root/admin keys for servers.
+
+The `ucan/*` ability MAY be used to substitute into any delegation chain. It "forwards" whatever is later in the chain, in effect swapping out the `iss` field. `ucan/*` MUST NOT change the Ability it redelegates. It MAY be scoped to a particular scheme or attach additional caveats.
+
+``` js
+// Anything
+{
+  "sub": "did:web:example.com",
+  "can": "ucan/*",
+  "iff": [],
+  // ...
+}
+```
+
+``` mermaid
+sequenceDiagram
+    actor Alice
+    actor Bob
+    actor Carol
+    actor Dan
+    
+    autonumber
+
+    Note over Alice, Dan: Delegation Setup
+
+    Bob -->> Carol: Delegate(ucan/*)
+    Alice -->> Bob: Delegate(crud/create, dns:example.com)
+    Carol -->> Dan: Delegate(crud/create, dns:example.com)
+
+    Note over Alice, Dan: Invoke
+    Dan ->> Alice: Invoke(crud/create, dns:example.com, txt="hi", proof: [➋,➊,➌])
+
+    Note over Alice, Dan: Delegation path in ➍
+    Alice -->> Bob: Delegate(crud/create, dns:example.com)
+
+    rect rgb(127, 127, 127)
+        Bob -->> Carol: Delegate(ucan/*)
+    end
+    
+    Carol -->> Dan: Delegate(crud/create, dns:example.com)
+```
+
+```js
+// Only DNS TXT records
+{
+  "sub": "did:web:example.com",
+  "can": "ucan/*",
+  "iff": [
+    { "resource": { "scheme": "dns" } },
+    { "rrtype": "TXT" }
+  ],
+  // ...
+}
+```
+
 ## 3.5 Examples
 
 ### 3.5.1 Interacting with an HTTP API
