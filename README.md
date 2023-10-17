@@ -382,22 +382,23 @@ sequenceDiagram
     autonumber
 
     Note over Alice, Dan: Delegation Setup
-
-    Bob -->> Carol: Delegate(ucan/*)
-    Alice -->> Bob: Delegate(crud/create, dns:example.com)
-    Carol -->> Dan: Delegate(crud/create, dns:example.com)
+      Bob -->> Carol: Delegate(ucan/*)
+      Alice -->> Bob: Delegate(crud/create, dns:example.com)
+      Carol -->> Dan: Delegate(crud/create, dns:example.com)
 
     Note over Alice, Dan: Invoke
-    Dan ->> Alice: Invoke(crud/create, dns:example.com, txt="hi", proof: [➋,➊,➌])
+      Dan ->> Alice: Invoke(crud/create, dns:example.com, txt="hi", proof: [➋,➊,➌])
 
     Note over Alice, Dan: Delegation path in ➍
-    Alice -->> Bob: Delegate(crud/create, dns:example.com)
+      autonumber 1 
 
-    rect rgb(127, 127, 127)
-        Bob -->> Carol: Delegate(ucan/*)
-    end
-    
-    Carol -->> Dan: Delegate(crud/create, dns:example.com)
+      Alice -->> Bob: Delegate(crud/create, dns:example.com)
+
+      rect rgb(127, 127, 127)
+          Bob -->> Carol: Delegate(ucan/*)
+      end
+
+      Carol -->> Dan: Delegate(crud/create, dns:example.com)
 ```
 
 ```js
