@@ -276,7 +276,29 @@ A Task wraps a [Command] with contextual information. This includes expiration t
 
 The CID of a Task is useful for reverse look-ups in [Receipt]-sharing networks to check if someone else has run this Task before, and in [UCAN Promise] to connect Tasks together.
 
-### 3.2.1 Proof Chains
+## 3.3 Invocation
+
+As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is a request to the [Executor] to perform the enclosed [Task]. [Invocation Payload]s are not executable until they have been signed and [Delegation] proofs validated.
+
+### 3.3.1 Invocation (Envelope)
+ 
+| Field | Type                 | Required | Description                                              |
+|-------|----------------------|----------|----------------------------------------------------------|
+| `uci` | `&InvocationPayload` | Yes      | The CID of the [Invocation Payload]                      |
+| `sig` | `&Signature`         | Yes      | A signature by the Payload's `iss` over the CID in `uci` |
+
+### 3.3.2 Invocation Payload
+
+The Invocation Payload attaches sender, receiver, and provenance to the [Task].
+ 
+| Field | Type       | Required | Description                                               |
+|-------|------------|----------|-----------------------------------------------------------|
+| `iss` | `DID`      | Yes      | The DID of the [Invoker]                                  |
+| `aud` | `DID`      | Yes      | The DID of the intended [Executor]                        |
+| `run` | `&Task`    | Yes      | The enclosed [Task]'s CID                                 |
+| `cau` | `&Receipt` | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task] |
+
+## 3.4 Proof Chains
 
 A Task MUST include the entire [UCAN Delegation] proof chain in the `prf` field. The chain MUST form a direct line of authority, starting with the delegation with an `aud` that matches the Invoker, and ending with a delegation where the `iss` matches the `sub`. The `sub` throughout MUST match the `aud` of the Invocation.
 
@@ -334,31 +356,9 @@ flowchart RL
     prf --> Delegations
 ```
 
-## 3.3 Invocation
+## 3.5 Examples
 
-As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is a request to the [Executor] to perform the enclosed [Task]. [Invocation Payload]s are not executable until they have been signed and [Delegation] proofs validated.
-
-### 3.3.1 Invocation (Envelope)
- 
-| Field | Type                 | Required | Description                                              |
-|-------|----------------------|----------|----------------------------------------------------------|
-| `uci` | `&InvocationPayload` | Yes      | The CID of the [Invocation Payload]                      |
-| `sig` | `&Signature`         | Yes      | A signature by the Payload's `iss` over the CID in `uci` |
-
-### 3.3.2 Invocation Payload
-
-The Invocation Payload attaches sender, receiver, and provenance to the [Task].
- 
-| Field | Type       | Required | Description                                               |
-|-------|------------|----------|-----------------------------------------------------------|
-| `iss` | `DID`      | Yes      | The DID of the [Invoker]                                  |
-| `aud` | `DID`      | Yes      | The DID of the intended [Executor]                        |
-| `run` | `&Task`    | Yes      | The enclosed [Task]'s CID                                 |
-| `cau` | `&Receipt` | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task] |
-
-## 3.4 Examples
-
-### 3.4.1 Interacting with an HTTP API
+### 3.5.1 Interacting with an HTTP API
 
 ```js
 {
@@ -398,7 +398,7 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
 }
 ```
 
-### 3.4.2 Sending Email
+### 3.5.2 Sending Email
 
 ```js
 {
@@ -425,7 +425,7 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
 }
 ```
 
-### 3.4.3 Inline WebAssembly
+### 3.5.3 Inline WebAssembly
 
 ```js
 {
