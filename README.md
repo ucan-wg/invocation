@@ -102,7 +102,7 @@ A core part of UCAN's design is interacting with the wider, non-UCAN world. Many
 
 ## 1.3 Promise Pipelining
 
-[UCAN Promise] extends UCAN Invocation with [distributed promise pipelines]. Promises are helpful in a wide variety of situations for efficiency and convenience. Implementing [UCAN Promise]s is RECOMMENDED.
+[UCAN Promise] extends UCAN Invocation with [distributed promise pipelines]. Promises are helpful in a wide variety of situations for efficiency and convenience. Implementing UCAN Promises is RECOMMENDED.
 
 # 2 Concepts
 
