@@ -390,14 +390,15 @@ sequenceDiagram
       Dan ->> Alice: Invoke(crud/create, dns:example.com, txt="hi", proof: [➋,➊,➌])
 
     Note over Alice, Dan: Delegation path in ➍
-      autonumber 1 
-
+      autonumber 2
       Alice -->> Bob: Delegate(crud/create, dns:example.com)
 
+      autonumber 1
       rect rgb(127, 127, 127)
           Bob -->> Carol: Delegate(ucan/*)
       end
 
+      autonumber 3
       Carol -->> Dan: Delegate(crud/create, dns:example.com)
 ```
 
