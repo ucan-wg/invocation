@@ -632,6 +632,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Bacalhau]: https://www.bacalhau.org/
 [Blaine Cook]: https://github.com/blaine
 [Brooklyn Zelenka]: https://github.com/expede/
+[Cap 'n Proto RPC]: https://capnproto.org/
 [CapTP]: https://capnproto.org/rpc.html#specification
 [Christine Lemmer-Webber]: https://github.com/cwebber
 [DAG House]: https://dag.house
