@@ -295,7 +295,7 @@ flowchart RL
                 rootSub(sub: Alice)
             end
 
-            rootCap("cap: (Storage, crud/*)")
+            rootCap("(Storage, crud/*)")
             rootAud(aud: Bob)
         end
 
@@ -303,8 +303,7 @@ flowchart RL
             del1Iss(iss: Bob) --> rootAud
             del1Sub(sub: Alice)
             del1Aud(aud: Carol)
-            del1Cap("cap: (Storage, crud/*)") --> rootCap
-
+            del1Cap("(Storage, crud/*)") --> rootCap
 
             del1Sub --> rootSub
         end
@@ -313,7 +312,7 @@ flowchart RL
             del2Iss(iss: Carol) --> del1Aud
             del2Sub(sub: Alice)
             del2Aud(aud: Dan)
-            del2Cap("cap: (Storage, crud/*)") --> del1Cap
+            del2Cap("(Storage, crud/*)") --> del1Cap
 
             del2Sub --> del1Sub
         end
@@ -322,7 +321,7 @@ flowchart RL
      subgraph inv [Invocation]
         invIss(iss: Dan)
         args("args: [Storage, crud/update, (key, value)]")
-        invSub(sub: Alice)
+        invSub(aud: Alice)
         prf("proofs")
     end
 
