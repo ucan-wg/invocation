@@ -390,7 +390,7 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
 
 ## 4.1 Receipt (Envelope)
 
-A `Receipt` is an attestation of the [Result Payload]. A Receipt MUST be signed by the [Executor] (including by [Execution Proxy]).
+A `Receipt` is an attestation of the [Result Payload]. A Receipt MUST be signed by the [Executor] (including by [Proxy Execution]).
 
 **NB: a Receipt does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
@@ -465,7 +465,7 @@ const delegation = {
 
 const workerDelegation = {
   iss: "did:web:example.com",
-  aud: "did:web:worker.not-example.net"
+  aud: "did:web:worker.not-example.net",
   sub: "did:web:example.com",
   can: "ucan/execute",
   // ...
