@@ -71,7 +71,10 @@ sequenceDiagram
     Boris ->> 🚗: Invoke!(Drive 🚗)
 ```
 
-In the example above, steps ➌ and ➍ are qualitatively different. Step ➌ grants authority (to drive the car). ➍ is a _command_ to do so.
+In the example above, steps ➌ and ➍ are qualitatively different:
+
+- Step ➌ grants authority (to drive the car)
+- Step ➍ is a _command_ to do so
 
 ## 1.1.2 Lazy vs Eager Evaluation
 
@@ -93,19 +96,11 @@ Delegating a capability is like the statement `message`. Task is akin to `messag
 
 However, there is clearly a distinction between passing a function and invoking it. The same is true for capabilities: delegating the authority to do something is not the same as asking for it to be done immediately, even if sometimes it's clear from context.
 
-## 1.2 Delegation Gossip
-
-UCAN delegation can be gossiped freely between services. This is not true for invocation.
-
-For example, if `alice@example.com` delegates her `web3.storage` storage quota to `bob@example.com`, it may be beneficial for all of the related `web3.storage` services to cache this information. If this were to be understood as an invocation, then gossiping this information would lead to validation failures due to principal misalignment in the certificate chain.
-
-By distinguishing invocation from delegation, agents are able to understand the user intention, and handle such messages accordingly. Receipt of an invocation with misaligned principles will fail, but a delegation may be held in e.g. Bob's proxy inbox to be acted on when he comes online or widely distributed across the `web3.storage` infrastructure.
-
-## 1.3 Public Resources
+## 1.2 Public Resources
 
 A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible, and a hard required for initiating flow (e.g. sign up). These cases typically involve a reference passed out of band (such as a web link). Due to [designation without authorization], knowing the URI of a public resource is often sufficient for interacting with it. In these cases, the Executor MAY accept Invocations without having a "closed-loop" proof chain , but this SHOULD NOT be the default behavior.
 
-## 1.4 Promise Pipelining
+## 1.3 Promise Pipelining
 
 [UCAN Promise] extends UCAN Invocation with [distributed promise pipelines]. Promises are helpful in a wide variety of situations for efficiency and convenience. Implementing [UCAN Promise]s is RECOMMENDED.
 
