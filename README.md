@@ -433,7 +433,10 @@ flowchart RL
   "inv": cid({
     "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
     "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
-    "run": ({
+    "run": cid({
+      "mta": {
+        "fuel": 999999
+      },
       "act": {
         "nnc": "", // NOTE: as stated above, idempotent Actions should always have the same nonce
         "cmd": "wasm/run",
