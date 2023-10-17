@@ -13,7 +13,7 @@
 
 ## Depends On
 
-- [DAG-CBOR]
+- [IPLD]
 - [DID]
 - [UCAN Delegation]
 
@@ -103,6 +103,10 @@ A core part of UCAN's design is interacting with the wider, non-UCAN world. Many
 ## 1.3 Promise Pipelining
 
 [UCAN Promise] extends UCAN Invocation with [distributed promise pipelines]. Promises are helpful in a wide variety of situations for efficiency and convenience. Implementing UCAN Promises is RECOMMENDED.
+
+## 1.4 Serialization
+
+UCAN Invocations MUST be encoded with some [IPLD] codec. [DAG-CBOR] is RECOMMENDED.
 
 # 2 Concepts
 
@@ -636,6 +640,8 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Electronic Rights Transfer Protocol (ERTP)]: https://docs.agoric.com/guides/ertp/
 [Fission]: https://fission.codes/
 [Haskell]: https://en.wikipedia.org/wiki/Haskell
+[IEEE-754]: https://ieeexplore.ieee.org/document/8766229
+[IPLD]: https://ipld.io/
 [IPVM]: https://github.com/ipvm-wg
 [Irakli Gozalishvili]: https://github.com/Gozala
 [JS Number]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number
@@ -661,4 +667,3 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [distributed promise pipelines]: http://erights.org/elib/distrib/pipeline.html
 [eRights]: https://erights.org
 [ucanto RPC]: https://github.com/web3-storage/ucanto
- 
