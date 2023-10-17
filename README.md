@@ -394,7 +394,7 @@ Receipt Payloads MUST conform to the following shape:
 | `enq` | `[&Task]`          | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
 | `mta` | `{String : Any}`   | Yes      | Additional data about the receipt                                                  |
 | `rec` | `&Receipt`         | No       | Recursive `Receipt`s if the Invocation was proxied to another Executor             |
-| `iat` | `Integer`[^js-num] | No       | The UTC Unix timestand at which the Receipt was issed                              |
+| `iat` | `Integer`[^js-num] | No       | The UTC Unix timestamp at which the Receipt was issued                             |
 
 A few of these fields warrant further comment below.
 
