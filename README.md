@@ -452,7 +452,7 @@ flowchart RL
 
 ## 4.1 Receipt (Envelope)
 
-A `Receipt` is an attestation of the [Result Payload]. A Receipt MUST be signed by the [Executor] (including by [Execution Proxy]).
+A `Receipt` is an attestation of the [Receipt Payload]. A Receipt MUST be signed by the [Executor] (including by [Execution Proxy]).
 
 **NB: a Receipt does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
