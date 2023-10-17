@@ -488,10 +488,10 @@ const receipt = {
 
 ## 4.3 DAG-JSON Examples
 
-``` js
+``` json
 {
   "ucr": {
-    "ran": {"/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu"}
+    "ran": {"/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu"},
     "out": {
       "ok": ["bob@example.com", "alice@example.com"]
     },
@@ -500,7 +500,7 @@ const receipt = {
       "total-time": [400, "hours"]
     }
   },
-  "sig": {"/": {bytes: "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU"}}
+  "sig": {"/": {"bytes": "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU"}}
 }
 ```
 
