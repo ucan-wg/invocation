@@ -59,6 +59,7 @@ auth
 backend
 base64url
 canonicalized
+codec
 cryptographic
 cryptographically
 dataflow
