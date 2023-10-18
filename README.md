@@ -358,9 +358,9 @@ flowchart RL
 
 ### 3.4.1 Proof Paths with `ucan/*`
 
-Beyond [attenuation], [`ucan/*`] MAY be used to connect otherwise disjoint parts of an authorization network. The motivation is to express the intention of automatically redelegtaing (or "forwarding") authorioty to another agent if you are offline, while retaining the ability to [revoke] that link. The clear use case is linking user devices, but also has applications for PoLA "cold" root/admin keys for servers.
+Beyond [attenuation], [`ucan/*`] MAY be used to connect otherwise disjoint parts of an authorization network. The motivation is to express the intention of automatically re-delegating (or "forwarding") authority to another agent if you are offline, while retaining the ability to [revoke] that link. The clear use case is linking user devices, but also has applications for PoLA "cold" root/admin keys for servers.
 
-The `ucan/*` ability MAY be used to substitute into any delegation chain. It "forwards" whatever is later in the chain, in effect swapping out the `iss` field. `ucan/*` MUST NOT change the Ability it redelegates. It MAY be scoped to a particular scheme or attach additional caveats.
+The `ucan/*` ability MAY be used to substitute into any delegation chain. It "forwards" whatever is later in the chain, in effect swapping out the `iss` field. `ucan/*` MUST NOT change the Ability it re-delegates. It MAY be scoped to a particular scheme or attach additional caveats.
 
 ``` js
 // Anything
