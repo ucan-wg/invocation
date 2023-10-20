@@ -211,7 +211,7 @@ A Command is the smallest unit of work that can be Invoked. It is akin to a func
 | [Subject]   | `sub` | `DID`            | No       |
 | [Command]   | `cmd` | `String`         | Yes      |
 | [Arguments] | `arg` | `{String : Any}` | Yes      |
-| [Nonce]     | `nnc` | `String`         | Yes      |
+| [Nonce]     | `nnc` | `Bytes`          | Yes      |
 
 The `arg` field MUST be defined by the `cmd` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively.
 
@@ -243,8 +243,6 @@ Using the JavaScript analogy from the introduction, an Action is similar to wrap
 ### 3.1.1 Command
 
 The Command (`cmd`) field MUST contain a concrete, dispatchable message that can be sent to the Executor. The Command MUST define the shape of the data in the [Arguments].
-
-This field can be thought of as the method, message, or trait being sent to the resource. Note that _unlike_ a UCAN Delegation [Ability], which includes hierarchy, a Command MUST be fully concrete.
 
 ### 3.1.2 Arguments
 
@@ -285,7 +283,7 @@ As [noted in the introduction][lazy-vs-eager], there is a difference between a r
 | Field | Type                 | Required | Description                                              |
 |-------|----------------------|----------|----------------------------------------------------------|
 | `uci` | `&InvocationPayload` | Yes      | The CID of the [Invocation Payload]                      |
-| `sig` | `&Signature`         | Yes      | A signature by the Payload's `iss` over the CID in `uci` |
+| `sig` | `Signature`          | Yes      | A signature by the Payload's `iss` over the CID in `uci` |
 
 ### 3.3.2 Invocation Payload
 
@@ -360,7 +358,7 @@ flowchart RL
 
 Beyond [attenuation], [`ucan/*`] MAY be used to connect otherwise disjoint parts of an authorization network. The motivation is to express the intention of automatically re-delegating (or "forwarding") authority to another agent if you are offline, while retaining the ability to [revoke] that link. The clear use case is linking user devices, but also has applications for PoLA "cold" root/admin keys for servers.
 
-The `ucan/*` ability MAY be used to substitute into any delegation chain. It "forwards" whatever is later in the chain, in effect swapping out the `iss` field. `ucan/*` MUST NOT change the Ability it re-delegates. It MAY be scoped to a particular scheme or attach additional caveats.
+The `ucan/*` Command MAY be used to substitute into any delegation chain. It "forwards" whatever is later in the chain, in effect swapping out the `iss` field. `ucan/*` MUST NOT change the Ability it re-delegates. It MAY be scoped to a particular scheme or attach additional caveats.
 
 ``` js
 // Anything
@@ -497,7 +495,7 @@ sequenceDiagram
         "fuel": 999999
       },
       "act": {
-        "nnc": "", // NOTE: as stated above, idempotent Actions should always have the same nonce
+        "nnc": null, // NOTE: as stated above, idempotent Actions should always have the same nonce
         "cmd": "wasm/run",
         "arg": {
           "mod": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
@@ -685,7 +683,6 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 
 <!-- External Links -->
 
-[Ability]: https://github.com/ucan-wg/delegation#33-abilities
 [Agoric]: https://agoric.com/
 [BCP 14]: https://www.rfc-editor.org/info/bcp14
 [Bacalhau]: https://www.bacalhau.org/
@@ -718,7 +715,6 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Rod Vagg]: https://github.com/rvagg/
 [Simon Worthington]: https://github.com/simonwo
 [Spritely Institute]: https://spritely.institute/news/introducing-a-distributed-debugger-for-goblins-with-time-travel.html
-[UCAN Ability]: https://github.com/ucan-wg/delegation/#23-ability
 [UCAN Delegation]: https://github.com/ucan-wg/delegation/
 [UCAN Promise]: https://github.com/ucan-wg/promise/
 [URI]: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
