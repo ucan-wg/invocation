@@ -206,14 +206,14 @@ flowchart RL
 
 A Command is the smallest unit of work that can be Invoked. It is akin to a function call or actor message. It MUST conform to the following struct shape:
 
-| Name        | Field | Type             | Required |
-|-------------|-------|------------------|----------|
-| [Subject]   | `sub` | `DID`            | No       |
-| [Command]   | `cmd` | `String`         | Yes      |
-| [Arguments] | `arg` | `{String : Any}` | Yes      |
-| [Nonce]     | `nnc` | `Bytes`          | Yes      |
+| Name        | Field   | Type             | Required |
+|-------------|---------|------------------|----------|
+| [Subject]   | `sub`   | `DID`            | No       |
+| [Command]   | `cmd`   | `String`         | Yes      |
+| [Arguments] | `args`  | `{String : Any}` | Yes      |
+| [Nonce]     | `nonce` | `Bytes \| null`  | Yes      |
 
-The `arg` field MUST be defined by the `cmd` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively.
+The `args` field MUST be defined by the `cmd` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively.
 
 Using the JavaScript analogy from the introduction, an Action is similar to wrapping a call in a closure:
 
@@ -246,7 +246,7 @@ The Command (`cmd`) field MUST contain a concrete, dispatchable message that can
 
 ### 3.1.2 Arguments
 
-The Arguments (`arg`) field, MAY contain any parameters expected by the Command. The Subject MUST be considered the authority on the shape of this data. This field MUST be representable as a map or keyword list.
+The Arguments (`args`) field, MAY contain any parameters expected by the Command. The Subject MUST be considered the authority on the shape of this data. This field MUST be representable as a map or keyword list.
 
 UCAN capabilities provided in proofs MAY impose certain constraint on the type of Arguments allowed.
 
@@ -259,18 +259,18 @@ The OPTIONAL `sub` field is intended for cases where parameterizing a specific a
 
 ### 3.1.4 Nonce
 
-If present, the REQUIRED `nnc` field MUST include a random nonce expressed in ASCII. This field ensures that multiple (non-idempotent) invocations are unique. The nonce SHOULD be `""` for Commands that are idempotent (such as deterministic Wasm modules or standards-abiding HTTP PUT requests).
+The REQUIRED `nonce` field MUST include a random nonce. This field ensures that multiple (non-idempotent) invocations are unique. The nonce SHOULD be empty (`0x`) for Commands that are idempotent (such as deterministic Wasm modules or standards-abiding HTTP PUT requests).
 
 ## 3.2 Task
 
 A Task wraps a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits.
 
-| Field | Type                       | Required | Description                                                                    |
-|-------|----------------------------|----------|--------------------------------------------------------------------------------|
-| `act` | `&Command`                 | Yes      | The CID of the [Task] to be run                                                |
-| `mta` | `{String : Any}`           | Yes      | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on |
-| `prf` | `[&Delegation]`            | Yes      | [UCAN Delegation]s that provide the authority to perform the `act` [Action]    |
-| `exp` | `Integer \| null`[^js-num] | Yes      | The UTC Unix timestamp at which the Task expires                               |
+| Field  | Type                       | Required | Description                                                                    |
+|--------|----------------------------|----------|--------------------------------------------------------------------------------|
+| `act`  | `&Command`                 | Yes      | The CID of the [Task] to be run                                                |
+| `meta` | `{String : Any}`           | Yes      | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on |
+| `prf`  | `[&Delegation]`            | Yes      | [UCAN Delegation]s that provide the authority to perform the `act` [Action]    |
+| `exp`  | `Integer \| null`[^js-num] | Yes      | The UTC Unix timestamp at which the Task expires                               |
 
 The CID of a Task is useful for reverse look-ups in [Receipt]-sharing networks to check if someone else has run this Task before, and in [UCAN Promise] to connect Tasks together.
 
@@ -289,12 +289,12 @@ As [noted in the introduction][lazy-vs-eager], there is a difference between a r
 
 The Invocation Payload attaches sender, receiver, and provenance to the [Task].
  
-| Field | Type       | Required | Description                                               |
-|-------|------------|----------|-----------------------------------------------------------|
-| `iss` | `DID`      | Yes      | The DID of the [Invoker]                                  |
-| `aud` | `DID`      | Yes      | The DID of the intended [Executor]                        |
-| `run` | `&Task`    | Yes      | The enclosed [Task]'s CID                                 |
-| `cau` | `&Receipt` | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task] |
+| Field   | Type       | Required | Description                                               |
+|---------|------------|----------|-----------------------------------------------------------|
+| `iss`   | `DID`      | Yes      | The DID of the [Invoker]                                  |
+| `aud`   | `DID`      | Yes      | The DID of the intended [Executor]                        |
+| `run`   | `&Task`    | Yes      | The enclosed [Task]'s CID                                 |
+| `cause` | `&Receipt` | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task] |
 
 ## 3.4 Proof Chains
 
@@ -365,7 +365,7 @@ The `ucan/*` Command MAY be used to substitute into any delegation chain. It "fo
 {
   "sub": "did:web:example.com",
   "can": "ucan/*",
-  "iff": [],
+  "if": [],
   // ...
 }
 ```
@@ -401,14 +401,14 @@ sequenceDiagram
 ```
 
 ```js
-// Only DNS TXT records
+// Only DNS resources
 {
   "sub": "did:web:example.com",
   "can": "ucan/*",
-  "iff": [
-    { "resource": { "scheme": "dns" } },
-    { "rrtype": "TXT" }
-  ],
+  "args": {
+    "scheme": "dns:"
+  }
+  "if": [],
   // ...
 }
 ```
@@ -420,14 +420,14 @@ sequenceDiagram
 ```js
 {
   "sig": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
-  "inv": {                                                                    //           ┐
+  "pld": {                                                                    //           ┐
     "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",                                //           │
     "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",        //           │
     "run": cid({                                                              //  ┐        │
       "act": cid({                                 // ┐                           │        │
-        "nnc": "&NCC-1701-D*",                     // │                           │        │
+        "nonce": {"/": {"bytes": "TWFueSBopvcs"}}, // │                           │        │
         "cmd": "crud/create",                      // │                           │        │
-        "arg": {                                   // │                           │        │
+        "args": {                                  // │                           │        │
           "uri": "https://example.com/blog/posts", // │                           │        │
           "headers": {                             // │                           │        │
             "content-type": "application/json"     // │                           │        │
@@ -440,7 +440,7 @@ sequenceDiagram
           }                                        // │                           │        │
         }                                          // │                           │        │
       }),                                          // ┘                           │        │
-      "mta": {                                                                //  │        │
+      "meta": {                                                               //  │        │
         "env": "development",                                                 //  │        │
         "tags": ["blog", "post", "pr#123"]                                    //  │        │
       },                                                                      //  │        │
@@ -465,9 +465,9 @@ sequenceDiagram
     "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
     "run": cid({
       "act": {
-        "nnc": "email-akiko#1234567890"
+        "nonce": {"/": {"bytes": "TWFueSBopZ2h0IHdvcs"}}
         "cmd": "msg/send",
-        "arg": {
+        "args": {
           "from": "mailto:akiko@example.com",
           "to": [ "boris@example.com", "carol@example.com" ],
           "subject": "Coffee",
@@ -495,9 +495,9 @@ sequenceDiagram
         "fuel": 999999
       },
       "act": {
-        "nnc": null, // NOTE: as stated above, idempotent Actions should always have the same nonce
+        "nonce": {"/": {"bytes": ""}}, // NOTE: as stated above, idempotent Actions should always have the same nonce
         "cmd": "wasm/run",
-        "arg": {
+        "args": {
           "mod": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
           "fun": "add_one",
           "params": [42]
@@ -527,17 +527,17 @@ Receipts MUST use the same-or-higher version number as the [Invocation] that the
 
 Receipt Payloads MUST conform to the following shape:
 
-| Field | Type               | Required | Description                                                                        |
-|-------|--------------------|----------|------------------------------------------------------------------------------------|
-| `ucr` | `SemVer`           | Yes      | The version of this spec that the Receipt conforms to                              |
-| `iss` | `DID`              | Yes      | The DID of the Executor                                                            |
-| `ran` | `&Invocation`      | Yes      | A link to the [Invocation] that the Receipt is for                                 |
-| `prf` | `[&Delegation]`    | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
-| `out` | `Result`           | Yes      | The value output of the invocation in [Result] format                              |
-| `enq` | `[&Task]`          | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
-| `mta` | `{String : Any}`   | Yes      | Additional data about the receipt                                                  |
-| `rec` | `&Receipt`         | No       | Recursive `Receipt`s if the Invocation was proxied to another Executor             |
-| `iat` | `Integer`[^js-num] | No       | The UTC Unix timestamp at which the Receipt was issued                             |
+| Field  | Type               | Required | Description                                                                        |
+|--------|--------------------|----------|------------------------------------------------------------------------------------|
+| `ucr`  | `SemVer`           | Yes      | The version of this spec that the Receipt conforms to                              |
+| `iss`  | `DID`              | Yes      | The DID of the Executor                                                            |
+| `ran`  | `&Invocation`      | Yes      | A link to the [Invocation] that the Receipt is for                                 |
+| `prf`  | `[&Delegation]`    | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
+| `out`  | `Result`           | Yes      | The value output of the invocation in [Result] format                              |
+| `enq`  | `[&Task]`          | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
+| `meta` | `{String : Any}`   | Yes      | Additional data about the receipt                                                  |
+| `rec`  | `&Receipt`         | No       | Recursive `Receipt`s if the Invocation was proxied to another Executor             |
+| `iat`  | `Integer`[^js-num] | No       | The UTC Unix timestamp at which the Receipt was issued                             |
 
 A few of these fields warrant further comment below.
 
