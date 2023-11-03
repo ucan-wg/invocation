@@ -248,7 +248,7 @@ The Command (`cmd`) field MUST contain a concrete, dispatchable message that can
 
 The Arguments (`args`) field, MAY contain any parameters expected by the Command. The Subject MUST be considered the authority on the shape of this data. This field MUST be representable as a map or keyword list.
 
-UCAN capabilities provided in proofs MAY impose certain constraint on the type of Arguments allowed.
+UCAN capabilities provided in proofs MAY impose constraints on the type of Arguments allowed.
 
 ### 3.1.3 Subject
 
