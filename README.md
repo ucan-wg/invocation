@@ -127,7 +127,7 @@ The invoker MUST be the UCAN delegator. Their DID MUST be authenticated in the `
 
 ### 2.1.2 Executor
 
-The executor is directed to perform some task described in the UCAN by the invoker.
+The executor is directed to perform some task described in the UCAN invocation by the invoker.
 
 ## 2.2 Life Cycle
 
