@@ -200,7 +200,7 @@ flowchart RL
     Ran   -->|provenance| Invocation
 ```
 
-# Request (Invocation)
+# Invocation (Request)
 
 A request for some work to be done (or to "exercise your authority") is an Invocation.
 
@@ -575,7 +575,7 @@ sequenceDiagram
 }
 ```
  
-# Response (Receipt)
+# Receipt (Response)
 
 A `Receipt` is a kind of Invocation used to attest to the result of another Invocation. A Receipt MUST be issued by the [Executor] (including by [Execution Proxy]).
 
@@ -784,7 +784,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Expiry]: #expiry
 [Invocation Payload]: #invocation-payload
 [Invocation Signature]: #invocation-envelope
-[Invocation]: #request-invocation
+[Invocation]: #invocation-request
 [Invoker]: #invoker
 [Issued At]: #issued-at
 [Issuer]: #issuer
@@ -792,7 +792,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Nonce]: #nonce
 [Proofs]: #proofs
 [Receipt Payload]: #receipt-payload
-[Receipt]: #response-receipt
+[Receipt]: #receipt-response
 [Response]: #response
 [Result]: #result
 [Subject]: #subject
