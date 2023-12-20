@@ -213,7 +213,7 @@ flowchart TD
             VarsigHeader["Varsig Header"]
 
             subgraph InvocationPayload ["Invocation Payload"]
-                direction 
+                direction TD
 
                 iss
                 sub
@@ -239,12 +239,12 @@ Note that the Invocation MUST include the Signature envelope. An [Invocation Pay
 
 ## 3.2 Signature Payload
 
-| Field               | Type                | Required | Description                                                                                                   |
-|---------------------|---------------------|----------|---------------------------------------------------------------------------------------------------------------|
-| `h`                 | `VarsigHeader`      | Yes      | The Varsig header, describing the cryptographic configuration used to format and sign the [Invocaion Payload] |
-| `ucan/i/1.0.0-rc.1` | `InvocationPayload` | Yes      | The [Invocation Payload]                                                                                      |
+| Field               | Type                | Required | Description              |
+|---------------------|---------------------|----------|--------------------------|
+| `h`                 | `VarsigHeader`      | Yes      | The Varsig header        |
+| `ucan/i/1.0.0-rc.1` | `InvocationPayload` | Yes      | The [Invocation Payload] |
 
-The Signature Payload MUST contain a [Varsig] header, and the [Invocation Payload]. The Varsig header MUST be inside the signature payload as it:
+The Signature Payload MUST contain a [Varsig] header, and the [Invocation Payload]. The Varsig header MUST describe the cryptographic configuration used to format and sign the [Invocaion Payload]. This is important in order to:
 
 1. Commits the Signature to the cryptographic algorithms used
 2. Describes how the paylaod was serialized before signing
@@ -258,13 +258,13 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
 | [Issuer]    | `iss`   | `DID`              | Yes         | The DID of the [Invoker]                                           |
 | [Subject]   | `sub`   | `DID`              | Yes         | The [Subject] being invoked                                        |
 | [Audience]  | `aud`   | `DID`              | No          | The DID of the intended [Executor] if different from the [Subject] |
-| [Command]   | `do`    | `String`           | Yes         |                                                                    |
-| [Arguments] | `args`  | `{String : Any}`   | Yes         |                                                                    |
-| [Nonce]     | `nonce` | `Bytes \| null`    | Yes         |                                                                    |
-| [Metadata]  | `meta`  | `{String : Any}`   | Yes         |                                                                    |
-| [Proofs]    | `prf`   | `[&Delegation]`    | Yes         |                                                                    |
-| [Expiry]    | `exp`   | `Integer`[^js-num] | No          |                                                                    |
-| [Issued At] | `iat`   | `Integer`[^js-num] | No          |                                                                    |
+| [Command]   | `do`    | `String`           | Yes         | The [Command]                                                      |
+| [Arguments] | `args`  | `{String : Any}`   | Yes         | The [Command]'s [Arguments]                                        |
+| [Proofs]    | `prf`   | `[&Delegation]`    | Yes         | [Delegation]s that prove the chain of authority                    |
+| [Metadata]  | `meta`  | `{String : Any}`   | No          | Arbitrary [Metadata]                                               |
+| [Nonce]     | `nonce` | `Bytes`            | No          | A unique, random nonce                                             |
+| [Expiry]    | `exp`   | `Integer`[^js-num] | No          | The timestamp at which the Invocation becomes invalid              |
+| [Issued At] | `iat`   | `Integer`[^js-num] | No          | The timestamp at which the Invocation was created                  |
 | [Cause]     | `cause` | `&Receipt`         | No          | An OPTIONAL CID of the [Receipt] that enqueued the [Task]          |
 
 The shape of the `args` MUST be defined by the `do` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively. Using the JavaScript analogy from the introduction, an Action is similar to wrapping a call in a closure:
@@ -553,12 +553,12 @@ A `Receipt` is a kind of Invocation used to attest to the result of another Invo
 
 Receipts MUST use the same-or-higher version number as the [Invocation] that they reference.
 
-FIXME
-
 | Field | Type        | Required | Description                                                                                    |
 |-------|-------------|----------|------------------------------------------------------------------------------------------------|
 | `s`   | `Signature` | Yes      | Signature (bytes or struct) of the `pld` field, which MUST be interpreted as the `pld.h` field |
 | `p`   | `&Payload`  | Yes      | The data being signed over                                                                     |
+
+## 3.2 Signature Payload
 
 | Field               | Type             | Required | Description                                          |
 |---------------------|------------------|----------|------------------------------------------------------|
@@ -575,7 +575,7 @@ Receipt Payloads MUST conform to the following shape:
 | `ran`  | `&Invocation`      | Yes      | A link to the [Invocation] that the Receipt is for                                 |
 | `out`  | `Result`           | Yes      | The value output of the invocation in [Result] format                              |
 | `prf`  | `[&Delegation]`    | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
-| `req`  | `[&Task]`          | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
+| `next` | `[&Task]`          | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
 | `meta` | `{String : Any}`   | Yes      | Additional data about the receipt                                                  |
 | `iat`  | `Integer`[^js-num] | No       | The UTC Unix timestamp at which the Receipt was issued                             |
 
@@ -603,7 +603,7 @@ A Result records the output of the [Task], as well as its success or failure sta
 }
 ```
 
-## 4.2 Enqueue Request
+## 4.2 Next Task(s)
 
 The result of an [Invocation] MAY include a request for further actions to be performed. This is a process of requesting that the invoker "enqueue" a new Task. This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
 
@@ -621,11 +621,10 @@ All [Task]s in an [enqueue] array MUST be treated as concurrent, unless explicit
     "h": {"/": {"bytes": "NBIFEgEAcQ"}},
     "ucan/r/1.0.0-rc.1": {
       "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
-      "ran": {"/": FIXME},
+      "ran": {"/": "bafkreictzcfwelyww7zmjkl5nptyot24oilky2bppw42nui2acozhfmzqa"},
       "out": {"ok": 42},
       "iat": 1702907627,
-      "meta": {},
-      "prf": [], // FIXME document & diagram that this only has to complete the chain
+      "prf": [],
     }
   }
 }
