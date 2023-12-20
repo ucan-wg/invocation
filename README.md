@@ -329,7 +329,9 @@ The `iat` field MAY contain an issuance timestamp. This time SHOULD NOT be trust
 
 ## 3.2 Task
 
-A Task is the subset of fields that uniquely determine the work to be performed[^subtype]. A Task MUST be unqiuely defined by the following fields:
+A Task is the subset of Invocation fields that uniquely determine the work to be performed[^subtype]. A Task MUST be unqiuely defined by the following fields:
+
+[^subtype]: Which is to say: an Invocation is a subtype of Task
 
 - [Subject]
 - [Command]
@@ -337,8 +339,6 @@ A Task is the subset of fields that uniquely determine the work to be performed[
 - [Nonce]
 
 The nonce is important for distinguishing between non-idempotent executions of a Task by making the group together unique.
-
-[^subtype]: An Invocation is thus a subtype of Task: $\textsf{Invocation} <: \textsf{Task}$
 
 ## 3.3 Attestation
 
