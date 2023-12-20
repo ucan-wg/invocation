@@ -81,6 +81,7 @@ multiformat
 namespace
 outmost
 parallelize
+parameterizes
 parameterizing
 pipelined
 pipelining

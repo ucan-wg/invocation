@@ -358,7 +358,7 @@ The OPTIONAL `iat` field MAY contain an issuance timestamp. This time SHOULD NOT
 
 #### Metadata
 
-The OPTIONAL `meta` field MAY include arbitrary metadata or extensable fields. For example, Wasm fuel, an internal job ID, references to GitHub Issues, and so on. This data MAY be used by the Executor.
+The OPTIONAL `meta` field MAY include arbitrary metadata or extensible fields. For example, Wasm fuel, an internal job ID, references to GitHub Issues, and so on. This data MAY be used by the Executor.
 
 ## Attestation
 
