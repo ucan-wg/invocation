@@ -202,26 +202,30 @@ flowchart RL
 
 # 3 Request
 
-## 3.1 Action
+## 3.1 Task
 
-A Command is the smallest unit of work that can be Invoked. It is akin to a function call or actor message. It MUST conform to the following struct shape:
+A Task is the smallest unit of work that can be Invoked. It is akin to a function call or actor message. It MUST conform to the following struct shape:
 
-| Name        | Field   | Type             | Required |
-|-------------|---------|------------------|----------|
-| [Subject]   | `sub`   | `DID`            | No       |
-| [Command]   | `cmd`   | `String`         | Yes      |
-| [Arguments] | `args`  | `{String : Any}` | Yes      |
-| [Nonce]     | `nonce` | `Bytes \| null`  | Yes      |
+| Name        | Field   | Type               | Required |                                                                                |
+|-------------|---------|--------------------|----------|--------------------------------------------------------------------------------|
+| [Subject]   | `sub`   | `DID`              | No       |                                                                                |
+| [Command]   | `do`    | `String`           | Yes      |                                                                                |
+| [Arguments] | `args`  | `{String : Any}`   | Yes      |                                                                                |
+| [Nonce]     | `nonce` | `Bytes \| null`    | Yes      |                                                                                |
+| [Meta]      | `meta`  | `{String : Any}`   | Yes      | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on |
+| [Proofs]    | `prf`   | `[&Delegation]`    | Yes      | [UCAN Delegation]s that provide the authority to perform the `act` [Action]    |
+| [Expiry]    | `exp`   | `Integer`[^js-num] | No       | The UTC Unix timestamp at which the Task expires                               |
+| [Issued At] | `iat`   | `Integer`[^js-num] | No       | The UTC Unix timestamp at which the Invocation was issued                      |
 
-The `args` field MUST be defined by the `cmd` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively.
+The shape of the `args` MUST be defined by the `do` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively.
 
 Using the JavaScript analogy from the introduction, an Action is similar to wrapping a call in a closure:
 
 ```js
 // Command
 {
-  "cmd": "msg/send",
-  "arg": {
+  "do": "msg/send",
+  "args": {
     "from": "mailto:alice@example.com",
     "to": [ "bob@example.com", "carol@example.com" ],
     "subject": "hello",
@@ -242,17 +246,17 @@ Using the JavaScript analogy from the introduction, an Action is similar to wrap
 
 ### 3.1.1 Command
 
-The Command (`cmd`) field MUST contain a concrete, dispatchable message that can be sent to the Executor. The Command MUST define the shape of the data in the [Arguments].
+The REQUIRED Command (`do`) field MUST contain a concrete, dispatchable message that can be sent to the Executor. The Command MUST define the shape of the data in the [Arguments].
 
 ### 3.1.2 Arguments
 
-The Arguments (`args`) field, MAY contain any parameters expected by the Command. The Subject MUST be considered the authority on the shape of this data. This field MUST be representable as a map or keyword list.
+The REQUIRED Arguments (`args`) field, MAY contain any parameters expected by the Command. The Subject MUST be considered the authority on the shape of this data. This field MUST be representable as a map or keyword list.
 
 UCAN capabilities provided in proofs MAY impose constraints on the type of Arguments allowed.
 
 ### 3.1.3 Subject
 
-The OPTIONAL `sub` field is intended for cases where parameterizing a specific agent is important. This is especially critical for two parts of the life cycle:
+The REQUIRED `sub` field both parameterizes over a specific agent, and acts as a namespace for how to interpret the [Command]. This is especially critical for two parts of the life cycle:
 
 1. Specifying a particular `sub` (and thus `aud`) when [enqueuing new Tasks][enqueue] in a Receipt
 2. Indexing Receipts for reverse lookup and memoization
@@ -263,14 +267,11 @@ The REQUIRED `nonce` field MUST include a random nonce. This field ensures that 
 
 ## 3.2 Task
 
-A Task wraps a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits.
+A Task extends a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits.
 
-| Field  | Type                       | Required | Description                                                                    |
-|--------|----------------------------|----------|--------------------------------------------------------------------------------|
-| `act`  | `&Command`                 | Yes      | The CID of the [Task] to be run                                                |
-| `meta` | `{String : Any}`           | Yes      | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on |
-| `prf`  | `[&Delegation]`            | Yes      | [UCAN Delegation]s that provide the authority to perform the `act` [Action]    |
-| `exp`  | `Integer \| null`[^js-num] | Yes      | The UTC Unix timestamp at which the Task expires                               |
+| Field  | Type               | Required | Description                                                                    |
+|--------|--------------------|----------|--------------------------------------------------------------------------------|
+| `act`  | `&Action`          | Yes      | The CID of the [Task] to be run                                                |
 
 The CID of a Task is useful for reverse look-ups in [Receipt]-sharing networks to check if someone else has run this Task before, and in [UCAN Promise] to connect Tasks together.
 
@@ -282,19 +283,20 @@ As [noted in the introduction][lazy-vs-eager], there is a difference between a r
  
 | Field | Type                 | Required | Description                                              |
 |-------|----------------------|----------|----------------------------------------------------------|
-| `uci` | `&InvocationPayload` | Yes      | The CID of the [Invocation Payload]                      |
-| `sig` | `Signature`          | Yes      | A signature by the Payload's `iss` over the CID in `uci` |
+| `p`   | `&InvocationPayload` | Yes      | The CID of the [Invocation Payload]                      |
+| `s`   | `Signature`          | Yes      | A signature by the Payload's `iss` over the CID in `uci` |
 
 ### 3.3.2 Invocation Payload
 
 The Invocation Payload attaches sender, receiver, and provenance to the [Task].
  
-| Field   | Type       | Required | Description                                               |
-|---------|------------|----------|-----------------------------------------------------------|
-| `iss`   | `DID`      | Yes      | The DID of the [Invoker]                                  |
-| `aud`   | `DID`      | Yes      | The DID of the intended [Executor]                        |
-| `run`   | `&Task`    | Yes      | The enclosed [Task]'s CID                                 |
-| `cause` | `&Receipt` | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task] |
+| Field   | Type       | Required | Description                                                        |
+|---------|------------|----------|--------------------------------------------------------------------|
+| `iss`   | `DID`      | Yes      | The DID of the [Invoker]                                           |
+| `sub`   | `DID`      | Yes      | The [Subject] being invoked                                        |
+| `aud`   | `DID`      | No       | The DID of the intended [Executor] if different from the [Subject] |
+| `run`   | `&Task`    | Yes      | The enclosed [Task]'s CID                                          |
+| `cause` | `&Receipt` | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task]          |
 
 ## 3.4 Proof Chains
 
@@ -354,18 +356,18 @@ flowchart RL
     prf --> Delegations
 ```
 
-### 3.4.1 Proof Paths with `ucan/*`
+### 3.4.1 Proxied Proof Paths with `ucan/proxy`
 
-Beyond [attenuation], [`ucan/*`] MAY be used to connect otherwise disjoint parts of an authorization network. The motivation is to express the intention of automatically re-delegating (or "forwarding") authority to another agent if you are offline, while retaining the ability to [revoke] that link. The clear use case is linking user devices, but also has applications for PoLA "cold" root/admin keys for servers.
+Beyond [attenuation], [`ucan/proxy`] MAY be used to connect otherwise disjoint parts of an authorization network. The motivation is to express the intention of automatically re-delegating (or "forwarding") authority to another agent if you are offline, while retaining the ability to [revoke] that link. The clear use case is linking user devices, but also has applications for PoLA "cold" root/admin keys for servers.
 
-The `ucan/*` Command MAY be used to substitute into any delegation chain. It "forwards" whatever is later in the chain, in effect swapping out the `iss` field. `ucan/*` MUST NOT change the Ability it re-delegates. It MAY be scoped to a particular scheme or attach additional caveats.
+The `ucan/proxy` Command MAY be used to substitute into any delegation chain. It "forwards" whatever is later in the chain, in effect swapping out the `iss` field. `ucan/proxy` MUST NOT change the Ability it re-delegates. It MAY be scoped to a particular scheme or attach additional caveats.
 
 ``` js
 // Anything
 {
   "sub": "did:web:example.com",
-  "can": "ucan/*",
-  "if": [],
+  "can": "ucan/proxy",
+  "cond": [],
   // ...
 }
 ```
@@ -380,7 +382,7 @@ sequenceDiagram
     autonumber
 
     Note over Alice, Dan: Delegation Setup
-      Bob -->> Carol: Delegate(ucan/*)
+      Bob -->> Carol: Delegate(ucan/proxy)
       Alice -->> Bob: Delegate(crud/create, dns:example.com)
       Carol -->> Dan: Delegate(crud/create, dns:example.com)
 
@@ -393,7 +395,7 @@ sequenceDiagram
 
       autonumber 1
       rect rgb(127, 127, 127)
-          Bob -->> Carol: Delegate(ucan/*)
+          Bob -->> Carol: Delegate(ucan/proxy)
       end
 
       autonumber 3
@@ -404,9 +406,9 @@ sequenceDiagram
 // Only DNS resources
 {
   "sub": "did:web:example.com",
-  "can": "ucan/*",
+  "can": "ucan/proxy",
   "args": {
-    "scheme": "dns:"
+    "scheme": "dns"
   }
   "if": [],
   // ...
@@ -418,67 +420,70 @@ sequenceDiagram
 ### 3.5.1 Interacting with an HTTP API
 
 ```js
+// DAG-JSON
 {
-  "sig": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
-  "pld": {                                                                    //           ┐
-    "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",                                //           │
-    "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",        //           │
-    "run": cid({                                                              //  ┐        │
-      "act": cid({                                 // ┐                           │        │
-        "nonce": {"/": {"bytes": "TWFueSBopvcs"}}, // │                           │        │
-        "cmd": "crud/create",                      // │                           │        │
-        "args": {                                  // │                           │        │
-          "uri": "https://example.com/blog/posts", // │                           │        │
-          "headers": {                             // │                           │        │
-            "content-type": "application/json"     // │                           │        │
-          },                                       // ├── Action                  │        │
-          "payload": {                             // │                           │        │
-            "title": "UCAN for Fun an Profit",     // │                           │        │
-            "body": "UCAN is great!",              // │                           ├── Task ├── Payload
-            "topics": ["authz", "journal"],        // │                           │        │
-            "draft": true                          // │                           │        │
-          }                                        // │                           │        │
-        }                                          // │                           │        │
-      }),                                          // ┘                           │        │
-      "meta": {                                                               //  │        │
-        "env": "development",                                                 //  │        │
-        "tags": ["blog", "post", "pr#123"]                                    //  │        │
-      },                                                                      //  │        │
-      "prf": [                                                                //  │        │
-        {"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"}, //  │        │
-        {"/": "bafkr4idnrqfouibxdqpvh2lmkhgsbw5yabvjbiaea3fplrb4vxifaphvgy"}, //  │        │
-        {"/": "bafkr4ig4o5mwufavfewt4jurycn7g7dby2tcwg5q2ii2y6idnwguoyeruq"}  //  │        │
-      ],                                                                      //  │        │
-      "exp": 1697409438                                                       //  │        │
-    })                                                                        //  ┘        │
-  }                                                                           //           ┘
+  "s": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
+  "p": {
+    {
+      "h": {"/": {"bytes": "NBIFEgEAcQ"}},
+      "ucan/i/1.0.0-rc.1": {
+        "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
+        "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
+        "do": "crud/create",
+        "args": {
+          "uri": "https://example.com/blog/posts",
+          "headers": {
+            "content-type": "application/json"
+          },
+          "payload": {
+            "title": "UCAN for Fun an Profit",
+            "body": "UCAN is great!",
+            "topics": ["authz", "journal"],
+            "draft": true
+          }
+        },
+        "nonce": {"/": {"bytes": "TWFueSBopvcs"}},
+        "meta": {
+          "env": "development",
+          "tags": ["blog", "post", "pr#123"]
+        },
+        "exp": 1697409438
+        "prf": [
+          {"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"},
+          {"/": "bafkr4idnrqfouibxdqpvh2lmkhgsbw5yabvjbiaea3fplrb4vxifaphvgy"},
+          {"/": "bafkr4ig4o5mwufavfewt4jurycn7g7dby2tcwg5q2ii2y6idnwguoyeruq"}
+        ]
+      }
+    }
+  }
 }
 ```
 
 ### 3.5.2 Sending Email
 
 ```js
+// DAG-JSON
 {
-  "sig": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
-  "inv": cid({
-    "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
-    "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
-    "run": cid({
-      "act": {
-        "nonce": {"/": {"bytes": "TWFueSBopZ2h0IHdvcs"}}
-        "cmd": "msg/send",
-        "args": {
-          "from": "mailto:akiko@example.com",
-          "to": [ "boris@example.com", "carol@example.com" ],
-          "subject": "Coffee",
-          "body": "Let get coffee sometime and talk about UCAN Invocations!"
-        }
-      }),
+  "s": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
+  "p": {
+    "h": {"/": {"bytes": "NBIFEgEAcQ"}},
+    "ucan/i/1.0.0-rc.1": {
+      "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
+      "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
+      "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
+      "do": "msg/send",
+      "args": {
+        "from": "mailto:akiko@example.com",
+        "to": [ "boris@example.com", "carol@example.com" ],
+        "subject": "Coffee",
+        "body": "Let get coffee sometime and talk about UCAN Invocations!"
+      },
+      "nonce": {"/": {"bytes": "TWFueSBopZ2h0IHdvcs"}},
       "mta": {},
       "prf": [{"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"}],
       "exp": 1697409438
     }
-  })
+  }
 }
 ```
 
@@ -486,42 +491,45 @@ sequenceDiagram
 
 ```js
 {
-  "sig": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
-  "inv": cid({
-    "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
-    "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
-    "run": cid({
-      "mta": {
-        "fuel": 999999
-      },
-      "act": {
-        "nonce": {"/": {"bytes": ""}}, // NOTE: as stated above, idempotent Actions should always have the same nonce
-        "cmd": "wasm/run",
-        "args": {
-          "mod": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
-          "fun": "add_one",
-          "params": [42]
-        }
+  "s": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
+  "p": {
+    "h": {"/": {"bytes": "NBIFEgEAcQ"}},
+    "ucan/i/1.0.0-rc.1": {
+      "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
+      "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
+      "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
+      "meta": {"fuel": 999999},
+      "nonce": {"/": {"bytes": ""}}, // NOTE: as stated above, idempotent Actions should always have the same nonce
+      "do": "wasm/run",
+      "args": {
+        "mod": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
+        "fun": "add_one",
+        "params": [42]
       }
-    })
-  })
+    }
+  }
 }
 ```
 
 # 4 Response
 
-## 4.1 Receipt (Envelope)
-
-A `Receipt` is an attestation of the [Receipt Payload]. A Receipt MUST be signed by the [Executor] (including by [Execution Proxy]).
+A `Receipt` is a kind of Invocation used to attest to the result of another Invocation. A Receipt MUST be issued by the [Executor] (including by [Execution Proxy]).
 
 **NB: a Receipt does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
 Receipts MUST use the same-or-higher version number as the [Invocation] that they reference.
 
-| Field | Type              | Required | Description                                                              |
-|-------|-------------------|----------|--------------------------------------------------------------------------|
-| `ucr` | `&ReceiptPayload` | Yes      | The CID for the [Receipt Payload]                                        |
-| `sig` | `Signature`       | Yes      | The [Signature] of the `uci` value, by the [Receipt Payload]'s `iss` DID |
+FIXME
+
+| Field | Type        | Required | Description                                                                                    |
+|-------|-------------|----------|------------------------------------------------------------------------------------------------|
+| `s`   | `Signature` | Yes      | Signature (bytes or struct) of the `pld` field, which MUST be interpreted as the `pld.h` field |
+| `p`   | `&Payload`  | Yes      | The data being signed over                                                                     |
+
+| Field               | Type             | Required | Description                                          |
+|---------------------|------------------|----------|------------------------------------------------------|
+| `h`                 | `VarsigHeader`   | Yes      | [Varsig] header that describes the outer `sig` field |
+| `ucan/r/1.0.0-rc.1` | `ReceiptPayload` | Yes      | Fields unique to the Receipt                         |
 
 ## 4.2 Receipt Payload
 
@@ -529,19 +537,17 @@ Receipt Payloads MUST conform to the following shape:
 
 | Field  | Type               | Required | Description                                                                        |
 |--------|--------------------|----------|------------------------------------------------------------------------------------|
-| `ucr`  | `SemVer`           | Yes      | The version of this spec that the Receipt conforms to                              |
 | `iss`  | `DID`              | Yes      | The DID of the Executor                                                            |
 | `ran`  | `&Invocation`      | Yes      | A link to the [Invocation] that the Receipt is for                                 |
-| `prf`  | `[&Delegation]`    | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
 | `out`  | `Result`           | Yes      | The value output of the invocation in [Result] format                              |
-| `enq`  | `[&Task]`          | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
+| `prf`  | `[&Delegation]`    | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
+| `req`  | `[&Task]`          | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
 | `meta` | `{String : Any}`   | Yes      | Additional data about the receipt                                                  |
-| `rec`  | `&Receipt`         | No       | Recursive `Receipt`s if the Invocation was proxied to another Executor             |
 | `iat`  | `Integer`[^js-num] | No       | The UTC Unix timestamp at which the Receipt was issued                             |
 
 A few of these fields warrant further comment below.
 
-### 4.2.1 Result
+### 4.1 Result
 
 A Result records the output of the [Task], as well as its success or failure state. A Result MUST be formatted as map with a single `tag` field.
 
@@ -563,7 +569,7 @@ A Result records the output of the [Task], as well as its success or failure sta
 }
 ```
 
-### 4.2.2 Enqueue
+## 4.2 Enqueue Request
 
 The result of an [Invocation] MAY include a request for further actions to be performed. This is a process of requesting that the invoker "enqueue" a new Task. This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
 
@@ -571,7 +577,27 @@ Enqueued [Task]s describe requests for future work to be performed. They SHOULD 
 
 All [Task]s in an [enqueue] array MUST be treated as concurrent, unless explicit data dependencies between them exist via [UCAN Promise]s.
 
-### 4.2.3 Proxy Execution
+## 4.3 Examples
+
+``` js
+// DAG-JSON
+{
+  "s": {"/": {"bytes": "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU"}},
+  "p": {
+    "h": {"/": {"bytes": "NBIFEgEAcQ"}},
+    "ucan/r/1.0.0-rc.1": {
+      "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
+      "ran": {"/": FIXME},
+      "out": {"ok": 42},
+      "iat": 1702907627,
+      "meta": {},
+      "prf": [], // FIXME document & diagram that this only has to complete the chain
+    }
+  }
+}
+```
+
+# 5 Proxy Execution
 
 If the Receipt Issuer is not identical to the `aud` field of Invocation referenced in the `ran` field, a [Delegation] proof chain SHOULD be included. If a chain is present, it MUST show that such a proxy execution was authorized by the original listed `aud` Agent.
 
@@ -608,25 +634,34 @@ const receipt = {
 }
 ```
 
-## 4.3 Examples
+## 5.1 Examples
 
-``` json
+``` js
+// DAG-JSON
 {
-  "ucr": {
-    "ran": {"/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu"},
-    "out": {
-      "ok": ["bob@example.com", "alice@example.com"]
-    },
-    "mta": {
-      "retry-count": 2,
-      "total-time": [400, "hours"]
+  "s": {"/": {"bytes": "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU"}},
+  "p": {
+    "h": {"/": {"bytes": "NBIFEgEAcQ"}},
+    "ucan/i/1.0.0-rc.1": {
+      "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
+      "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
+      "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
+      "do": "ucan/receipt",
+      "args": {
+        "ran": {"/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu"},
+        "out": {"ok": ["bob@example.com", "alice@example.com"]}
+      },
+      "meta": {
+        "retry-count": 2,
+        "total-time": [400, "hours"]
+      },
+      "prf": []
     }
-  },
-  "sig": {"/": {"bytes": "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU"}}
+  }
 }
 ```
 
-# 5 Prior Art
+# 6 Prior Art
 
 [ucanto RPC] from [DAG House] is a production system that uses UCAN as the basis for an RPC layer.
 
@@ -638,7 +673,7 @@ The Object Capability Network ([OCapN]) protocol extends [CapTP] with a generali
 
 [Cap 'n Proto RPC] is an influential RPC framework based on concepts from [CapTP].
 
-# 6 Acknowledgements
+# 7 Acknowledgements
 
 Many thanks to [Mark Miller] for his [trail blazing work][eRights] on [capability systems].
 
