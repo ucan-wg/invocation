@@ -213,8 +213,6 @@ flowchart TD
             VarsigHeader["Varsig Header"]
 
             subgraph InvocationPayload ["Invocation Payload"]
-                direction TD
-
                 iss
                 sub
                 do
@@ -329,7 +327,20 @@ The OPTIONAL field `exp` defines when the Invocation SHOULD time out. This is bo
 
 The `iat` field MAY contain an issuance timestamp. This time SHOULD NOT be trusted; it is only a claim by the Invoker of their system time. System clocks often have clock skew, or a Byzantine Invoker could claim an arbitrary time.
 
-## 3.2 Attestation
+## 3.2 Task
+
+A Task is the subset of fields that uniquely determine the work to be performed[^subtype]. A Task MUST be unqiuely defined by the following fields:
+
+- [Subject]
+- [Command]
+- [Arguments]
+- [Nonce]
+
+The nonce is important for distinguishing between non-idempotent executions of a Task by making the group together unique.
+
+[^subtype]: An Invocation is thus a subtype of Task: $\textsf{Invocation} <: \textsf{Task}$
+
+## 3.3 Attestation
 
 An Invocation MAY be used to attest to some information. This is in effect a statement to the Issuer (without Audience) that never expires.
 
