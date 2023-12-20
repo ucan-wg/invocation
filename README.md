@@ -200,7 +200,7 @@ flowchart RL
     Ran   -->|provenance| Invocation
 ```
 
-# Request
+# Request (Invocation)
 
 A request for some work to be done (or to "exercise your authority") is an Invocation.
 
@@ -572,7 +572,7 @@ sequenceDiagram
 }
 ```
  
-# Response
+# Response (Receipt)
 
 A `Receipt` is a kind of Invocation used to attest to the result of another Invocation. A Receipt MUST be issued by the [Executor] (including by [Execution Proxy]).
 
@@ -749,10 +749,10 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
  
 <!-- Internal Links -->
 
-[Issuer]: #issuer
-[Audience]: #audience
 [Action]: #action
 [Arguments]: #arguments
+[Audience]: #audience
+[Cause]: #cause
 [Command]: #command
 [Execution Proxy]: #proxy-execution
 [Executor]: #executor
@@ -762,6 +762,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Invocation]: #invocation
 [Invoker]: #invoker
 [Issued At]: #issued-at
+[Issuer]: #issuer
 [Metadata]: #metadata 
 [Nonce]: #nonce
 [Proofs]: #proofs
