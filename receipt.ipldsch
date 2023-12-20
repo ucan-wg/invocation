@@ -1,6 +1,11 @@
 type Receipt {
-  pld &Receipt
-  sig &Signature
+  s Signature
+  p SignaturePayload
+}
+
+type SignaturePayload {
+  h VarsigHeader
+  r ReceiptPayload
 }
 
 type ReceiptPayload struct {

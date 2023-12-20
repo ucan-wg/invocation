@@ -1,29 +1,27 @@
 type Invocation struct {
-  inv &InvocationPayload
-  sig Signature
+  p SignaturePayload
+  s Signature
+}
+
+type SignaturePayload {
+  h VarsigHeader
+  i Invocation
 }
 
 type InvocationPayload struct {
   uiv SemVer
 
   iss DID
-  aud DID
+  sub DID
+  aud optional DID
 
-  run &Task
-  cse optional &Receipt
-}
+  do Command
+  args {String : Any}
+  nonce String
 
-type Task struct {
-  act &Command
-  mta {String : Any}
+  meta {String : Any}
   prf [&Delegation]
   exp optional Integer
-}
 
-type Action {
-  cmd Command
-  arg {String : Any}
-  nnc String
-
-  sub optional DID
+  cause optional &Receipt
 }
