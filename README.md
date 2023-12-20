@@ -202,24 +202,72 @@ flowchart RL
 
 # 3 Request
 
-## 3.1 Task
+A request for some work to be done (or to "exercise your authority") is an Invocation.
 
-A Task is the smallest unit of work that can be Invoked. It is akin to a function call or actor message. It MUST conform to the following struct shape:
+``` mermaid
+flowchart TD
+    subgraph Invocation
+        SignatureBytes["Signature (raw bytes)"]
+      
+        subgraph SigPayload ["Signature Payload"]
+            VarsigHeader["Varsig Header"]
 
-| Name        | Field   | Type               | Required |
-|-------------|---------|--------------------|----------|
-| [Subject]   | `sub`   | `DID`              | No       |
-| [Command]   | `do`    | `String`           | Yes      |
-| [Arguments] | `args`  | `{String : Any}`   | Yes      |
-| [Nonce]     | `nonce` | `Bytes \| null`    | Yes      |
-| [Metadata]  | `meta`  | `{String : Any}`   | Yes      |
-| [Proofs]    | `prf`   | `[&Delegation]`    | Yes      |
-| [Expiry]    | `exp`   | `Integer`[^js-num] | No       |
-| [Issued At] | `iat`   | `Integer`[^js-num] | No       |
+            subgraph InvocationPayload ["Invocation Payload"]
+                direction 
 
-The shape of the `args` MUST be defined by the `do` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively.
+                iss
+                sub
+                do
+                args
+                prf
+                etc["..."]
+            end
+        end
+    end
+```
 
-Using the JavaScript analogy from the introduction, an Action is similar to wrapping a call in a closure:
+As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is a request to the [Executor] to perform the enclosed [Task]. [Invocation Payload]s are not executable until they have been signed and [Delegation] proofs validated.
+
+Note that the Invocation MUST include the Signature envelope. An [Invocation Payload] on its own MUST NOT be considered a valid Invocation.
+
+## 3.1 Invocation (Envelope)
+ 
+| Field | Type               | Required | Description                                           |
+|-------|--------------------|----------|-------------------------------------------------------|
+| `s`   | `Signature`        | Yes      | A signature by the Payload's `iss` over the `p` field |
+| `p`   | `SignaturePayload` | Yes      | The content that was signed                           |
+
+## 3.2 Signature Payload
+
+| Field               | Type                | Required | Description                                                                                                   |
+|---------------------|---------------------|----------|---------------------------------------------------------------------------------------------------------------|
+| `h`                 | `VarsigHeader`      | Yes      | The Varsig header, describing the cryptographic configuration used to format and sign the [Invocaion Payload] |
+| `ucan/i/1.0.0-rc.1` | `InvocationPayload` | Yes      | The [Invocation Payload]                                                                                      |
+
+The Signature Payload MUST contain a [Varsig] header, and the [Invocation Payload]. The Varsig header MUST be inside the signature payload as it:
+
+1. Commits the Signature to the cryptographic algorithms used
+2. Describes how the paylaod was serialized before signing
+
+## 3.3 Invocation Payload
+
+The Invocation Payload attaches sender, receiver, and provenance to the [Task].
+ 
+| Field       | Type    | Required           | Description |                                                                    |
+|-------------|---------|--------------------|-------------|--------------------------------------------------------------------|
+| [Issuer]    | `iss`   | `DID`              | Yes         | The DID of the [Invoker]                                           |
+| [Subject]   | `sub`   | `DID`              | Yes         | The [Subject] being invoked                                        |
+| [Audience]  | `aud`   | `DID`              | No          | The DID of the intended [Executor] if different from the [Subject] |
+| [Command]   | `do`    | `String`           | Yes         |                                                                    |
+| [Arguments] | `args`  | `{String : Any}`   | Yes         |                                                                    |
+| [Nonce]     | `nonce` | `Bytes \| null`    | Yes         |                                                                    |
+| [Metadata]  | `meta`  | `{String : Any}`   | Yes         |                                                                    |
+| [Proofs]    | `prf`   | `[&Delegation]`    | Yes         |                                                                    |
+| [Expiry]    | `exp`   | `Integer`[^js-num] | No          |                                                                    |
+| [Issued At] | `iat`   | `Integer`[^js-num] | No          |                                                                    |
+| [Cause]     | `cause` | `&Receipt`         | No          | An OPTIONAL CID of the [Receipt] that enqueued the [Task]          |
+
+The shape of the `args` MUST be defined by the `do` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively. Using the JavaScript analogy from the introduction, an Action is similar to wrapping a call in a closure:
 
 ```js
 // Command
@@ -281,60 +329,9 @@ The OPTIONAL field `exp` defines when the Invocation SHOULD time out. This is bo
 
 The `iat` field MAY contain an issuance timestamp. This time SHOULD NOT be trusted; it is only a claim by the Invoker of their system time. System clocks often have clock skew, or a Byzantine Invoker could claim an arbitrary time.
 
-## 3.2 Task
+## 3.2 Attestation
 
-A Task extends a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits. Indexing the CID of a Task is useful for reverse look-ups in [Receipt]-sharing networks to check if someone else has run this Task before, and in [UCAN Promise] to connect Tasks together.
-
-## 3.3 Invocation
-
-As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is a request to the [Executor] to perform the enclosed [Task]. [Invocation Payload]s are not executable until they have been signed and [Delegation] proofs validated.
-
-``` mermaid
-flowchart TD
-    subgraph Invocation
-        SignatureBytes["Signature (raw bytes)"]
-      
-        subgraph SigPayload ["Signature Payload"]
-            VarsigHeader["Varsig Header"]
-
-            subgraph InvocationPayload
-                direction 
-
-                iss
-                sub
-                do
-                args
-                etc["..."]
-            end
-        end
-    end
-```
-
-### 3.3.1 Invocation (Envelope)
- 
-| Field | Type               | Required | Description                                           |
-|-------|--------------------|----------|-------------------------------------------------------|
-| `s`   | `Signature`        | Yes      | A signature by the Payload's `iss` over the `p` field |
-| `p`   | `SignaturePayload` | Yes      | The Siganture Payload                                 |
-
-### 3.3.2 Signature Payload
-
-| Field               | Type                 | Required | Description                                                                                                   |
-|---------------------|----------------------|----------|---------------------------------------------------------------------------------------------------------------|
-| `h`                 | `VarsigHeader`       | Yes      | The Varsig header, describing the cryptographic configuration used to format and sign the [Invocaion Payload] |
-| `ucan/i/1.0.0-rc.1` | `Invocation Payload` | Yes      | The [Invocation Payload]                                                                                      |
-
-### 3.3.3 Invocation Payload
-
-The Invocation Payload attaches sender, receiver, and provenance to the [Task].
- 
-| Field   | Type       | Required | Description                                                        |
-|---------|------------|----------|--------------------------------------------------------------------|
-| `iss`   | `DID`      | Yes      | The DID of the [Invoker]                                           |
-| `sub`   | `DID`      | Yes      | The [Subject] being invoked                                        |
-| `aud`   | `DID`      | No       | The DID of the intended [Executor] if different from the [Subject] |
-| `run`   | `&Task`    | Yes      | The enclosed [Task]'s CID                                          |
-| `cause` | `&Receipt` | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task]          |
+An Invocation MAY be used to attest to some information. This is in effect a statement to the Issuer (without Audience) that never expires.
 
 ## 3.4 Proof Chains
 
@@ -462,37 +459,36 @@ sequenceDiagram
 {
   "s": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
   "p": {
-    {
-      "h": {"/": {"bytes": "NBIFEgEAcQ"}},
-      "ucan/i/1.0.0-rc.1": {
-        "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
-        "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
-        "do": "crud/create",
-        "args": {
-          "uri": "https://example.com/blog/posts",
-          "headers": {
-            "content-type": "application/json"
-          },
-          "payload": {
-            "title": "UCAN for Fun an Profit",
-            "body": "UCAN is great!",
-            "topics": ["authz", "journal"],
-            "draft": true
-          }
+    "h": {"/": {"bytes": "NBIFEgEAcQ"}},
+    "ucan/i/1.0.0-rc.1": {
+      "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
+      "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
+      "do": "crud/create",
+      "args": {
+        "uri": "https://example.com/blog/posts",
+        "headers": {
+          "content-type": "application/json"
         },
-        "nonce": {"/": {"bytes": "TWFueSBopvcs"}},
-        "meta": {
-          "env": "development",
-          "tags": ["blog", "post", "pr#123"]
-        },
-        "exp": 1697409438
-        "prf": [
-          {"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"},
-          {"/": "bafkr4idnrqfouibxdqpvh2lmkhgsbw5yabvjbiaea3fplrb4vxifaphvgy"},
-          {"/": "bafkr4ig4o5mwufavfewt4jurycn7g7dby2tcwg5q2ii2y6idnwguoyeruq"}
-        ]
-      }
+        "payload": {
+          "title": "UCAN for Fun an Profit",
+          "body": "UCAN is great!",
+          "topics": ["authz", "journal"],
+          "draft": true
+        }
+      },
+      "nonce": {"/": {"bytes": "TWFueSBopvcs"}},
+      "meta": {
+        "env": "development",
+        "tags": ["blog", "post", "pr#123"]
+      },
+      "exp": 1697409438
+      "prf": [
+        {"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"},
+        {"/": "bafkr4idnrqfouibxdqpvh2lmkhgsbw5yabvjbiaea3fplrb4vxifaphvgy"},
+        {"/": "bafkr4ig4o5mwufavfewt4jurycn7g7dby2tcwg5q2ii2y6idnwguoyeruq"}
+      ]
     }
+    
   }
 }
 ```
