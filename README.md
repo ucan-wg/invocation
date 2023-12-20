@@ -245,10 +245,10 @@ Note that the Invocation MUST include the Signature envelope. An [Invocation Pay
 | `h`                 | `VarsigHeader`      | Yes      | The Varsig header        |
 | `ucan/i/1.0.0-rc.1` | `InvocationPayload` | Yes      | The [Invocation Payload] |
 
-The Signature Payload MUST contain a [Varsig] header, and the [Invocation Payload]. The Varsig header MUST describe the cryptographic configuration used to format and sign the [Invocaion Payload]. This is important in order to:
+The Signature Payload MUST contain a [Varsig] header, and the [Invocation Payload]. The Varsig header MUST describe the cryptographic configuration used to format and sign the [Invocation Payload]. This is important in order to:
 
 1. Commits the Signature to the cryptographic algorithms used
-2. Describes how the paylaod was serialized before signing
+2. Describes how the payload was serialized before signing
 
 ## Invocation Payload
 
@@ -308,13 +308,13 @@ The REQUIRED `sub` field both parameterizes over a specific agent, and acts as a
 
 #### Audience
 
-The OPTIONAL `aud` field specified the intended recipitent of Invocation, otherwise the Audience MUST be assumed to the [Subject]. This is useful for message routing, command brokers, proxy execution, gateways, replicated state machines, and so on.
+The OPTIONAL `aud` field specified the intended recipient of Invocation, otherwise the Audience MUST be assumed to the [Subject]. This is useful for message routing, command brokers, proxy execution, gateways, replicated state machines, and so on.
 
 ### Task
 
 A Task is the subset of Invocation fields that uniquely determine the work to be performed[^subtype]. The nonce is important for distinguishing between non-idempotent executions of a Task by making the group together unique.
  
-A Task MUST be unqiuely defined by the following fields:
+A Task MUST be uniquely defined by the following fields:
 
 - [Subject]
 - [Command]

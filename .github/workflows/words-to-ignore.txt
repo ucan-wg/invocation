@@ -78,6 +78,7 @@ invoker
 js-num
 memoization
 multiformat
+namespace
 outmost
 parallelize
 parameterizing
