@@ -212,7 +212,7 @@ A Task is the smallest unit of work that can be Invoked. It is akin to a functio
 | [Command]   | `do`    | `String`           | Yes      |
 | [Arguments] | `args`  | `{String : Any}`   | Yes      |
 | [Nonce]     | `nonce` | `Bytes \| null`    | Yes      |
-| [Meta]      | `meta`  | `{String : Any}`   | Yes      |
+| [Metadata]  | `meta`  | `{String : Any}`   | Yes      |
 | [Proofs]    | `prf`   | `[&Delegation]`    | Yes      |
 | [Expiry]    | `exp`   | `Integer`[^js-num] | No       |
 | [Issued At] | `iat`   | `Integer`[^js-num] | No       |
@@ -267,34 +267,64 @@ The REQUIRED `nonce` field MUST include a random nonce. This field ensures that 
 
 ### 3.1.5 Metadata
 
+The `meta` field MAY include arbitrary metadata or extensable fields. For example, Wasm fuel, an internal job ID, references to GitHub Issues, and so on. This data MAY be used by the Executor.
+
 ### 3.1.6 Proofs
+
+The `prf` field defines all [Delegation]s required to prove that this Invocation has an unbroken authorization chain.
 
 ### 3.1.7 Expiry
 
-### 3.1.9 Issuance Timestamp
+The OPTIONAL field `exp` defines when the Invocation SHOULD time out. This is both expressive (defines a timeout, which is a best practice), and prevents replays.
+
+### 3.1.8 Issued At
+
+The `iat` field MAY contain an issuance timestamp. This time SHOULD NOT be trusted; it is only a claim by the Invoker of their system time. System clocks often have clock skew, or a Byzantine Invoker could claim an arbitrary time.
 
 ## 3.2 Task
 
-A Task extends a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits.
-
-| Field  | Type               | Required | Description                                                                    |
-|--------|--------------------|----------|--------------------------------------------------------------------------------|
-| `act`  | `&Action`          | Yes      | The CID of the [Task] to be run                                                |
-
-The CID of a Task is useful for reverse look-ups in [Receipt]-sharing networks to check if someone else has run this Task before, and in [UCAN Promise] to connect Tasks together.
+A Task extends a [Command] with contextual information. This includes expiration time, delegation chain, and extensible metadata for things like resource limits. Indexing the CID of a Task is useful for reverse look-ups in [Receipt]-sharing networks to check if someone else has run this Task before, and in [UCAN Promise] to connect Tasks together.
 
 ## 3.3 Invocation
 
 As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is a request to the [Executor] to perform the enclosed [Task]. [Invocation Payload]s are not executable until they have been signed and [Delegation] proofs validated.
 
+``` mermaid
+flowchart TD
+    subgraph Invocation
+        SignatureBytes["Signature (raw bytes)"]
+      
+        subgraph SigPayload ["Signature Payload"]
+            VarsigHeader["Varsig Header"]
+
+            subgraph InvocationPayload
+                direction 
+
+                iss
+                sub
+                do
+                args
+                etc["..."]
+            end
+        end
+    end
+```
+
 ### 3.3.1 Invocation (Envelope)
  
-| Field | Type                 | Required | Description                                              |
-|-------|----------------------|----------|----------------------------------------------------------|
-| `p`   | `&InvocationPayload` | Yes      | The CID of the [Invocation Payload]                      |
-| `s`   | `Signature`          | Yes      | A signature by the Payload's `iss` over the CID in `uci` |
+| Field | Type               | Required | Description                                           |
+|-------|--------------------|----------|-------------------------------------------------------|
+| `s`   | `Signature`        | Yes      | A signature by the Payload's `iss` over the `p` field |
+| `p`   | `SignaturePayload` | Yes      | The Siganture Payload                                 |
 
-### 3.3.2 Invocation Payload
+### 3.3.2 Signature Payload
+
+| Field               | Type                 | Required | Description                                                                                                   |
+|---------------------|----------------------|----------|---------------------------------------------------------------------------------------------------------------|
+| `h`                 | `VarsigHeader`       | Yes      | The Varsig header, describing the cryptographic configuration used to format and sign the [Invocaion Payload] |
+| `ucan/i/1.0.0-rc.1` | `Invocation Payload` | Yes      | The [Invocation Payload]                                                                                      |
+
+### 3.3.3 Invocation Payload
 
 The Invocation Payload attaches sender, receiver, and provenance to the [Task].
  
@@ -710,11 +740,15 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Command]: #311-command
 [Execution Proxy]: #423-proxy-execution
 [Executor]: #212-executor
+[Expiry]: #317-expiry
 [Invocation Payload]: #331-invocation-payload
 [Invocation Signature]: #331-invocation-envelope
 [Invocation]: #33-invocation
 [Invoker]: #211-invoker
+[Issued At]: #318-issued-at
+[Metadata]: #315-metadata 
 [Nonce]: #314-nonce
+[Proofs]: #316-proofs
 [Receipt Payload]: #42-receipt-payload
 [Receipt]: #41-receipt-envelope
 [Response]: #4-response
