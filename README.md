@@ -218,10 +218,13 @@ flowchart TD
                 do
                 args
                 prf
+                cause
                 etc["..."]
             end
         end
     end
+    
+    cause -.->|CID| Receipt
 ```
 
 As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is a request to the [Executor] to perform the enclosed [Task]. [Invocation Payload]s are not executable until they have been signed and [Delegation] proofs validated.
@@ -789,7 +792,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Nonce]: #nonce
 [Proofs]: #proofs
 [Receipt Payload]: #receipt-payload
-[Receipt]: #receipt-envelope
+[Receipt]: #response-receipt
 [Response]: #response
 [Result]: #result
 [Subject]: #subject
