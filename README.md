@@ -488,7 +488,7 @@ sequenceDiagram
 ```js
 // DAG-JSON
 {
-  "s": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
+  "s": {"/": {"bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
   "p": {
     "h": {"/": {"bytes": "NBIFEgEAcQ"}},
     "ucan/i/1.0.0-rc.1": {
@@ -529,7 +529,7 @@ sequenceDiagram
 ```js
 // DAG-JSON
 {
-  "s": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
+  "s": {"/": {"bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
   "p": {
     "h": {"/": {"bytes": "NBIFEgEAcQ"}},
     "ucan/i/1.0.0-rc.1": {
@@ -555,7 +555,7 @@ sequenceDiagram
 
 ```js
 {
-  "s": {"/": {bytes: "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
+  "s": {"/": {"bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
   "p": {
     "h": {"/": {"bytes": "NBIFEgEAcQ"}},
     "ucan/i/1.0.0-rc.1": {
