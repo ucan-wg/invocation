@@ -784,7 +784,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Expiry]: #expiry
 [Invocation Payload]: #invocation-payload
 [Invocation Signature]: #invocation-envelope
-[Invocation]: #invocation
+[Invocation]: #request-invocation
 [Invoker]: #invoker
 [Issued At]: #issued-at
 [Issuer]: #issuer
