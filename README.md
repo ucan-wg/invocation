@@ -578,6 +578,28 @@ A `Receipt` is a kind of Invocation used to attest to the result of another Invo
 
 **NB: a Receipt does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
 
+``` mermaid
+flowchart TD
+    subgraph Receipt
+        SignatureBytes["Signature (raw bytes)"]
+      
+        subgraph SigPayload ["Signature Payload"]
+            VarsigHeader["Varsig Header"]
+
+            subgraph InvocationPayload ["Receipt Payload"]
+                iss
+                sub
+                ran
+                out
+                prf
+                etc["..."]
+            end
+        end
+    end
+
+    ran -.->|CID| Invocation
+```
+
 Receipts MUST use the same-or-higher version number as the [Invocation] that they reference.
 
 | Field | Type        | Required | Description                                                                                    |
