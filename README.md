@@ -290,42 +290,54 @@ The shape of the `args` MUST be defined by the `do` field type. This is similar 
 })
 ```
 
-### 3.1.1 Command
+### 3.1.1 Issuer
 
-The REQUIRED Command (`do`) field MUST contain a concrete, dispatchable message that can be sent to the Executor. The Command MUST define the shape of the data in the [Arguments].
+The `iss` field MUST include the Issuer of the Invocation. This DID MUST match against the encoding signature.
 
-### 3.1.2 Arguments
-
-The REQUIRED Arguments (`args`) field, MAY contain any parameters expected by the Command. The Subject MUST be considered the authority on the shape of this data. This field MUST be representable as a map or keyword list.
-
-UCAN capabilities provided in proofs MAY impose constraints on the type of Arguments allowed.
-
-### 3.1.3 Subject
+### 3.1.2 Subject
 
 The REQUIRED `sub` field both parameterizes over a specific agent, and acts as a namespace for how to interpret the [Command]. This is especially critical for two parts of the life cycle:
 
 1. Specifying a particular `sub` (and thus `aud`) when [enqueuing new Tasks][enqueue] in a Receipt
 2. Indexing Receipts for reverse lookup and memoization
 
-### 3.1.4 Nonce
+### 3.1.3 Audience
+
+The OPTIONAL `aud` field specified the intended recipitent of Invocation, otherwise the Audience MUST be assumed to the [Subject]. This is useful for message routing, command brokers, proxy execution, gateways, replicated state machines, and so on.
+
+### 3.1.4 Command
+
+The REQUIRED Command (`do`) field MUST contain a concrete, dispatchable message that can be sent to the Executor. The Command MUST define the shape of the data in the [Arguments].
+
+### 3.1.5 Arguments
+
+The REQUIRED Arguments (`args`) field, MAY contain any parameters expected by the Command. The Subject MUST be considered the authority on the shape of this data. This field MUST be representable as a map or keyword list.
+
+UCAN capabilities provided in proofs MAY impose constraints on the type of Arguments allowed.
+
+### 3.1.6 Nonce
 
 The REQUIRED `nonce` field MUST include a random nonce. This field ensures that multiple (non-idempotent) invocations are unique. The nonce SHOULD be empty (`0x`) for Commands that are idempotent (such as deterministic Wasm modules or standards-abiding HTTP PUT requests).
 
-### 3.1.5 Metadata
+### 3.1.7 Metadata
 
 The `meta` field MAY include arbitrary metadata or extensable fields. For example, Wasm fuel, an internal job ID, references to GitHub Issues, and so on. This data MAY be used by the Executor.
 
-### 3.1.6 Proofs
+### 3.1.8 Proofs
 
 The `prf` field defines all [Delegation]s required to prove that this Invocation has an unbroken authorization chain.
 
-### 3.1.7 Expiry
+### 3.1.9 Expiry
 
 The OPTIONAL field `exp` defines when the Invocation SHOULD time out. This is both expressive (defines a timeout, which is a best practice), and prevents replays.
 
-### 3.1.8 Issued At
+### 3.1.10 Issued At
 
 The `iat` field MAY contain an issuance timestamp. This time SHOULD NOT be trusted; it is only a claim by the Invoker of their system time. System clocks often have clock skew, or a Byzantine Invoker could claim an arbitrary time.
+
+### 3.1.11 Cause
+
+The OPTIONAL `cause` field is a provenance claim describing which [Receipt] requested it. This is helpful for tracking chains of Invocations.
 
 ## 3.2 Task
 
@@ -524,7 +536,6 @@ sequenceDiagram
         "body": "Let get coffee sometime and talk about UCAN Invocations!"
       },
       "nonce": {"/": {"bytes": "TWFueSBopZ2h0IHdvcs"}},
-      "mta": {},
       "prf": [{"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"}],
       "exp": 1697409438
     }
@@ -555,7 +566,7 @@ sequenceDiagram
   }
 }
 ```
-
+ 
 # 4 Response
 
 A `Receipt` is a kind of Invocation used to attest to the result of another Invocation. A Receipt MUST be issued by the [Executor] (including by [Execution Proxy]).
