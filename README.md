@@ -133,8 +133,8 @@ The executor is directed to perform some task described in the UCAN invocation b
 
 At a very high level:
 
-- A [Task] abstractly requests some action
-- An [Invocation] attaches proven ([delegated][Delegation]) authority to a [Task]
+- A [Task] abstractly describes some Action to be run
+- An [Invocation] attaches proven ([delegated][Delegation]) authority to a [Task], and requests it be run by a certain Agent
 - A [Receipt] MAY request that the Invoker enqueue more [Task]s
 
 ``` mermaid
@@ -206,16 +206,16 @@ flowchart RL
 
 A Task is the smallest unit of work that can be Invoked. It is akin to a function call or actor message. It MUST conform to the following struct shape:
 
-| Name        | Field   | Type               | Required |                                                                                |
-|-------------|---------|--------------------|----------|--------------------------------------------------------------------------------|
-| [Subject]   | `sub`   | `DID`              | No       |                                                                                |
-| [Command]   | `do`    | `String`           | Yes      |                                                                                |
-| [Arguments] | `args`  | `{String : Any}`   | Yes      |                                                                                |
-| [Nonce]     | `nonce` | `Bytes \| null`    | Yes      |                                                                                |
-| [Meta]      | `meta`  | `{String : Any}`   | Yes      | Extensible fields, e.g. resource limits, human-readable tags, notes, and so on |
-| [Proofs]    | `prf`   | `[&Delegation]`    | Yes      | [UCAN Delegation]s that provide the authority to perform the `act` [Action]    |
-| [Expiry]    | `exp`   | `Integer`[^js-num] | No       | The UTC Unix timestamp at which the Task expires                               |
-| [Issued At] | `iat`   | `Integer`[^js-num] | No       | The UTC Unix timestamp at which the Invocation was issued                      |
+| Name        | Field   | Type               | Required |
+|-------------|---------|--------------------|----------|
+| [Subject]   | `sub`   | `DID`              | No       |
+| [Command]   | `do`    | `String`           | Yes      |
+| [Arguments] | `args`  | `{String : Any}`   | Yes      |
+| [Nonce]     | `nonce` | `Bytes \| null`    | Yes      |
+| [Meta]      | `meta`  | `{String : Any}`   | Yes      |
+| [Proofs]    | `prf`   | `[&Delegation]`    | Yes      |
+| [Expiry]    | `exp`   | `Integer`[^js-num] | No       |
+| [Issued At] | `iat`   | `Integer`[^js-num] | No       |
 
 The shape of the `args` MUST be defined by the `do` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively.
 
@@ -264,6 +264,14 @@ The REQUIRED `sub` field both parameterizes over a specific agent, and acts as a
 ### 3.1.4 Nonce
 
 The REQUIRED `nonce` field MUST include a random nonce. This field ensures that multiple (non-idempotent) invocations are unique. The nonce SHOULD be empty (`0x`) for Commands that are idempotent (such as deterministic Wasm modules or standards-abiding HTTP PUT requests).
+
+### 3.1.5 Metadata
+
+### 3.1.6 Proofs
+
+### 3.1.7 Expiry
+
+### 3.1.9 Issuance Timestamp
 
 ## 3.2 Task
 
