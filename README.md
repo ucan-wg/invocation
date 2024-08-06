@@ -1,31 +1,36 @@
-# UCAN Invocation Specification v1.0.0-rc. 1
+# UCAN Invocation Specification
+## Version 1.0.0-rc. 1
 
 ## Editors
+[Editors]: #editors
 
-- [Brooklyn Zelenka], [Fission]
-- [Irakli Gozalishvili], [DAG House]
+- [Brooklyn Zelenka], [Witchcraft Software]
+- [Irakli Gozalishvili], [Protocol Labs]
 
 ## Authors
+[Authors]: #authors
 
-- [Brooklyn Zelenka], [Fission]
-- [Irakli Gozalishvili], [DAG House]
-- [Zeeshan Lakhani], [Fission]
+- [Brooklyn Zelenka], [Witchcraft Software]
+- [Irakli Gozalishvili], [Protocol Labs]
+- [Zeeshan Lakhani], [Oxide Computer]
 
-## Depends On
+# Dependencies
+[Dependencies]: #dependencies
 
-- [IPLD]
-- [DID]
 - [UCAN Delegation]
 
 ## Language
+[Language]: #language
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [BCP 14] when, and only when, they appear in all capitals, as shown here.
 
 # Abstract
+[Abstract]: #abstract
 
 UCAN Invocation defines a format for expressing the intention to execute delegated UCAN capabilities, and the attested receipts from an execution.
 
 # Introduction
+[Introduction]: #introduction
 
 > Just because you can doesn't mean that you should
 >
@@ -33,15 +38,17 @@ UCAN Invocation defines a format for expressing the intention to execute delegat
 
 > When authorization is communicated without such context, it's like receiving a key in the mail with no hint about what to do with it [...] After an object receives this message, she can invoke arg if she chooses, but why would she ever choose to do so?
 >
-> Mark Miller, [E-lang Mailing List, 2000 Oct 18]
+> [Mark Miller], [E-lang Mailing List, 2000 Oct 18]
 
 UCAN is a chained-capability format. A UCAN contains all of the information that one would need to perform some task, and the provable authority to do so. This begs the question: can UCAN be used directly as an RPC language?
 
 Some teams have had success with UCAN directly for RPC when the intention is clear from context. This can be successful when there is more information on the channel than the UCAN itself (such as an HTTP path that a UCAN is sent to). However, capability invocation contains strictly more information than delegation: all of the authority of UCAN, plus the command to perform the task.
 
 ## Intuition
+[Intuition]: #intuition
 
 ### Car Keys
+[Car Keys]: #car-keys
 
 Consider the following fictitious scenario:
 
@@ -77,6 +84,7 @@ In the example above, steps ➌ and ➍ are qualitatively different:
 - Step ➍ is a _command_ to do so
 
 ## Lazy vs Eager Evaluation
+[Lazy vs Eager Evaluation]: #lazy-vs-eager-evaluation
 
 In a referentially transparent setting, the description of a task is equivalent to having done so: a function and its results are interchangeable. [Programming languages with call-by-need semantics][Haskell] have shown that this can be an elegant programming model, especially for pure functions. However, _when_ something will run can sometimes be unclear.
 
@@ -97,20 +105,20 @@ Delegating a capability is like the statement `message`. Task is akin to `messag
 However, there is clearly a distinction between passing a function and invoking it. The same is true for capabilities: delegating the authority to do something is not the same as asking for it to be done immediately, even if sometimes it's clear from context.
 
 ## Public Resources
+[Public Resources]: #public-resources
 
 A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible, and a hard requirement for initiating a flow (e.g. sign up). These cases typically involve a reference passed out of band (such as a web link). Due to [designation without authorization], knowing the URI of a public resource is often sufficient for interacting with it. In these cases, the Executor MAY accept Invocations without having a "closed-loop" proof chain, but this SHOULD NOT be the default behavior.
 
 ## Promise Pipelining
+[Promise Pipelining]: #promise-pipelining
 
-[UCAN Promise] extends UCAN Invocation with [distributed promise pipelines]. Promises are helpful in a wide variety of situations for efficiency and convenience. Implementing UCAN Promises is RECOMMENDED.
-
-## Serialization
-
-UCAN Invocations MUST be encoded with some [IPLD] codec. [DAG-CBOR] is RECOMMENDED.
+[UCAN Promise] extends UCAN Invocation with [distributed promise pipelines]. Promises are helpful in a wide variety of situations for efficiency and convenience. Implementations supporting UCAN Promises is RECOMMENDED.
 
 # Concepts
+[Concepts]: #concepts
 
 ## Roles
+[Roles]: #roles
 
 Task adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
 
@@ -120,16 +128,19 @@ Task adds two new roles to UCAN: invoker and executor. The existing UCAN delegat
 | `aud`      | Delegate: gain authority (passive)     | Executor: perform task (active) |
 
 ### Invoker
+[Invoker]: #invoker
 
 The invoker signals to the executor that a task associated with a UCAN SHOULD be performed.
 
 The invoker MUST be the UCAN delegator. Their DID MUST be authenticated in the `iss` field of the contained UCAN.
 
 ### Executor
+[Executor]: #executor
 
 The executor is directed to perform some task described in the UCAN invocation by the invoker.
 
 ## Life Cycle
+[Life Cycle]: #life-cycle
 
 At a very high level:
 
@@ -146,61 +157,13 @@ erDiagram
 ```
 
 ## Anatomy
+[Anatomy]: #anatomy
 
 | Concept      | Description                                                                 |
 |--------------|-----------------------------------------------------------------------------|
-| [Command]    | (Deferred) function application; a description of work to be performed      |
+| [Command]    | Function application; a description of work to be performed                 |
 | [Task]       | Contextual information for a [Command], such as resource limits             |
 | [Invocation] | A request to perform some [Task] based on [delegated][Delegation] authority |
-| [Result]     | The success value or error information from the run [Invocation]            |
-| [Receipt]    | The return value from an [Invocation], which may [enqueue] more tasks       |
-
-``` mermaid
-flowchart RL
-    subgraph Invocation
-        direction LR
-        subgraph InvocationPayload
-            subgraph Task
-                direction TB
-
-                Command
-                DelegationProofs[Delegation Proofs]
-            end
-        end
-
-        Inv1Sig[Signature]
-    end
-
-    subgraph Receipt
-        subgraph ReceiptPayload
-            Ran
-            Result
-            Enqueue
-        end
-
-        RecSig[Signature]
-    end
-
-    subgraph Invocation2["(Next) Invocation"]
-        direction RL
-
-        subgraph InvocationPayload2[Invocation Payload]
-            subgraph Task2
-                Command2["Command"]
-                DelegationProofs2[Delegation Proofs]
-            end
-
-            Cause
-        end
-
-        Inv2Sig[Signature]
-    end
-
-    Cause -->|provenance| Enqueue
-    Ran   -->|provenance| Invocation
-```
-
-# Invocation (Request)
 
 A request for some work to be done (or to "exercise your authority") is an Invocation.
 
@@ -218,7 +181,7 @@ flowchart TD
                 do
                 args
                 prf
-                cause
+                cause["cause (optional)"]
                 etc["..."]
             end
         end
@@ -231,49 +194,41 @@ As [noted in the introduction][lazy-vs-eager], there is a difference between a r
 
 Note that the Invocation MUST include the Signature envelope. An [Invocation Payload] on its own MUST NOT be considered a valid Invocation.
 
-## Invocation (Envelope)
+# [UCAN Envelope] Configuration
+[UCAN Envelope Configuration]: #ucan-envelope-configuration
+
+## Type Tag
+[Type Tag]: #type-tag
  
-| Field | Type               | Required | Description                                           |
-|-------|--------------------|----------|-------------------------------------------------------|
-| `s`   | `Signature`        | Yes      | A signature by the Payload's `iss` over the `p` field |
-| `p`   | `SignaturePayload` | Yes      | The content that was signed                           |
-
-## Signature Payload
-
-| Field               | Type                | Required | Description              |
-|---------------------|---------------------|----------|--------------------------|
-| `h`                 | `VarsigHeader`      | Yes      | The Varsig header        |
-| `ucan/i/1.0.0-rc.1` | `InvocationPayload` | Yes      | The [Invocation Payload] |
-
-The Signature Payload MUST contain a [Varsig] header, and the [Invocation Payload]. The Varsig header MUST describe the cryptographic configuration used to format and sign the [Invocation Payload]. This is important in order to:
-
-1. Commits the Signature to the cryptographic algorithms used
-2. Describes how the payload was serialized before signing
+The UCAN envelope's payload tag MUST be `ucan/inv@1.0.0-rc.1`.
 
 ## Invocation Payload
+[Invocation Payload]: #invocation-payload
 
 The Invocation Payload attaches sender, receiver, and provenance to the [Task].
  
-| Field       | Type    | Required           | Description |                                                                    |
-|-------------|---------|--------------------|-------------|--------------------------------------------------------------------|
-| [Issuer]    | `iss`   | `DID`              | Yes         | The DID of the [Invoker]                                           |
-| [Subject]   | `sub`   | `DID`              | Yes         | The [Subject] being invoked                                        |
-| [Audience]  | `aud`   | `DID`              | No          | The DID of the intended [Executor] if different from the [Subject] |
-| [Command]   | `do`    | `String`           | Yes         | The [Command]                                                      |
-| [Arguments] | `args`  | `{String : Any}`   | Yes         | The [Command]'s [Arguments]                                        |
-| [Proofs]    | `prf`   | `[&Delegation]`    | Yes         | [Delegation]s that prove the chain of authority                    |
-| [Metadata]  | `meta`  | `{String : Any}`   | No          | Arbitrary [Metadata]                                               |
-| [Nonce]     | `nonce` | `Bytes`            | No          | A unique, random nonce                                             |
-| [Expiry]    | `exp`   | `Integer`[^js-num] | No          | The timestamp at which the Invocation becomes invalid              |
-| [Issued At] | `iat`   | `Integer`[^js-num] | No          | The timestamp at which the Invocation was created                  |
-| [Cause]     | `cause` | `&Receipt`         | No          | An OPTIONAL CID of the [Receipt] that enqueued the [Task]          |
+| Field   | Type               | Required | Description                                                        |
+|---------|--------------------|----------|--------------------------------------------------------------------|
+| `iss`   | `DID`              | Yes      | The DID of the [Invoker]                                           |
+| `sub`   | `DID`              | Yes      | The [Subject] being invoked                                        |
+| `aud`   | `DID`              | No       | The DID of the intended [Executor] if different from the [Subject] |
+| `cmd`   | `String`           | Yes      | The [Command]                                                      |
+| `args`  | `{String : Any}`   | Yes      | The [Command]'s [Arguments]                                        |
+| `prf`   | `[&Delegation]`    | Yes      | [Delegation]s that prove the chain of authority                    |
+| `meta`  | `{String : Any}`   | No       | Arbitrary [Metadata]                                               |
+| `nonce` | `Bytes`            | No       | A unique, random nonce                                             |
+| `exp`   | `Integer`[^js-num] | No       | The timestamp at which the Invocation becomes invalid              |
+| `iat`   | `Integer`[^js-num] | No       | The timestamp at which the Invocation was created                  |
+| `cause` | `&Receipt`         | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task]          |
+ 
+[^js-num]: JavaScript has a single numeric type ([`Number`][JS Number]) for both integers and floats. This representation is defined as a [IEEE-754] double-precision floating point number, which has a 53-bit significand.
 
-The shape of the `args` MUST be defined by the `do` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively. Using the JavaScript analogy from the introduction, an Action is similar to wrapping a call in a closure:
+The shape of the `args` MUST be defined by the `cmd` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively. Using the JavaScript analogy from the introduction, an Action is similar to wrapping a call in a closure:
 
 ```js
 // Command
 {
-  "do": "msg/send",
+  "cmd": "/msg/send",
   "args": {
     "from": "mailto:alice@example.com",
     "to": [ "bob@example.com", "carol@example.com" ],
@@ -294,12 +249,15 @@ The shape of the `args` MUST be defined by the `do` field type. This is similar 
 ```
 
 ### Agents
+[Agents]: #agents
 
 #### Issuer
+[Issuer]: #issuer
 
 The `iss` field MUST include the Issuer of the Invocation. This DID MUST match against the encoding signature.
 
 #### Subject
+[Subject]: #subject
 
 The REQUIRED `sub` field both parameterizes over a specific agent, and acts as a namespace for how to interpret the [Command]. This is especially critical for two parts of the life cycle:
 
@@ -307,64 +265,76 @@ The REQUIRED `sub` field both parameterizes over a specific agent, and acts as a
 2. Indexing Receipts for reverse lookup and memoization
 
 #### Audience
+[Audience]: #audience
 
 The OPTIONAL `aud` field specified the intended recipient of Invocation, otherwise the Audience MUST be assumed to the [Subject]. This is useful for message routing, command brokers, proxy execution, gateways, replicated state machines, and so on.
 
 ### Task
+[Task]: #task
 
-A Task is the subset of Invocation fields that uniquely determine the work to be performed[^subtype]. The nonce is important for distinguishing between non-idempotent executions of a Task by making the group together unique.
+A Task is the subset of Invocation fields that uniquely determine the work to be performed. The nonce is important for distinguishing between non-idempotent executions of a Task by making the group together unique.
  
-A Task MUST be uniquely defined by the following fields:
+A Task MUST be uniquely defined by a Task ID that is the CID of the following fields:
 
 - [Subject]
 - [Command]
 - [Arguments]
 - [Nonce]
 
-[^subtype]: Which is to say: an Invocation is a subtype of Task
+Tasks that describe pure functions — or other strategies like fan-out racing — SHOULD have the same Task ID by using the same nonce.
 
 #### Command
+[Command]: #command
 
-The REQUIRED Command (`do`) field MUST contain a concrete, dispatchable message that can be sent to the Executor. The Command MUST define the shape of the data in the [Arguments].
+The REQUIRED Command (`cmd`) field MUST contain a concrete, dispatchable message that can be sent to the Executor. The Command MUST define the shape of the data in the [Arguments].
 
 ### Arguments
+[Arguments]: #arguments
 
 The REQUIRED Arguments (`args`) field, MAY contain any parameters expected by the Command. The Subject MUST be considered the authority on the shape of this data. This field MUST be representable as a map or keyword list.
 
-UCAN capabilities provided in proofs MAY impose constraints on the type of Arguments allowed.
+The Arguments MUST pass validation of the Policies on all of the [UCAN Delegations][UCAN Delegation] in the [Proofs] field. If any Policy reports failure, the Invocation MUST be rejected.
 
 #### Nonce
+[Nonce]: #nonce
 
 The REQUIRED `nonce` field MUST include a random nonce. This field ensures that multiple (non-idempotent) invocations are unique. The nonce SHOULD be empty (`0x`) for Commands that are idempotent (such as deterministic Wasm modules or standards-abiding HTTP PUT requests).
 
 ### Proofs
+[Proofs]: #proofs
 
 The `prf` field defines all [Delegation]s required to prove that this Invocation has an unbroken authorization chain.
 
 ### Provenance
+[Provenance]: #provenance
 
 #### Cause
+[Cause]: #cause
 
 The OPTIONAL `cause` field is a provenance claim describing which [Receipt] requested it. This is helpful for tracking chains of Invocations.
 
-
-#### Expiry
+#### Expiration
+[Expiration]: #expiration
 
 The OPTIONAL field `exp` defines when the Invocation SHOULD time out. This is both expressive (defines a timeout, which is a best practice), and prevents replays.
 
 #### Issued At
+[Issued At]: #issued-at
 
 The OPTIONAL `iat` field MAY contain an issuance timestamp. This time SHOULD NOT be trusted; it is only a claim by the Invoker of their system time. System clocks often have clock skew, or a Byzantine Invoker could claim an arbitrary time.
 
 #### Metadata
+[Metadata]: #metadata
 
 The OPTIONAL `meta` field MAY include arbitrary metadata or extensible fields. For example, Wasm fuel, an internal job ID, references to GitHub Issues, and so on. This data MAY be used by the Executor.
 
 ## Attestation
+[Attestation]: #attestation
 
 An Invocation MAY be used to attest to some information. This is in effect a statement to the Issuer (without Audience) that never expires.
 
 ## Proof Chains
+[Proof Chains]: #proof-chains
 
 A Task MUST include the entire [UCAN Delegation] proof chain in the `prf` field. The chain MUST form a direct line of authority, starting with the delegation with an `aud` that matches the Invoker, and ending with a delegation where the `iss` matches the `sub`. The `sub` throughout MUST match the `aud` of the Invocation.
 
@@ -422,79 +392,21 @@ flowchart RL
     prf --> Delegations
 ```
 
-### Proxied Proof Paths with `ucan/proxy`
-
-Beyond [attenuation], [`ucan/proxy`] MAY be used to connect otherwise disjoint parts of an authorization network. The motivation is to express the intention of automatically re-delegating (or "forwarding") authority to another agent if you are offline, while retaining the ability to [revoke] that link. The clear use case is linking user devices, but also has applications for PoLA "cold" root/admin keys for servers.
-
-The `ucan/proxy` Command MAY be used to substitute into any delegation chain. It "forwards" whatever is later in the chain, in effect swapping out the `iss` field. `ucan/proxy` MUST NOT change the Ability it re-delegates. It MAY be scoped to a particular scheme or attach additional caveats.
-
-``` js
-// Anything
-{
-  "sub": "did:web:example.com",
-  "can": "ucan/proxy",
-  "cond": [],
-  // ...
-}
-```
-
-``` mermaid
-sequenceDiagram
-    actor Alice
-    actor Bob
-    actor Carol
-    actor Dan
-    
-    autonumber
-
-    Note over Alice, Dan: Delegation Setup
-      Bob -->> Carol: Delegate(ucan/proxy)
-      Alice -->> Bob: Delegate(crud/create, dns:example.com)
-      Carol -->> Dan: Delegate(crud/create, dns:example.com)
-
-    Note over Alice, Dan: Invoke
-      Dan ->> Alice: Invoke(crud/create, dns:example.com, txt="hi", proof: [➋,➊,➌])
-
-    Note over Alice, Dan: Delegation path in ➍
-      autonumber 2
-      Alice -->> Bob: Delegate(crud/create, dns:example.com)
-
-      autonumber 1
-      rect rgb(127, 127, 127)
-          Bob -->> Carol: Delegate(ucan/proxy)
-      end
-
-      autonumber 3
-      Carol -->> Dan: Delegate(crud/create, dns:example.com)
-```
-
-```js
-// Only DNS resources
-{
-  "sub": "did:web:example.com",
-  "can": "ucan/proxy",
-  "args": {
-    "scheme": "dns"
-  }
-  "if": [],
-  // ...
-}
-```
-
 ## Examples
+[Examples]: #examples
 
 ### Interacting with an HTTP API
 
 ```js
 // DAG-JSON
-{
-  "s": {"/": {"bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
-  "p": {
+[
+  {"/": {"bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
+  {
     "h": {"/": {"bytes": "NBIFEgEAcQ"}},
     "ucan/i/1.0.0-rc.1": {
       "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
       "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
-      "do": "crud/create",
+      "cmd": "/crud/create",
       "args": {
         "uri": "https://example.com/blog/posts",
         "headers": {
@@ -521,22 +433,22 @@ sequenceDiagram
     }
     
   }
-}
+]
 ```
 
 ### Sending Email
 
 ```js
 // DAG-JSON
-{
-  "s": {"/": {"bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
-  "p": {
+[
+  {"/": {"bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
+  {
     "h": {"/": {"bytes": "NBIFEgEAcQ"}},
     "ucan/i/1.0.0-rc.1": {
       "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
       "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
-      "do": "msg/send",
+      "cmd": "/msg/send",
       "args": {
         "from": "mailto:akiko@example.com",
         "to": [ "boris@example.com", "carol@example.com" ],
@@ -548,15 +460,15 @@ sequenceDiagram
       "exp": 1697409438
     }
   }
-}
+]
 ```
 
 ### Inline WebAssembly
 
 ```js
-{
-  "s": {"/": {"bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
-  "p": {
+[
+  {"/": {"bytes": "7aEDQIscUKVuAIB2Yj6jdX5ru9OcnQLxLutvHPjeMD3pbtHIoErFpo7OoC79Oe2ShgQMLbo2e6dvHh9scqHKEOmieA0"}},
+  {
     "h": {"/": {"bytes": "NBIFEgEAcQ"}},
     "ucan/i/1.0.0-rc.1": {
       "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
@@ -564,7 +476,7 @@ sequenceDiagram
       "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "meta": {"fuel": 999999},
       "nonce": {"/": {"bytes": ""}}, // NOTE: as stated above, idempotent Actions should always have the same nonce
-      "do": "wasm/run",
+      "cmd": "/wasm/run",
       "args": {
         "mod": "data:application/wasm;base64,AHdhc21lci11bml2ZXJzYWwAAAAAAOAEAAAAAAAAAAD9e7+p/QMAkSAEABH9e8GowANf1uz///8UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////8AAAAACAAAACoAAAAIAAAABAAAACsAAAAMAAAACAAAANz///8AAAAA1P///wMAAAAlAAAALAAAAAAAAAAUAAAA/Xu/qf0DAJHzDx/44wMBqvMDAqphAkC5YAA/1mACALnzB0H4/XvBqMADX9bU////LAAAAAAAAAAAAAAAAAAAAAAAAAAvVXNlcnMvZXhwZWRlL0Rlc2t0b3AvdGVzdC53YXQAAGFkZF9vbmUHAAAAAAAAAAAAAAAAYWRkX29uZV9mAAAADAAAAAAAAAABAAAAAAAAAAkAAADk////AAAAAPz///8BAAAA9f///wEAAAAAAAAAAQAAAB4AAACM////pP///wAAAACc////AQAAAAAAAAAAAAAAnP///wAAAAAAAAAAlP7//wAAAACM/v//iP///wAAAAABAAAAiP///6D///8BAAAAqP///wEAAACk////AAAAAJz///8AAAAAlP///wAAAACM////AAAAAIT///8AAAAAAAAAAAAAAAAAAAAAAAAAAET+//8BAAAAWP7//wEAAABY/v//AQAAAID+//8BAAAAxP7//wEAAADU/v//AAAAAMz+//8AAAAAxP7//wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU////pP///wAAAAAAAQEBAQAAAAAAAACQ////AAAAAIj///8AAAAAAAAAAAAAAADQAQAAAAAAAA==",
         "fun": "add_one",
@@ -572,173 +484,11 @@ sequenceDiagram
       }
     }
   }
-}
-```
- 
-# Receipt (Response)
-
-A `Receipt` is a kind of Invocation used to attest to the result of another Invocation. A Receipt MUST be issued by the [Executor] (including by [Execution Proxy]).
-
-**NB: a Receipt does not guarantee correctness of the result!** The statement's veracity MUST be only understood as an attestation from the executor.
-
-``` mermaid
-flowchart TD
-    subgraph Receipt
-        SignatureBytes["Signature (raw bytes)"]
-      
-        subgraph SigPayload ["Signature Payload"]
-            VarsigHeader["Varsig Header"]
-
-            subgraph InvocationPayload ["Receipt Payload"]
-                iss
-                sub
-                ran
-                out
-                prf
-                etc["..."]
-            end
-        end
-    end
-
-    ran -.->|CID| Invocation
-```
-
-Receipts MUST use the same-or-higher version number as the [Invocation] that they reference.
-
-| Field | Type        | Required | Description                                                                                    |
-|-------|-------------|----------|------------------------------------------------------------------------------------------------|
-| `s`   | `Signature` | Yes      | Signature (bytes or struct) of the `pld` field, which MUST be interpreted as the `pld.h` field |
-| `p`   | `&Payload`  | Yes      | The data being signed over                                                                     |
-
-## Signature Payload
-
-| Field               | Type             | Required | Description                                          |
-|---------------------|------------------|----------|------------------------------------------------------|
-| `h`                 | `VarsigHeader`   | Yes      | [Varsig] header that describes the outer `sig` field |
-| `ucan/r/1.0.0-rc.1` | `ReceiptPayload` | Yes      | Fields unique to the Receipt                         |
-
-## Receipt Payload
-
-Receipt Payloads MUST conform to the following shape:
-
-| Field  | Type               | Required | Description                                                                        |
-|--------|--------------------|----------|------------------------------------------------------------------------------------|
-| `iss`  | `DID`              | Yes      | The DID of the Executor                                                            |
-| `ran`  | `&Invocation`      | Yes      | A link to the [Invocation] that the Receipt is for                                 |
-| `out`  | `Result`           | Yes      | The value output of the invocation in [Result] format                              |
-| `prf`  | `[&Delegation]`    | Yes      | [Delegation] proof chain if the Executor was not the `aud` of the `ran` Invocation |
-| `next` | `[&Task]`          | Yes      | Further [Task]s that the [Invocation] would like to enqueue                        |
-| `meta` | `{String : Any}`   | Yes      | Additional data about the receipt                                                  |
-| `iat`  | `Integer`[^js-num] | No       | The UTC Unix timestamp at which the Receipt was issued                             |
-
-A few of these fields warrant further comment below.
-
-### Result
-
-A Result records the output of the [Task], as well as its success or failure state. A Result MUST be formatted as map with a single `tag` field.
-
-| Tag     | Value            | Description                                     |
-|---------|------------------|-------------------------------------------------|
-| `ok`    | `Any`            | The successfully returned data from a [Command] |
-| `error` | `{String : Any}` | Error information from a failed [Command]       |
-
-```js
-// Success
-{ "ok": 42 }
-
-// Failure
-{
-  "error": {
-    "dev/reason": "unauthorized",
-    "http/status": 401
-  }
-}
-```
-
-## Next Task(s)
-
-The result of an [Invocation] MAY include a request for further actions to be performed. This is a process of requesting that the invoker "enqueue" a new Task. This enables several things: a clean separation of pure return values from requesting impure tasks to be performed by the runtime, and gives the runtime the control to decide how (or if!) more work should be performed.
-
-Enqueued [Task]s describe requests for future work to be performed. They SHOULD come with [Delegation]s, but MAY be a simple request back to the Invoker.
-
-All [Task]s in an [enqueue] array MUST be treated as concurrent, unless explicit data dependencies between them exist via [UCAN Promise]s.
-
-## Examples
-
-``` js
-// DAG-JSON
-{
-  "s": {"/": {"bytes": "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU"}},
-  "p": {
-    "h": {"/": {"bytes": "NBIFEgEAcQ"}},
-    "ucan/r/1.0.0-rc.1": {
-      "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
-      "ran": {"/": "bafkreictzcfwelyww7zmjkl5nptyot24oilky2bppw42nui2acozhfmzqa"},
-      "out": {"ok": 42},
-      "iat": 1702907627,
-      "prf": [{"/": "bafkreig3e34gbe65q4axx7bcsq3aei7urggprx7uynpltkhp4nclqzebbu"}],
-    }
-  }
-}
-```
-
-# Proxy Execution
-
-If the Receipt Issuer is not identical to the `aud` field of Invocation referenced in the `ran` field, a [Delegation] proof chain SHOULD be included. If a chain is present, it MUST show that such a proxy execution was authorized by the original listed `aud` Agent.
-
-``` js
-// Pseudocode
-
-const delegation = {
-  iss: "did:web:example.com",
-  aud: "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
-  can: "crud/update",
-  // ...
-}
-
-const workerDelegation = {
-  iss: "did:web:example.com",
-  aud: "did:web:worker.not-example.net",
-  sub: "did:web:example.com",
-  can: "ucan/execute",
-  // ...
-}
-
-const invocation = {
-  iss: "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
-  aud: "did:web:example.com",
-  prf: [ cid(delegation) ],
-  // ...
-}
-
-const receipt = {
-  iss: "did:web:worker.not-example.net",
-  ran: cid(invocation)
-  prf: [ cid(workerDelegation) ],
-  // ...
-}
-```
-
-## Examples
-
-``` js
-// DAG-JSON
-{
-  "s": {"/": {"bytes": "7aEDQLYvb3lygk9yvAbk0OZD0q+iF9c3+wpZC4YlFThkiNShcVriobPFr/wl3akjM18VvIv/Zw2LtA4uUmB5m8PWEAU"}},
-  "p": {
-    "h": {"/": {"bytes": "NBIFEgEAcQ"}},
-    "ucan/r/1.0.0-rc.1": {
-      "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
-      "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
-      "ran": {"/": "bafyreia5tctxekbm5bmuf6tsvragyvjdiiceg5q6wghfjiqczcuevmdqcu"},
-      "out": {"ok": ["bob@example.com", "alice@example.com"]}
-      "prf": []
-    }
-  }
-}
+]
 ```
 
 # Prior Art
+[Prior Art]: #prior-art
 
 [ucanto RPC] from [DAG House] is a production system that uses UCAN as the basis for an RPC layer.
 
@@ -751,6 +501,7 @@ The Object Capability Network ([OCapN]) protocol extends [CapTP] with a generali
 [Cap 'n Proto RPC] is an influential RPC framework based on concepts from [CapTP].
 
 # 7 Acknowledgements
+[Acknowledgements]: #acknowledgements
 
 Many thanks to [Mark Miller] for his [trail blazing work][eRights] on [capability systems].
 
@@ -767,39 +518,7 @@ Thanks to [Philipp Krüger] for the enthusiastic feedback on the overall design 
 Thanks to [Christine Lemmer-Webber] for the many conversations about capability systems and the programming models that they enable.
 
 Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the general IPLD worldview
-
-<!-- Footnotes -->
-
-[^js-num]: JavaScript has a single numeric type ([`Number`][JS Number]) for both integers and floats. This representation is defined as a [IEEE-754] double-precision floating point number, which has a 53-bit significand.
  
-<!-- Internal Links -->
-
-[Action]: #action
-[Arguments]: #arguments
-[Audience]: #audience
-[Cause]: #cause
-[Command]: #command
-[Execution Proxy]: #proxy-execution
-[Executor]: #executor
-[Expiry]: #expiry
-[Invocation Payload]: #invocation-payload
-[Invocation Signature]: #invocation-envelope
-[Invocation]: #invocation-request
-[Invoker]: #invoker
-[Issued At]: #issued-at
-[Issuer]: #issuer
-[Metadata]: #metadata 
-[Nonce]: #nonce
-[Proofs]: #proofs
-[Receipt Payload]: #receipt-payload
-[Receipt]: #receipt-response
-[Response]: #response
-[Result]: #result
-[Subject]: #subject
-[Task]: #task
-[enqueue]: #enqueue
-[lazy-vs-eager]: #lazy-vs-eager-evaluation
-
 <!-- External Links -->
 
 [Agoric]: https://agoric.com/
@@ -828,7 +547,9 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Mark Miller]: https://github.com/erights
 [OAuth 1]: https://oauth.net/1/
 [OCapN]: https://github.com/ocapn/
+[Oxide Computer]: https://oxide.computer/ 
 [Philipp Krüger]: https://github.com/matheus23/
+[Protocol Labs]: https://protocol.ai
 [Quinn Wilton]: https://github.com/QuinnWilton
 [Robust Composition]: http://www.erights.org/talks/thesis/markm-thesis.pdf
 [Rod Vagg]: https://github.com/rvagg/
@@ -837,6 +558,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [UCAN Delegation]: https://github.com/ucan-wg/delegation/
 [UCAN Promise]: https://github.com/ucan-wg/promise/
 [URI]: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
+[Witchcraft Software]: https://github.com/expede
 [Zeeshan Lakhani]: https://github.com/zeeshanlakhani
 [`data`]: https://en.wikipedia.org/wiki/Data_URI_scheme
 [`ipfs`]: https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls
@@ -845,4 +567,5 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [designation without authorization]: https://srl.cs.jhu.edu/pubs/SRL2003-02.pdf
 [distributed promise pipelines]: http://erights.org/elib/distrib/pipeline.html
 [eRights]: https://erights.org
+[principle of least authority]: https://en.wikipedia.org/wiki/Principle_of_least_privilege
 [ucanto RPC]: https://github.com/web3-storage/ucanto
