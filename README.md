@@ -107,7 +107,7 @@ However, there is clearly a distinction between passing a function and invoking 
 ## Public Resources
 [Public Resources]: #public-resources
 
-A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible, and a hard requirement for initiating a flow (e.g. sign up). These cases typically involve a reference passed out of band (such as a web link). Due to [designation without authorization], knowing the URI of a public resource is often sufficient for interacting with it. In these cases, the Executor MAY accept Invocations without having a "closed-loop" proof chain, but this SHOULD NOT be the default behavior.
+A core part of UCAN's design is interacting with the wider, non-UCAN world. Many resources are open to anyone to access, such as unauthenticated web endpoints. Unlike UCAN-controlled resources, an invocation on public resources is both possible, and a hard requirement for initiating a flow (e.g. sign up). These cases typically involve a reference passed out of band (such as a web link). Due to [designation with authorization], knowing the URI of a public resource is often sufficient for interacting with it. In these cases, the Executor MAY accept Invocations without having a "closed-loop" proof chain, but this SHOULD NOT be the default behavior.
 
 ## Promise Pipelining
 [Promise Pipelining]: #promise-pipelining
@@ -568,7 +568,7 @@ Many thanks to [Juan Caballero] for his detailed questions and comments to help 
 [`ipfs`]: https://docs.ipfs.tech/how-to/address-ipfs-on-web/#native-urls
 [`magnet`]: https://en.wikipedia.org/wiki/Magnet_URI_scheme
 [capability systems]: https://en.wikipedia.org/wiki/Capability-based_security
-[designation without authorization]: https://srl.cs.jhu.edu/pubs/SRL2003-02.pdf
+[designation with authorization]: https://srl.cs.jhu.edu/pubs/SRL2003-02.pdf
 [distributed promise pipelines]: http://erights.org/elib/distrib/pipeline.html
 [eRights]: https://erights.org
 [payload tag]: https://github.com/ucan-wg/spec/blob/main/README.md#envelope
