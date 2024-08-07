@@ -315,7 +315,7 @@ The OPTIONAL `cause` field is a provenance claim describing which [Receipt] requ
 #### Expiration
 [Expiration]: #expiration
 
-The REQUIRED field `exp` defines when the Invocation SHOULD time out. This is both expressive (defines a timeout, which is a best practice), and prevents replays.
+The REQUIRED nullable field `exp` defines when the Invocation SHOULD time out. Setting a timeout within a a few minutes is RECOMMENDED as it accounts for clock skew but limits the ability of an attacker to take advantage of an intercepted Invocation. In general, the smaller the time window the better. This is both expressive (defines a timeout, which is a best practice), and prevents replays.
 
 #### Issued At
 [Issued At]: #issued-at
