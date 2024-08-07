@@ -79,6 +79,7 @@ js-num
 memoization
 multiformat
 namespace
+nullable
 outmost
 parallelize
 parameterizes

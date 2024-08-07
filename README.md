@@ -254,7 +254,7 @@ The shape of the `args` MUST be defined by the `cmd` field type. This is similar
 #### Issuer
 [Issuer]: #issuer
 
-The `iss` field MUST include the Issuer of the Invocation. This DID MUST match against the encoding signature.
+The `iss` field MUST include the Issuer of the Invocation. This DID URL MUST dereference to the public key which proves the signature over the payload included in the envelope.
 
 #### Subject
 [Subject]: #subject
