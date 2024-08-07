@@ -207,19 +207,19 @@ The UCAN envelope's payload tag MUST be `ucan/inv@1.0.0-rc.1`.
 
 The Invocation Payload attaches sender, receiver, and provenance to the [Task].
  
-| Field   | Type               | Required | Description                                                        |
-|---------|--------------------|----------|--------------------------------------------------------------------|
-| `iss`   | `DID`              | Yes      | The DID of the [Invoker]                                           |
-| `sub`   | `DID`              | Yes      | The [Subject] being invoked                                        |
-| `aud`   | `DID`              | No       | The DID of the intended [Executor] if different from the [Subject] |
-| `cmd`   | `String`           | Yes      | The [Command]                                                      |
-| `args`  | `{String : Any}`   | Yes      | The [Command]'s [Arguments]                                        |
-| `prf`   | `[&Delegation]`    | Yes      | [Delegation]s that prove the chain of authority                    |
-| `meta`  | `{String : Any}`   | No       | Arbitrary [Metadata]                                               |
-| `nonce` | `Bytes`            | No       | A unique, random nonce                                             |
-| `exp`   | `Integer`[^js-num] | No       | The timestamp at which the Invocation becomes invalid              |
-| `iat`   | `Integer`[^js-num] | No       | The timestamp at which the Invocation was created                  |
-| `cause` | `&Receipt`         | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task]          |
+| Field   | Type                       | Required | Description                                                        |
+|---------|----------------------------|----------|--------------------------------------------------------------------|
+| `iss`   | `DID`                      | Yes      | The DID of the [Invoker]                                           |
+| `sub`   | `DID`                      | Yes      | The [Subject] being invoked                                        |
+| `aud`   | `DID`                      | No       | The DID of the intended [Executor] if different from the [Subject] |
+| `cmd`   | `String`                   | Yes      | The [Command]                                                      |
+| `args`  | `{String : Any}`           | Yes      | The [Command]'s [Arguments]                                        |
+| `prf`   | `[&Delegation]`            | Yes      | [Delegation]s that prove the chain of authority                    |
+| `meta`  | `{String : Any}`           | No       | Arbitrary [Metadata]                                               |
+| `nonce` | `Bytes`                    | No       | A unique, random nonce                                             |
+| `exp`   | `Integer \| null`[^js-num] | Yes      | The timestamp at which the Invocation becomes invalid              |
+| `iat`   | `Integer`[^js-num]         | No       | The timestamp at which the Invocation was created                  |
+| `cause` | `&Receipt`                 | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task]          |
  
 [^js-num]: JavaScript has a single numeric type ([`Number`][JS Number]) for both integers and floats. This representation is defined as a [IEEE-754] double-precision floating point number, which has a 53-bit significand.
 
@@ -315,7 +315,7 @@ The OPTIONAL `cause` field is a provenance claim describing which [Receipt] requ
 #### Expiration
 [Expiration]: #expiration
 
-The OPTIONAL field `exp` defines when the Invocation SHOULD time out. This is both expressive (defines a timeout, which is a best practice), and prevents replays.
+The REQUIRED field `exp` defines when the Invocation SHOULD time out. This is both expressive (defines a timeout, which is a best practice), and prevents replays.
 
 #### Issued At
 [Issued At]: #issued-at
