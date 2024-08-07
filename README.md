@@ -550,6 +550,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Philipp Krüger]: https://github.com/matheus23/
 [Protocol Labs]: https://protocol.ai
 [Quinn Wilton]: https://github.com/QuinnWilton
+[Receipt]: https://github.com/ucan-wg/receipt
 [Robust Composition]: http://www.erights.org/talks/thesis/markm-thesis.pdf
 [Rod Vagg]: https://github.com/rvagg/
 [Simon Worthington]: https://github.com/simonwo
