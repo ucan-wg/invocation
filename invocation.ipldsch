@@ -1,0 +1,25 @@
+type Invocation struct {
+  p SignaturePayload
+  s Signature
+}
+
+type SignaturePayload {
+  h VarsigHeader
+  i InvocationV1Payload
+}
+
+type InvocationV1Payload struct {
+  iss DID
+  sub DID
+  aud optional DID
+
+  cmd Command
+  args {String : Any}
+  nonce String
+
+  meta {String : Any}
+  prf [&Delegation]
+  exp optional Integer
+
+  cause optional &Receipt
+}
