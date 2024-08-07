@@ -200,7 +200,7 @@ Note that the Invocation MUST include the Signature envelope. An [Invocation Pay
 ## Type Tag
 [Type Tag]: #type-tag
  
-The UCAN envelope's payload tag MUST be `ucan/inv@1.0.0-rc.1`.
+The UCAN envelope's [payload tag] MUST be `ucan/inv@1.0.0-rc.1`.
 
 ## Invocation Payload
 [Invocation Payload]: #invocation-payload
@@ -568,5 +568,6 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [designation without authorization]: https://srl.cs.jhu.edu/pubs/SRL2003-02.pdf
 [distributed promise pipelines]: http://erights.org/elib/distrib/pipeline.html
 [eRights]: https://erights.org
+[payload tag]: https://github.com/ucan-wg/spec/blob/main/README.md#envelope
 [principle of least authority]: https://en.wikipedia.org/wiki/Principle_of_least_privilege
 [ucanto RPC]: https://github.com/web3-storage/ucanto

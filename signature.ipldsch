@@ -1,9 +1,0 @@
-type Signature union {
-  | inline Bytes
-  | batch  &BatchSignature
-}
-
-type BatchSignature struct {
-  scp [&Any]
-  sig Bytes
-}

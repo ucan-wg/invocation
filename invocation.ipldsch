@@ -5,17 +5,15 @@ type Invocation struct {
 
 type SignaturePayload {
   h VarsigHeader
-  i Invocation
+  i InvocationV1Payload
 }
 
-type InvocationPayload struct {
-  uiv SemVer
-
+type InvocationV1Payload struct {
   iss DID
   sub DID
   aud optional DID
 
-  do Command
+  cmd Command
   args {String : Any}
   nonce String
 
