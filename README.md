@@ -274,7 +274,7 @@ The OPTIONAL `aud` field specified the intended recipient of Invocation, otherwi
 
 A Task is the subset of Invocation fields that uniquely determine the work to be performed. The nonce is important for distinguishing between non-idempotent executions of a Task by making the group together unique.
  
-A Task MUST be uniquely defined by a Task ID that is the CID of the following fields:
+A Task MUST be uniquely defined by a Task ID that is the CID of the following fields as a keyed map:
 
 - [Subject]
 - [Command]
@@ -293,7 +293,7 @@ The REQUIRED Command (`cmd`) field MUST contain a concrete, dispatchable message
 
 The REQUIRED Arguments (`args`) field, MAY contain any parameters expected by the Command. The Subject MUST be considered the authority on the shape of this data. This field MUST be representable as a map or keyword list.
 
-The Arguments MUST pass validation of the Policies on all of the [UCAN Delegations][UCAN Delegation] in the [Proofs] field. If any Policy reports failure, the Invocation MUST be rejected.
+The Arguments MUST pass validation of the Policies on all of the [UCAN Delegations][UCAN Delegation] in the [Proofs] field. If any [Policy] reports failure against the Invocation's Arguments, the Invocation MUST be rejected.
 
 #### Nonce
 [Nonce]: #nonce
@@ -547,6 +547,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [OCapN]: https://github.com/ocapn/
 [Oxide Computer]: https://oxide.computer/ 
 [Philipp Krüger]: https://github.com/matheus23/
+[Policy]: https://github.com/ucan-wg/delegation#policy
 [Protocol Labs]: https://protocol.ai
 [Quinn Wilton]: https://github.com/QuinnWilton
 [Receipt]: https://github.com/ucan-wg/receipt
