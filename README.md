@@ -532,7 +532,6 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [DAG-CBOR]: https://ipld.io/specs/codecs/dag-cbor/spec/
 [DID]: https://www.w3.org/TR/did-core/
 [Delegation]: https://github.com/ucan-wg/delegation
-[E-lang Mailing List, 2000 Oct 18]: http://wiki.erights.org/wiki/Capability-based_Active_Invocation_Certificates
 [Electronic Rights Transfer Protocol (ERTP)]: https://docs.agoric.com/guides/ertp/
 [Fission]: https://fission.codes/
 [Haskell]: https://en.wikipedia.org/wiki/Haskell
