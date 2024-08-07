@@ -517,6 +517,8 @@ Thanks to [Philipp Krüger] for the enthusiastic feedback on the overall design 
 Thanks to [Christine Lemmer-Webber] for the many conversations about capability systems and the programming models that they enable.
 
 Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the general IPLD worldview
+
+Many thanks to [Juan Caballero] for his detailed questions and comments to help polish the spec.
  
 <!-- External Links -->
 
@@ -540,6 +542,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [IPVM]: https://github.com/ipvm-wg
 [Irakli Gozalishvili]: https://github.com/Gozala
 [JS Number]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number
+[Juan Caballero]: https://github.com/bumblefudge
 [Luke Marsen]: https://github.com/lukemarsden
 [Marc-Antoine Parent]: https://github.com/maparent
 [Mark Miller]: https://github.com/erights
