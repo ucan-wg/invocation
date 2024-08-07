@@ -145,7 +145,7 @@ The executor is directed to perform some task described in the UCAN invocation b
 At a very high level:
 
 - A [Task] abstractly describes some Action to be run
-- An [Invocation] attaches proven ([delegated][Delegation]) authority to a [Task], and requests it be run by a certain Agent
+- An Invocation attaches proven ([delegated][Delegation]) authority to a [Task], and requests it be run by a certain Agent
 - A [Receipt] MAY request that the Invoker enqueue more [Task]s
 
 ``` mermaid
@@ -163,7 +163,7 @@ erDiagram
 |--------------|-----------------------------------------------------------------------------|
 | [Command]    | Function application; a description of work to be performed                 |
 | [Task]       | Contextual information for a [Command], such as resource limits             |
-| [Invocation] | A request to perform some [Task] based on [delegated][Delegation] authority |
+| Invocation   | A request to perform some [Task] based on [delegated][Delegation] authority |
 
 A request for some work to be done (or to "exercise your authority") is an Invocation.
 
@@ -190,7 +190,7 @@ flowchart TD
     cause -.->|CID| Receipt
 ```
 
-As [noted in the introduction][lazy-vs-eager], there is a difference between a reference to a function and calling that function. The [Invocation] is a request to the [Executor] to perform the enclosed [Task]. [Invocation Payload]s are not executable until they have been signed and [Delegation] proofs validated.
+As [noted in the introduction][Lazy vs Eager Evaluation], there is a difference between a reference to a function and calling that function. The Invocation is a request to the [Executor] to perform the enclosed [Task]. [Invocation Payload]s are not executable until they have been signed and [Delegation] proofs validated.
 
 Note that the Invocation MUST include the Signature envelope. An [Invocation Payload] on its own MUST NOT be considered a valid Invocation.
 
@@ -303,10 +303,9 @@ The REQUIRED `nonce` field MUST include a random nonce. This field ensures that 
 ### Proofs
 [Proofs]: #proofs
 
-The `prf` field defines all [Delegation]s required to prove that this Invocation has an unbroken authorization chain.
+The `prf` field lists the path of authority from the [Subject] to the [Invoker]. This MUST be an array of CIDs pointing [Delegations][Delegation] starting from the root Delegation (issued by the Subject), in strict sequence where the `aud` of the previous Delegation matches the `iss` of the next Delegation.
 
-### Provenance
-[Provenance]: #provenance
+See [Proof Chains] for more detail
 
 #### Cause
 [Cause]: #cause
@@ -404,7 +403,7 @@ flowchart RL
   {
     "h": {"/": {"bytes": "NBIFEgEAcQ"}},
     "ucan/i/1.0.0-rc.1": {
-      "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
+      "iss": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
       "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "cmd": "/crud/create",
       "args": {
@@ -426,9 +425,9 @@ flowchart RL
       },
       "exp": 1697409438
       "prf": [
-        {"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"},
-        {"/": "bafkr4idnrqfouibxdqpvh2lmkhgsbw5yabvjbiaea3fplrb4vxifaphvgy"},
-        {"/": "bafkr4ig4o5mwufavfewt4jurycn7g7dby2tcwg5q2ii2y6idnwguoyeruq"}
+        {"/": "zdpuAzx4sBrBCabrZZqXgvK3NDzh7Mf5mKbG11aBkkMCdLtCp"},
+        {"/": "zdpuApTCXfoKh2sB1KaUaVSGofCBNPUnXoBb6WiCeitXEibZy"},
+        {"/": "zdpuAoFdXRPw4n6TLcncoDhq1Mr6FGbpjAiEtqSBrTSaYMKkf"}
       ]
     }
     
@@ -445,7 +444,7 @@ flowchart RL
   {
     "h": {"/": {"bytes": "NBIFEgEAcQ"}},
     "ucan/i/1.0.0-rc.1": {
-      "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
+      "iss": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
       "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "cmd": "/msg/send",
@@ -456,7 +455,7 @@ flowchart RL
         "body": "Let get coffee sometime and talk about UCAN Invocations!"
       },
       "nonce": {"/": {"bytes": "TWFueSBopZ2h0IHdvcs"}},
-      "prf": [{"/": "bafkr4iblvgvkmqt46imsmwqkjs7p6wmpswak2p5hlpagl2htiox272xyy4"}],
+      "prf": [{"/": "zdpuAzx4sBrBCabrZZqXgvK3NDzh7Mf5mKbG11aBkkMCdLtCp"}],
       "exp": 1697409438
     }
   }
@@ -471,7 +470,7 @@ flowchart RL
   {
     "h": {"/": {"bytes": "NBIFEgEAcQ"}},
     "ucan/i/1.0.0-rc.1": {
-      "iss": "did:plc:ewvi7nxzyoun6zhxrhs64oiz",
+      "iss": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
       "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "meta": {"fuel": 999999},
@@ -556,6 +555,7 @@ Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the gen
 [Simon Worthington]: https://github.com/simonwo
 [Spritely Institute]: https://spritely.institute/news/introducing-a-distributed-debugger-for-goblins-with-time-travel.html
 [UCAN Delegation]: https://github.com/ucan-wg/delegation/
+[UCAN Envelope]: https://github.com/ucan-wg/spec/blob/main/README.md#envelope
 [UCAN Promise]: https://github.com/ucan-wg/promise/
 [URI]: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
 [Witchcraft Software]: https://github.com/expede
