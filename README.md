@@ -216,7 +216,7 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
 | `args`  | `{String : Any}`           | Yes      | The [Command]'s [Arguments]                                        |
 | `prf`   | `[&Delegation]`            | Yes      | [Delegation]s that prove the chain of authority                    |
 | `meta`  | `{String : Any}`           | No       | Arbitrary [Metadata]                                               |
-| `nonce` | `Bytes`                    | No       | A unique, random nonce                                             |
+| `nonce` | `Bytes`                    | Yes       | A unique, random nonce                                             |
 | `exp`   | `Integer \| null`[^js-num] | Yes      | The timestamp at which the Invocation becomes invalid              |
 | `iat`   | `Integer`[^js-num]         | No       | The timestamp at which the Invocation was created                  |
 | `cause` | `&Receipt`                 | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task]          |
