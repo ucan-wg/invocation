@@ -13,6 +13,7 @@
 - [Brooklyn Zelenka], [Witchcraft Software]
 - [Irakli Gozalishvili], [Protocol Labs]
 - [Zeeshan Lakhani], [Oxide Computer]
+- [Hugo Dias], [Decentralised Experience]
 
 # Dependencies
 [Dependencies]: #dependencies
@@ -574,3 +575,4 @@ Many thanks to [Juan Caballero] for his detailed questions and comments to help 
 [payload tag]: https://github.com/ucan-wg/spec/blob/main/README.md#envelope
 [principle of least authority]: https://en.wikipedia.org/wiki/Principle_of_least_privilege
 [ucanto RPC]: https://github.com/web3-storage/ucanto
+[Decentralised Experience]: https://decentralised.dev
