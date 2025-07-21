@@ -13,6 +13,7 @@
 - [Brooklyn Zelenka], [Witchcraft Software]
 - [Irakli Gozalishvili], [Protocol Labs]
 - [Zeeshan Lakhani], [Oxide Computer]
+- [Hugo Dias], [Decentralised Experience]
 
 # Dependencies
 [Dependencies]: #dependencies
@@ -199,7 +200,7 @@ Note that the Invocation MUST include the Signature envelope. An [Invocation Pay
 
 ## Type Tag
 [Type Tag]: #type-tag
- 
+  
 The UCAN envelope's [payload tag] MUST be `ucan/inv@1.0.0-rc.1`.
 
 ## Invocation Payload
@@ -216,7 +217,7 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
 | `args`  | `{String : Any}`           | Yes      | The [Command]'s [Arguments]                                        |
 | `prf`   | `[&Delegation]`            | Yes      | [Delegation]s that prove the chain of authority                    |
 | `meta`  | `{String : Any}`           | No       | Arbitrary [Metadata]                                               |
-| `nonce` | `Bytes`                    | No       | A unique, random nonce                                             |
+| `nonce` | `Bytes`                    | Yes       | A unique, random nonce                                             |
 | `exp`   | `Integer \| null`[^js-num] | Yes      | The timestamp at which the Invocation becomes invalid              |
 | `iat`   | `Integer`[^js-num]         | No       | The timestamp at which the Invocation was created                  |
 | `cause` | `&Receipt`                 | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task]          |
@@ -273,7 +274,7 @@ The OPTIONAL `aud` field specified the intended recipient of Invocation, otherwi
 [Task]: #task
 
 A Task is the subset of Invocation fields that uniquely determine the work to be performed. The nonce is important for distinguishing between non-idempotent executions of a Task by making the group together unique.
- 
+  
 A Task MUST be uniquely defined by a Task ID that is the CID of the following fields as a keyed map:
 
 - [Subject]
@@ -489,7 +490,7 @@ flowchart RL
 # Prior Art
 [Prior Art]: #prior-art
 
-[ucanto RPC] from [DAG House] is a production system that uses UCAN as the basis for an RPC layer.
+[ucanto RPC] from [Storacha] is a production system that uses UCAN as the basis for an RPC layer.
 
 The Capability Transport Protocol ([CapTP]) is one of the most influential object-capability systems, and forms the basis for much of the rest of the items on this list.
 
@@ -519,7 +520,7 @@ Thanks to [Christine Lemmer-Webber] for the many conversations about capability 
 Thanks to [Rod Vagg] for the clarifications on IPLD Schema implicits and the general IPLD worldview
 
 Many thanks to [Juan Caballero] for his detailed questions and comments to help polish the spec.
- 
+  
 <!-- External Links -->
 
 [Agoric]: https://agoric.com/
@@ -530,7 +531,7 @@ Many thanks to [Juan Caballero] for his detailed questions and comments to help 
 [Cap 'n Proto RPC]: https://capnproto.org/
 [CapTP]: http://erights.org/elib/distrib/captp/index.html
 [Christine Lemmer-Webber]: https://github.com/cwebber
-[DAG House]: https://dag.house
+[Storacha]: https://github.com/storacha/ucanto
 [DAG-CBOR]: https://ipld.io/specs/codecs/dag-cbor/spec/
 [DID]: https://www.w3.org/TR/did-core/
 [Delegation]: https://github.com/ucan-wg/delegation
@@ -574,3 +575,4 @@ Many thanks to [Juan Caballero] for his detailed questions and comments to help 
 [payload tag]: https://github.com/ucan-wg/spec/blob/main/README.md#envelope
 [principle of least authority]: https://en.wikipedia.org/wiki/Principle_of_least_privilege
 [ucanto RPC]: https://github.com/web3-storage/ucanto
+[Decentralised Experience]: https://decentralised.dev

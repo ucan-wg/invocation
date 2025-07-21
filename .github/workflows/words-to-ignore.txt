@@ -108,3 +108,5 @@ unpadded
 url
 v0
 validator
+Storacha
+Decentralised
