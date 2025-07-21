@@ -576,3 +576,4 @@ Many thanks to [Juan Caballero] for his detailed questions and comments to help 
 [principle of least authority]: https://en.wikipedia.org/wiki/Principle_of_least_privilege
 [ucanto RPC]: https://github.com/web3-storage/ucanto
 [Decentralised Experience]: https://decentralised.dev
+[Hugo Dias]: https://hugodias.me
