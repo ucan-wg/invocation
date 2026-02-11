@@ -1,5 +1,5 @@
 # UCAN Invocation Specification
-## Version 1.0.0-rc. 1
+## Version 1.0.0-rc.1
 
 ## Editors
 [Editors]: #editors
@@ -39,7 +39,7 @@ UCAN Invocation defines a format for expressing the intention to execute delegat
 
 > When authorization is communicated without such context, it's like receiving a key in the mail with no hint about what to do with it [...] After an object receives this message, she can invoke arg if she chooses, but why would she ever choose to do so?
 >
-> [Mark Miller], [E-lang Mailing List, 2000 Oct 18]
+> [Mark Miller], E-lang Mailing List, 2000 Oct 18
 
 UCAN is a chained-capability format. A UCAN contains all of the information that one would need to perform some task, and the provable authority to do so. This begs the question: can UCAN be used directly as an RPC language?
 
@@ -123,10 +123,11 @@ A core part of UCAN's design is interacting with the wider, non-UCAN world. Many
 
 Task adds two new roles to UCAN: invoker and executor. The existing UCAN delegator and delegate principals MUST persist to the invocation.
 
-| UCAN Field | Delegation                             | Invocation                      |
-|------------|----------------------------------------|---------------------------------|
-| `iss`      | Delegator: transfer authority (active) | Invoker: request task (active)  |
-| `aud`      | Delegate: gain authority (passive)     | Executor: perform task (active) |
+| UCAN Field | Delegation                             | Invocation                                          |
+|------------|----------------------------------------|-----------------------------------------------------|
+| `iss`      | Delegator: transfer authority (active) | Invoker: request task (active)                      |
+| `sub`      | —                                      | Executor: perform task (default)                    |
+| `aud`      | Delegate: gain authority (passive)     | Executor: perform task (if different from [Subject]) |
 
 ### Invoker
 [Invoker]: #invoker
@@ -179,7 +180,7 @@ flowchart TD
             subgraph InvocationPayload ["Invocation Payload"]
                 iss
                 sub
-                do
+                cmd
                 args
                 prf
                 cause["cause (optional)"]
@@ -379,7 +380,7 @@ flowchart RL
      subgraph inv [Invocation]
         invIss(iss: Dan)
         args("args: [Storage, crud/update, (key, value)]")
-        invSub(aud: Alice)
+        invSub(sub: Alice)
         prf("proofs")
     end
 
@@ -403,8 +404,9 @@ flowchart RL
   {"/": {"bytes": "bdNVZn+uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"}},
   {
     "h": {"/": {"bytes": "NAHtAe0BE3E"}},
-    "ucan/i/1.0.0-rc.1": {
+    "ucan/inv@1.0.0-rc.1": {
       "iss": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+      "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "cmd": "/crud/create",
       "args": {
@@ -424,7 +426,7 @@ flowchart RL
         "env": "development",
         "tags": ["blog", "post", "pr#123"]
       },
-      "exp": 1697409438
+      "exp": 1697409438,
       "prf": [
         {"/": "zdpuAzx4sBrBCabrZZqXgvK3NDzh7Mf5mKbG11aBkkMCdLtCp"},
         {"/": "zdpuApTCXfoKh2sB1KaUaVSGofCBNPUnXoBb6WiCeitXEibZy"},
@@ -444,7 +446,7 @@ flowchart RL
   {"/": {"bytes": "bdNVZn+uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"}},
   {
     "h": {"/": {"bytes": "NAHtAe0BE3E"}},
-    "ucan/i/1.0.0-rc.1": {
+    "ucan/inv@1.0.0-rc.1": {
       "iss": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
       "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
@@ -470,7 +472,7 @@ flowchart RL
   {"/": {"bytes": "bdNVZn+uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"}},
   {
     "h": {"/": {"bytes": "NAHtAe0BE3E"}},
-    "ucan/i/1.0.0-rc.1": {
+    "ucan/inv@1.0.0-rc.1": {
       "iss": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
       "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
@@ -500,7 +502,7 @@ The Object Capability Network ([OCapN]) protocol extends [CapTP] with a generali
 
 [Cap 'n Proto RPC] is an influential RPC framework based on concepts from [CapTP].
 
-# 7 Acknowledgements
+# Acknowledgements
 [Acknowledgements]: #acknowledgements
 
 Many thanks to [Mark Miller] for his [trail blazing work][eRights] on [capability systems].
@@ -570,6 +572,7 @@ Many thanks to [Juan Caballero] for his detailed questions and comments to help 
 [`magnet`]: https://en.wikipedia.org/wiki/Magnet_URI_scheme
 [capability systems]: https://en.wikipedia.org/wiki/Capability-based_security
 [designation with authorization]: https://srl.cs.jhu.edu/pubs/SRL2003-02.pdf
+[enqueue]: https://github.com/ucan-wg/receipt
 [distributed promise pipelines]: http://erights.org/elib/distrib/pipeline.html
 [eRights]: https://erights.org
 [payload tag]: https://github.com/ucan-wg/spec/blob/main/README.md#envelope
