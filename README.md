@@ -336,7 +336,7 @@ An Invocation MAY be used to attest to some information. This is in effect a sta
 ## Proof Chains
 [Proof Chains]: #proof-chains
 
-A Task MUST include the entire [UCAN Delegation] proof chain in the `prf` field. The chain MUST form a direct line of authority, starting from the root authority (`sub`) and ending at the invoker (`iss`). The `sub` throughout MUST match the `aud` of the Invocation.
+A Task MUST include the entire [UCAN Delegation] proof chain in the `prf` field. The chain MUST form a direct line of authority, starting from the root authority (`sub`) and ending at the invoker (`iss`). The `sub` throughout MUST match the `sub` of the Invocation.
 
 ``` mermaid
 flowchart RL
