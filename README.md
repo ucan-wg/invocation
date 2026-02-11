@@ -269,7 +269,7 @@ The REQUIRED `sub` field both parameterizes over a specific agent, and acts as a
 #### Audience
 [Audience]: #audience
 
-The OPTIONAL `aud` field specified the intended recipient of Invocation, otherwise the Audience MUST be assumed to the [Subject]. This is useful for message routing, command brokers, proxy execution, gateways, replicated state machines, and so on.
+The OPTIONAL `aud` field specified the intended recipient of Invocation, otherwise the Audience MUST be assumed to be the [Subject]. This is useful for message routing, command brokers, proxy execution, gateways, replicated state machines, and so on.
 
 ### Task
 [Task]: #task
