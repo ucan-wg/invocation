@@ -218,12 +218,16 @@ The Invocation Payload attaches sender, receiver, and provenance to the [Task].
 | `args`  | `{String : Any}`           | Yes      | The [Command]'s [Arguments]                                        |
 | `prf`   | `[&Delegation]`            | Yes      | [Delegation]s that prove the chain of authority                    |
 | `meta`  | `{String : Any}`           | No       | Arbitrary [Metadata]                                               |
-| `nonce` | `Bytes`                    | Yes       | A unique, random nonce                                             |
+| `nonce` | `Bytes`                    | Yes      | A unique, random nonce                                             |
 | `exp`   | `Integer \| null`[^js-num] | Yes      | The timestamp at which the Invocation becomes invalid              |
 | `iat`   | `Integer`[^js-num]         | No       | The timestamp at which the Invocation was created                  |
 | `cause` | `&Receipt`                 | No       | An OPTIONAL CID of the [Receipt] that enqueued the [Task]          |
  
 [^js-num]: JavaScript has a single numeric type ([`Number`][JS Number]) for both integers and floats. This representation is defined as a [IEEE-754] double-precision floating point number, which has a 53-bit significand.
+
+The `aud` field MUST be different from `sub`. If intended [Executor] is the [Subject] the `aud` field MUST be omitted which makes it implicitly equal to `sub`.
+
+The `meta` field MUST be non empty map. If `meta` is empty map it MUST be omitted.
 
 The shape of the `args` MUST be defined by the `cmd` field type. This is similar to how a method or message contain certain data shapes in object oriented or actor model languages respectively. Using the JavaScript analogy from the introduction, an Action is similar to wrapping a call in a closure:
 
