@@ -1,5 +1,5 @@
 # UCAN Invocation Specification
-## Version 1.0.0-rc.1
+## Version 1.0.0
 
 ## Editors
 [Editors]: #editors
@@ -202,7 +202,7 @@ Note that the Invocation MUST include the Signature envelope. An [Invocation Pay
 ## Type Tag
 [Type Tag]: #type-tag
   
-The UCAN envelope's [payload tag] MUST be `ucan/inv@1.0.0-rc.1`.
+The UCAN envelope's [payload tag] MUST be `ucan/inv@1.0.0`.
 
 ## Invocation Payload
 [Invocation Payload]: #invocation-payload
@@ -408,7 +408,7 @@ flowchart RL
   {"/": {"bytes": "bdNVZn+uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"}},
   {
     "h": {"/": {"bytes": "NAHtAe0BE3E"}},
-    "ucan/inv@1.0.0-rc.1": {
+    "ucan/inv@1.0.0": {
       "iss": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
       "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
@@ -450,7 +450,7 @@ flowchart RL
   {"/": {"bytes": "bdNVZn+uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"}},
   {
     "h": {"/": {"bytes": "NAHtAe0BE3E"}},
-    "ucan/inv@1.0.0-rc.1": {
+    "ucan/inv@1.0.0": {
       "iss": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
       "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
@@ -476,7 +476,7 @@ flowchart RL
   {"/": {"bytes": "bdNVZn+uTrQ8bgq5LocO2y3gqIyuEtvYWRUH9YT+SRK6v/SX8bjt+VZ9JIPVTdxkWb6nhVKBt6JGpgnjABpOCA"}},
   {
     "h": {"/": {"bytes": "NAHtAe0BE3E"}},
-    "ucan/inv@1.0.0-rc.1": {
+    "ucan/inv@1.0.0": {
       "iss": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
       "aud": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
       "sub": "did:key:z6MkrZ1r5XBFZjBU34qyD8fueMbMRkKw17BZaq2ivKFjnz2z",
